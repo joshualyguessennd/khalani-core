@@ -1,0 +1,3 @@
+[submodule "solidity/tokenbridge-contracts"]
+	path = solidity/tokenbridge-contracts
+	url = https://github.com/tvl-labs/tokenbridge-contracts

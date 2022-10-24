@@ -1,0 +1,23 @@
+[profile.default]
+src = 'src'
+out = 'out'
+libs = ["node_modules", "lib"]
+remappings = [
+    '@ensdomains/=node_modules/@ensdomains/',
+    '@openzeppelin/=lib/openzeppelin-contracts/',
+    'hardhat/=node_modules/hardhat/',
+    '@balancer-labs/=node_modules/@balancer-labs/',
+    'ds-test/=lib/forge-std/lib/ds-test/src/',
+    'forge-std/=lib/forge-std/src/',
+    'hardhat/=node_modules/hardhat/',
+]
+
+[rpc_endpoints]
+godwoken_test = "${GODWOKEN_TESTNET_RPC_URL}"
+godwoken_main = "${GODWOKEN_MAINNET_RPC_URL}"
+axon = "{AXON_RPC_URL}"
+
+[etherscan]
+rinkeby = { key = "${ETHERSCAN_KEY}" }
+
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config
