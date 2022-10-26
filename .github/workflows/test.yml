@@ -1,0 +1,53 @@
+name: test
+
+on: workflow_dispatch
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  check:
+    strategy:
+      fail-fast: true
+
+    name: Foundry project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run Forge build
+        working-directory: soldity/khalani-core
+        run: |
+          forge --version
+          forge build --sizes
+        id: build
+
+      - name: Run Forge tests
+        working-directory: soldity/khalani-core
+        run: |
+          forge test -vvv
+        id: test
+
+      - name: Run Slither core
+        uses: crytic/slither-action@main
+        continue-on-error: true
+        id: slither
+        with:
+          target: "soldity/khalani-core/src"
+          slither-config: "soldity/khalani-core/slither.config.json"
+          solc-version: 0.8.17
+          sarif: results.sarif
+
+      - name: Upload SARIF file for core
+        uses: github/codeql-action/upload-sarif@v2
+        id: upload-1
+        with:
+          sarif_file: ${{ steps.slither.outputs.sarif }}
+
