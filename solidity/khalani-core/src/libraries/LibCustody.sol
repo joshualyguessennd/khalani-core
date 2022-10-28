@@ -4,15 +4,20 @@ pragma solidity ^0.8.0;
 library LibCustody {
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("khalini.custody.storage");
 
-    struct CustodyState{
+    struct CustodyStorage{
+        address gateway;
+        uint256 number;
 
+        /// @dev stores all user balances
+        mapping(address => uint) balances;
     }
 
-    function diamondStorage() internal pure returns (CustodyState storage ds) {
+
+
+    function custodyStorage() internal pure returns (CustodyStorage storage ds) {
         bytes32 position = DIAMOND_STORAGE_POSITION;
         assembly {
             ds.slot := position
         }
     }
-
 }
