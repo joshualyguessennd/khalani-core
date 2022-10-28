@@ -2,6 +2,8 @@
 pragma solidity >=0.7.0 < 0.9.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "../libraries/LibCustody.sol";
+import "../libraries/LibOwnership.sol";
 
 
 /// @title Custody Contract
@@ -26,9 +28,12 @@ contract Custody is Ownable {
         // }
         require(msg.sender == gateway, "CS_OnlyGateway");
     }
-    constructor(address _gateway) {
-        // owner = msg.sender;
-        gateway = _gateway;
+
+    function initCustody(address _gateway) {
+        require(_gateway!=address(0), "gateway storage must not be 0x0");
+        LibCustody.CustodyStorage storage ds = LibCustody.custodyStorage();
+        LibOwnership.enforceIsContractOwner();
+        ds.gateway = _gateway;
     }
 
     /// State Changing Functions

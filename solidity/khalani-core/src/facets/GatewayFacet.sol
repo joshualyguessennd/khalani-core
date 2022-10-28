@@ -18,6 +18,10 @@ contract Gateway {
         bridge = _bridge;
     }
 
+    function initGateway(address _bridge, address _custody) {
+
+    }
+
     function setCustody(address _custody) public {
         custody = _custody;
     }
