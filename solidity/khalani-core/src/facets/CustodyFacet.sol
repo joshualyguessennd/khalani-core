@@ -3,7 +3,7 @@ pragma solidity >=0.7.0 < 0.9.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../libraries/LibCustody.sol";
-import "../libraries/LibOwner.sol";
+import "../libraries/LibOwnership.sol";
 
 
 /// @title Custody Contract
@@ -34,7 +34,6 @@ contract Custody is Ownable {
         LibCustody.CustodyStorage storage ds = LibCustody.custodyStorage();
         LibOwnership.enforceIsContractOwner();
         ds.gateway = _gateway;
-
     }
 
     /// State Changing Functions
