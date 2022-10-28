@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.0;
 
-import "./../interfaces/IDiamond.sol";
-import "./../interfaces/IDiamondCut.sol";
 
-// Remember to add the loupe functions from DiamondLoupeFacet to the diamond.
-// The loupe functions are required by the EIP2535 Diamonds standard
+import "./../interfaces/IDiamondCut.sol";
+import "./LibDiamondStorage.sol";
+
+
+
+
 
 error NoSelectorsGivenToAdd();
 error NotContractOwner(address _user, address _contractOwner);
@@ -24,29 +26,6 @@ error CannotRemoveImmutableFunction(bytes4 _selector);
 error InitializationFunctionReverted(address _initializationContractAddress, bytes _calldata);
 
 library LibDiamond {
-    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("diamond.standard.diamond.storage");
-
-    struct FacetAddressAndSelectorPosition {
-        address facetAddress;
-        uint16 selectorPosition;
-    }
-
-    struct DiamondStorage {
-        // function selector => facet address and selector position in selectors array
-        mapping(bytes4 => FacetAddressAndSelectorPosition) facetAddressAndSelectorPosition;
-        bytes4[] selectors;
-        mapping(bytes4 => bool) supportedInterfaces;
-        // owner of the contract
-        address contractOwner;
-    }
-
-    function diamondStorage() internal pure returns (DiamondStorage storage ds) {
-        bytes32 position = DIAMOND_STORAGE_POSITION;
-        assembly {
-            ds.slot := position
-        }
-    }
-
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     function setContractOwner(address _newOwner) internal {
