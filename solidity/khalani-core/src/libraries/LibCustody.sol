@@ -5,11 +5,11 @@ library LibCustody {
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("khalini.custody.storage");
 
     struct CustodyStorage{
-        address public gateway;
-        uint256 public number;
+        address gateway;
+        uint256 number;
 
         /// @dev stores all user balances
-        mapping(address => uint) public balances;
+        mapping(address => uint) balances;
     }
 
 
@@ -20,5 +20,4 @@ library LibCustody {
             ds.slot := position
         }
     }
-
 }
