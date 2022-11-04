@@ -2,7 +2,7 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
-import {AbacusConnectionClient}  from "@hyperlane-xyz/contracts/AbacusConnectionClient.sol";
+import {AbacusConnectionClient}  from "@hyperlane-xyz/core/contracts/AbacusConnectionClient.sol";
 
 contract NexusHyperlaneClient is AbacusConnectionClient{
 
