@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import "./balancer/vault/interfaces/IVault.sol";
 import "./balancer/vault/interfaces/IERC20.sol";
+import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
 
 contract Nexus {
     address public owner;
