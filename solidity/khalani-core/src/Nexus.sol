@@ -14,10 +14,15 @@ contract Nexus {
     address private usdcavax;
     address private usdceth;
     address public vault;
+    mapping(uint32=>mapping(address=>address)) chainTokenRepresentation;
 
     constructor(address _vault) {
         owner = msg.sender;
         vault = _vault;
+    }
+    ///modifier
+    modifier onlyOwner() {
+        require(owner == _msgSender(), "caller not the owner");
     }
 
     /// STATE CHANGING METHODS
@@ -53,11 +58,12 @@ contract Nexus {
         IVault(vault).exitPool(_poolId, _sender, _recipient, _request);
     }
 
-    function _mintUSDCeth() private {}
+    function addTokenRepresentationMapping(
+        uint32 domain,
+        address token,
+        address tokenRepresentation
+    ) public onlyOwner {
+        chainTokenRepresentation[domain][token] = tokenRepresentation;
+    }
 
-    function _mintUSDCavax() private {}
-
-    function _burnUSDCeth() private {}
-
-    function _burnUSDCavax() private {}
 }
