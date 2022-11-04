@@ -1,3 +1,6 @@
 [submodule "solidity/tokenbridge-contracts"]
 	path = solidity/tokenbridge-contracts
 	url = https://github.com/tvl-labs/tokenbridge-contracts
+[submodule "solidity/khalani-core/lib/hyperlane-monorepo"]
+	path = solidity/khalani-core/lib/hyperlane-monorepo
+	url = https://github.com/hyperlane-xyz/hyperlane-monorepo
