@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import "forge-std/Test.sol";
 import "forge-std/console2.sol";
 import "../src/Nexus.sol";
-import "../src/Gateway.sol";
+import {Gateway} from "../src/facets/GatewayFacet.sol";
 import "../src/balancer/vault/interfaces/IVault.sol";
 import "../src/balancer/vault/interfaces/IBasePool.sol";
 import "../src/balancer/vault/interfaces/IERC20.sol";

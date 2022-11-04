@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.0;
 
-import "./interfaces/ICustody.sol" ;
-import "./interfaces/IAMB.sol" ;
+import "../interfaces/ICustody.sol" ;
+import "../interfaces/IAMB.sol" ;
 // import "./utils/Errors.sol" ;
 
 contract Gateway {
