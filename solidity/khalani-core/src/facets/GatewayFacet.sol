@@ -4,6 +4,7 @@ pragma solidity ^0.7.0;
 import "../interfaces/ICustody.sol" ;
 import "../interfaces/IAMB.sol" ;
 // import "./utils/Errors.sol" ;
+import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 contract Gateway {
     address public owner;
@@ -11,6 +12,13 @@ contract Gateway {
     address public psm;
     address public nexus;
     address public bridge;
+
+    event LogLockToChain(
+        string recipientAddress,
+        string recipientChain,
+        address token,
+        uint256 amount
+    );
 
     constructor(address _bridge, address _custody) {
         owner = msg.sender;
@@ -34,12 +42,37 @@ contract Gateway {
         nexus = _nexus;
     }
 
-    function depositLiquidity (address _contract, bytes calldata _data, uint256 _gas) external returns (bytes32) {    
+    function deposit(address user, address token, uint256 amount,  bytes destination) external returns (bool) {
+        _lock(_owner, _destination, token, amount);
+        _transferFromCustody(user,amount);
+        return true;
     }
-    
-    function removeLiquidity (address _contract, bytes calldata _data, uint256 _gas) external returns (bytes32) {
 
+    function _transferToCustody(address _owner,  uint256 _amount) private returns (bool) {
+        return ICustody(custody).deposit(_owner, _amount);
     }
-    function _transferToCustody(address _owner,  uint256 _amount) private returns (bool) {}
-    function _transferFromCustody(address _owner,  uint256 _amount) private returns (bool) {}
+
+    function _transferFromCustody(address _owner,  uint256 _amount) private returns (bool) {
+        return ICustody(custody).withdraw(_owner,_amount);
+    }
+
+    function _lock(address calldata _owner, address calldata _destination,address token, uint256 amount) internal returns(uint256) {
+
+        require(_owner!=address(0));
+
+        uint256 transferredAmount = IERC20Upgradeable(token).safeTransferFromWithFees(
+            _msgSender(),
+            address(this),
+            _amount
+        );
+
+        emit LogLockToChain(
+            _owner,
+            _destination,
+            token,
+            amount
+        );
+
+        return transferredAmount;
+    }
 }
