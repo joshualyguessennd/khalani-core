@@ -14,7 +14,7 @@ contract Nexus {
     address private usdcavax;
     address private usdceth;
     address public vault;
-    mapping(uint32=>mapping(address=>address)) chainTokenRepresentation;
+    mapping(uint32=>mapping(address=>address)) private chainTokenRepresentation;
 
     constructor(address _vault) {
         owner = msg.sender;
@@ -23,6 +23,10 @@ contract Nexus {
     ///modifier
     modifier onlyOwner() {
         require(owner == _msgSender(), "caller not the owner");
+    }
+
+    modifier onlyGateway() {
+        require(gateway == _msgSender(), "caller not gateway");
     }
 
     /// STATE CHANGING METHODS
@@ -66,4 +70,9 @@ contract Nexus {
         chainTokenRepresentation[domain][token] = tokenRepresentation;
     }
 
+    function mintToken(uint32 origin, address token, uint256 amount) public onlyGateway returns (bool) {
+        address tokenToMint = chainTokenRepresentation[origin][token];
+        ERC20PresetMinterPauser(tokenToMint).mint(gateway,amount);
+        return true;
+    }
 }
