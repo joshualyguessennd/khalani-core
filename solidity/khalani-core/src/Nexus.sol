@@ -5,8 +5,9 @@ pragma experimental ABIEncoderV2;
 import "./balancer/vault/interfaces/IVault.sol";
 import "./balancer/vault/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
+import "./interfaces/INexus.sol";
 
-contract Nexus {
+contract Nexus is INexus{
     address public owner;
     address public custody;
     address public psm;

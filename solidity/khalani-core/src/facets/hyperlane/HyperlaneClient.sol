@@ -8,9 +8,10 @@ contract HyperlaneClient is AbacusConnectionClient{
 
 
     uint32 private khalaDomain;
-    address gateway;
-    address owner;
-    address hostInbox;
+    address private gateway;
+    address private owner;
+    address private hostInbox;
+
     constructor(address owner, uint32 khalaDomain) {
 
     }
@@ -28,6 +29,7 @@ contract HyperlaneClient is AbacusConnectionClient{
         require(gateway == _msgSender(), "caller not the owner");
     }
 
+    ///setter
     function setGateway(address _gateway) onlyOwner {
         gateway = _gateway;
     }
