@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 import "forge-std/Test.sol";
 import "../src/interfaces/IDiamondCut.sol";
@@ -9,6 +10,9 @@ import {HyperlaneClient} from "../src/facets/bridges/HyperlaneClient.sol";
 import "./Mock/MockERC20.sol";
 import "@hyperlane-xyz/core/contracts/mock/MockInbox.sol";
 import "@hyperlane-xyz/core/contracts/mock/MockOutbox.sol";
+import {Gateway} from "../src/facets/GatewayFacet.sol";
+import "../src/NexusHyperlaneClient.sol";
+import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 
 contract GatewayTest is Test {
     Khalani public diamondContract;
@@ -17,13 +21,15 @@ contract GatewayTest is Test {
     MockOutbox outbox;
     MockInbox inbox;
 
+    NexusHyperlaneClient nexusSideClient;
+
     address MOCK_ADDR_1 = 0x0000000000000000000000000000000000000001;
     address MOCK_ADDR_2 = 0x0000000000000000000000000000000000000002;
     address MOCK_ADDR_3 = 0x0000000000000000000000000000000000000003;
     address MOCK_ADDR_4 = 0x0000000000000000000000000000000000000004;
     address MOCK_ADDR_5 = 0x0000000000000000000000000000000000000005;
 
-    function deployDiamond() internal returns (Diamond) {
+    function deployDiamond() internal returns (Khalani) {
         DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
         Khalani diamond = new Khalani(address(this), address(diamondCutFacet));
         return diamond;
@@ -35,30 +41,30 @@ contract GatewayTest is Test {
         usdc.initialize("USDC","USDC");
 
         inbox = new MockInbox();
-        outbox = new MockOutbox(address(inbox));
+        outbox = new MockOutbox(1,address(inbox));
 
         Khalani diamond = deployDiamond();
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](2);
 
 
-        GatewayFacet gatewayFacet = new GatewayFacet();
+        Gateway gatewayFacet = new Gateway();
         bytes4[] memory gatewayFacetfunctionSelectors = new bytes4[](2);
-        gatewayFacetfunctionSelectors[0] = GatewayFacet.deposit.selector;
-        gatewayFacetfunctionSelectors[1] = GatewayFacet.initGateway.selector;
-        cut[0] = IDiamondCut.FacetCut({
+        gatewayFacetfunctionSelectors[0] = gatewayFacet.deposit.selector;
+        gatewayFacetfunctionSelectors[1] = gatewayFacet.initGateway.selector;
+        cut[0] = IDiamond.FacetCut({
         facetAddress: address(gatewayFacet),
-        action: IDiamondCut.FacetCutAction.Add,
+        action: IDiamond.FacetCutAction.Add,
         functionSelectors: gatewayFacetfunctionSelectors
         });
 
         HyperlaneClient hyperlaneFacet = new HyperlaneClient();
 
         bytes4[] memory hyperlaneFacetfunctionSelectors = new bytes4[](2);
-        hyperlaneFacetfunctionSelectors[0] = HyperlaneClient.initHyperlane.selector;
-        hyperlaneFacetfunctionSelectors[1] = HyperlaneClient.sendMintMessage.selector;
-        cut[1] = IDiamondCut.FacetCut({
+        hyperlaneFacetfunctionSelectors[0] = hyperlaneFacet.initHyperlane.selector;
+        hyperlaneFacetfunctionSelectors[1] = hyperlaneFacet.sendMintMessage.selector;
+        cut[1] = IDiamond.FacetCut({
         facetAddress: address(hyperlaneFacet),
-        action: IDiamondCut.FacetCutAction.Add,
+        action: IDiamond.FacetCutAction.Add,
         functionSelectors: hyperlaneFacetfunctionSelectors
         });
 
@@ -70,17 +76,22 @@ contract GatewayTest is Test {
         diamondContract = diamond;
 
         //hyperlane init
-        HyperlaneClient(address(diamondContract)).initHyperlane(1,inbox,outbox,MOCK_ADDR_2);
+        HyperlaneClient(address(diamondContract)).initHyperlane(1,address(inbox),address(outbox),MOCK_ADDR_2);
+
+        nexusSideClient = new NexusHyperlaneClient();
+        MockERC20 usdcEth = new MockERC20();
+        usdcEth.initialize("USDC Eth", "USDC.Eth");
+        nexusSideClient.setNexus(address(usdcEth));
     }
 
     function testDeposit(uint256 amountToDeposit) public {
-        GatewayFacet gateway = GatewayFacet(address(diamondContract));
+        Gateway gateway = Gateway(address(diamondContract));
         vm.assume(amountToDeposit>0 && amountToDeposit<=100e18);
         address user  = MOCK_ADDR_1;
         usdc.mint(user,100e18);
         vm.prank(user);
-        gateway.deposit(user,amountToDeposit);
-        assertEq(amountToDeposit,gateway.balance(user,token));
+        gateway.deposit(user, address(usdc), amountToDeposit, abi.encodePacked(MOCK_ADDR_3));
+        assertEq(amountToDeposit,gateway.balance(user,address(usdc)));
         //more checks to added
     }
 }

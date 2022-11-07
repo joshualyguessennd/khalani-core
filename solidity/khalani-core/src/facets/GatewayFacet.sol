@@ -7,32 +7,32 @@ import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20
 import "../libraries/LibAppStorage.sol";
 import {Custody} from "../libraries/LibCustody.sol";
 import {HyperlaneClient} from "./bridges/HyperlaneClient.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol";
 
 contract Gateway is Modifiers {
 
     event LogLockToChain(
-        string recipientAddress,
-        string recipientChain,
+        address userAddr,
         address token,
         uint256 amount
     );
 
-    function initGateway(address _psm, address _nexus) public onlyOwner {
+    function initGateway(address _psm, address _nexus) public onlyDiamondOwner {
         s.psm = _psm;
         s.nexus = _nexus;
     }
 
-    function setPSM(address _psm) public onlyOwner {
+    function setPSM(address _psm) public onlyDiamondOwner {
         s.psm = _psm;
     }
 
-    function setNexus(address _nexus) public onlyOwner {
+    function setNexus(address _nexus) public onlyDiamondOwner {
         s.nexus = _nexus;
     }
 
-    function deposit(address user, address token, uint256 amount,  bytes destination) external returns (bool) {
+    function deposit(address user, address token, uint256 amount,  bytes calldata destination) external returns (bool) {
         Custody.depositIntoCustody(user,token,amount); //check effect
-        _lock(owner, token, amount);
+        _lock(user, token, amount);
         HyperlaneClient(address(this)).sendMintMessage(token, amount); // TODO : figure out - save gas
         return true;
     }
@@ -41,22 +41,23 @@ contract Gateway is Modifiers {
         return Custody._balance(user,token);
     }
 
-    function _lock(address calldata _user,address token, uint256 amount) internal returns(uint256) {
+    function _lock(address _user,address token, uint256 amount) internal returns(uint256) {
 
-        require(_owner!=address(0));
+        require(_user!=address(0));
 
-        uint256 transferredAmount = IERC20Upgradeable(token).safeTransferFromWithFees(
-            _msgSender(),
+        SafeERC20Upgradeable.safeTransferFrom(
+            IERC20Upgradeable(token),
+            msg.sender,
             address(this),
-            _amount
+            amount
         );
 
         emit LogLockToChain(
-            _owner,
+            _user,
             token,
             amount
         );
 
-        return transferredAmount;
+        return amount;
     }
 }
