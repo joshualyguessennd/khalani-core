@@ -23,14 +23,14 @@ jobs:
           version: nightly
 
       - name: Run Forge build
-        working-directory: soldity/khalani-core
+        working-directory: solidity/khalani-core
         run: |
           forge --version
           forge build --sizes
         id: build
 
       - name: Run Forge tests
-        working-directory: soldity/khalani-core
+        working-directory: solidity/khalani-core
         run: |
           forge test -vvv
         id: test
@@ -40,8 +40,8 @@ jobs:
         continue-on-error: true
         id: slither
         with:
-          target: "soldity/khalani-core/src"
-          slither-config: "soldity/khalani-core/slither.config.json"
+          target: "solidity/khalani-core/src"
+          slither-config: "solidity/khalani-core/slither.config.json"
           solc-version: 0.8.17
           sarif: results.sarif
 
