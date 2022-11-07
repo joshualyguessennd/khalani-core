@@ -3,7 +3,7 @@ pragma solidity >=0.7.0;
 pragma experimental ABIEncoderV2;
 
 import {AbacusConnectionClient} from "@hyperlane-xyz/core/contracts/AbacusConnectionClient.sol";
-import "../../libraries/LibAppStorage.sol";
+import {Modifiers} from "../../libraries/LibAppStorage.sol";
 import "./libraries/HyerlaneFacetLibrary.sol";
 
 contract HyperlaneClient is Modifiers, AbacusConnectionClient{
@@ -15,6 +15,19 @@ contract HyperlaneClient is Modifiers, AbacusConnectionClient{
    * @param _destination The ID of the chain we're sending the message to.
    * @param _recipient The address of the recipient we're sending the message to.
    */
+    function initHyperlane(uint32 _khalaDomain , address _khalaInbox) external onlyOwner{
+        s.khalaDomain = _khalaDomain;
+        s.khalaInbox - _khalaInbox;
+    }
+
+    function setKhalaDomain(uint32 _khalaDomain) external onlyOwner {
+        s.khalaDomain = _khalaDomain;
+    }
+
+    function setKhalaInbox(address _khalaInbox) external onlyOwner {
+        s.khalaInbox = _khalaInbox;
+    }
+
     function sendMintMessage(address _token, uint256 _amount) onlyGateway {
         HyperlaneStorage storage s = HyperlaneFacetLibrary.hyperlaneStorage();
         require(_token!=address(0x0) , "token address can not be null");
