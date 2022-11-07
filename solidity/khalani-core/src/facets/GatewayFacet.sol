@@ -33,7 +33,7 @@ contract Gateway is Modifiers {
     function deposit(address user, address token, uint256 amount,  bytes destination) external returns (bool) {
         Custody.depositIntoCustody(user,token,amount); //check effect
         _lock(owner, token, amount);
-        HyperlaneClient.sendMintMessage(token, amount);
+        HyperlaneClient(address(this)).sendMintMessage(token, amount); // TODO : figure out - save gas
         return true;
     }
 

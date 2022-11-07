@@ -16,7 +16,7 @@ contract Nexus is INexus{
     address private usdcavax;
     address private usdceth;
     address public vault;
-    mapping(uint32=>mapping(address=>address)) private chainTokenRepresentation;
+    mapping(uint32=>mapping(address=>address)) private chainTokenRepresentation; //{ eth -> { { usdc -> usdc.eth} , . . . . }, {avax -> {usdc -> usdc.avax } , . . .} }
 
     constructor(address _vault) {
         owner = msg.sender;
@@ -25,10 +25,12 @@ contract Nexus is INexus{
     ///modifier
     modifier onlyOwner() {
         require(owner == _msgSender(), "caller not the owner");
+        _;
     }
 
     modifier onlyGateway() {
         require(gateway == _msgSender(), "caller not gateway");
+        _;
     }
 
     /// STATE CHANGING METHODS
