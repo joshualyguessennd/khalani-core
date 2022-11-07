@@ -1,23 +1,24 @@
-// SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.1;
 
-library LibCustody {
-    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("khalini.custody.storage");
+import "./LibAppStorage.sol";
 
-    struct CustodyStorage{
-        address gateway;
-        uint256 number;
+library Custody {
+    event Deposit(address indexed _owner, uint256 indexed _amount);
+    event Withdraw(address indexed _owner, uint256 indexed _amount);
 
-        /// @dev stores all user balances
-        mapping(address => uint) balances;
+    function depositIntoCustody(address _user,address _token, uint256 _amount) internal returns (bool) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        s.balances[_user][_token] += _amount;
+        emit Deposit(_user, _amount);
+        return true;
     }
 
-
-
-    function custodyStorage() internal pure returns (CustodyStorage storage ds) {
-        bytes32 position = DIAMOND_STORAGE_POSITION;
-        assembly {
-            ds.slot := position
-        }
+    function withdrawFromCustody(address _user, address _token, uint256 _amount) internal returns (bool) {
+        AppStorage storage s  =  LibAppStorage.diamondStorage();
+        require(s.balances[_user][_token]>=_amount,"CS_InsufficientBalance");
+        s.balances[_user][_token] -= _amount;
+        emit Withdraw(_user,_amount);
+        return true;
     }
 }

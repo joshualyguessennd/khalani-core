@@ -5,13 +5,10 @@ import "../interfaces/ICustody.sol" ;
 import "../interfaces/IAMB.sol" ;
 // import "./utils/Errors.sol" ;
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-
-contract Gateway {
-    address public owner;
-    address public custody;
-    address public psm;
-    address public nexus;
-    address public bridge;
+import "../libraries/LibAppStorage.sol";
+import {Custody} from "../libraries/LibCustody.sol";
+import {HyperlaneClient} from "./bridges/HyperlaneClient.sol";
+contract Gateway is Modifiers {
 
     event LogLockToChain(
         string recipientAddress,
@@ -20,43 +17,27 @@ contract Gateway {
         uint256 amount
     );
 
-    constructor(address _bridge, address _custody) {
-        owner = msg.sender;
-        custody = _custody;
-        bridge = _bridge;
+    function initGateway(address _psm, address _nexus) public onlyOwner {
+        s.psm = _psm;
+        s.nexus = _nexus;
     }
 
-    function initGateway(address _bridge, address _custody) {
-
+    function setPSM(address _psm) public onlyOwner {
+        s.psm = _psm;
     }
 
-    function setCustody(address _custody) public {
-        custody = _custody;
-    }
-
-    function setPSM(address _psm) public {
-        psm = _psm;
-    }
-
-    function setNexus(address _nexus) public {
-        nexus = _nexus;
+    function setNexus(address _nexus) public onlyOwner {
+        s.nexus = _nexus;
     }
 
     function deposit(address user, address token, uint256 amount,  bytes destination) external returns (bool) {
-        _lock(_owner, _destination, token, amount);
-        _transferFromCustody(user,amount);
+        Custody.depositIntoCustody(user,token,amount); //check effect
+        _lock(owner, token, amount);
+        HyperlaneClient.sendMintMessage(token, amount);
         return true;
     }
 
-    function _transferToCustody(address _owner,  uint256 _amount) private returns (bool) {
-        return ICustody(custody).deposit(_owner, _amount);
-    }
-
-    function _transferFromCustody(address _owner,  uint256 _amount) private returns (bool) {
-        return ICustody(custody).withdraw(_owner,_amount);
-    }
-
-    function _lock(address calldata _owner, address calldata _destination,address token, uint256 amount) internal returns(uint256) {
+    function _lock(address calldata _user,address token, uint256 amount) internal returns(uint256) {
 
         require(_owner!=address(0));
 
@@ -68,7 +49,6 @@ contract Gateway {
 
         emit LogLockToChain(
             _owner,
-            _destination,
             token,
             amount
         );
