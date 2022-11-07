@@ -16,20 +16,23 @@ contract HyperlaneClient is Modifiers, AbacusConnectionClient{
    * @param _recipient The address of the recipient we're sending the message to.
    */
     function initHyperlane(uint32 _khalaDomain , address _khalaInbox) external onlyOwner{
-        s.khalaDomain = _khalaDomain;
-        s.khalaInbox - _khalaInbox;
+        HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
+        hs.khalaDomain = _khalaDomain;
+        hs.khalaInbox - _khalaInbox;
     }
 
     function setKhalaDomain(uint32 _khalaDomain) external onlyOwner {
-        s.khalaDomain = _khalaDomain;
+        HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
+        hs.khalaDomain = _khalaDomain;
     }
 
     function setKhalaInbox(address _khalaInbox) external onlyOwner {
-        s.khalaInbox = _khalaInbox;
+        HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
+        hs.khalaInbox = _khalaInbox;
     }
 
     function sendMintMessage(address _token, uint256 _amount) onlyGateway {
-        HyperlaneStorage storage s = HyperlaneFacetLibrary.hyperlaneStorage();
+        HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         require(_token!=address(0x0) , "token address can not be null");
         bytes memory _message = abi.encode(_token,_amount);
         _outbox().dispatch (
@@ -37,6 +40,6 @@ contract HyperlaneClient is Modifiers, AbacusConnectionClient{
                 s.khalaInbox ,
                 _message
             );
-        emit MintMessageSent(s.khalaDomain, s.khalaInbox,_message);
+        emit MintMessageSent(hs.khalaDomain, hs.khalaInbox, _message);
     }
 }

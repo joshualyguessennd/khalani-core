@@ -5,7 +5,6 @@ struct AppStorage {
     address gateway;
     address psm;
     address nexus;
-    address bridge;
     mapping(address => (address => uint256)) balances; // user -> USDC -> balance
 }
 
