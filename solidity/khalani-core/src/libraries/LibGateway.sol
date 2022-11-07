@@ -16,5 +16,4 @@ library LibGateway {
             ds.slot := position
         }
     }
-
 }

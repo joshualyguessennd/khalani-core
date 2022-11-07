@@ -4,8 +4,10 @@ pragma experimental ABIEncoderV2;
 
 import "./balancer/vault/interfaces/IVault.sol";
 import "./balancer/vault/interfaces/IERC20.sol";
+import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
+import "./interfaces/INexus.sol";
 
-contract Nexus {
+contract Nexus is INexus{
     address public owner;
     address public custody;
     address public psm;
@@ -14,10 +16,21 @@ contract Nexus {
     address private usdcavax;
     address private usdceth;
     address public vault;
+    mapping(uint32=>mapping(address=>address)) private chainTokenRepresentation; //{ eth -> { { usdc -> usdc.eth} , . . . . }, {avax -> {usdc -> usdc.avax } , . . .} }
 
     constructor(address _vault) {
         owner = msg.sender;
         vault = _vault;
+    }
+    ///modifier
+    modifier onlyOwner() {
+        require(owner == _msgSender(), "caller not the owner");
+        _;
+    }
+
+    modifier onlyGateway() {
+        require(gateway == _msgSender(), "caller not gateway");
+        _;
     }
 
     /// STATE CHANGING METHODS
@@ -53,11 +66,17 @@ contract Nexus {
         IVault(vault).exitPool(_poolId, _sender, _recipient, _request);
     }
 
-    function _mintUSDCeth() private {}
+    function addTokenRepresentationMapping(
+        uint32 domain,
+        address token,
+        address tokenRepresentation
+    ) public onlyOwner {
+        chainTokenRepresentation[domain][token] = tokenRepresentation;
+    }
 
-    function _mintUSDCavax() private {}
-
-    function _burnUSDCeth() private {}
-
-    function _burnUSDCavax() private {}
+    function mintToken(uint32 origin, address token, uint256 amount) public onlyGateway returns (bool) {
+        address tokenToMint = chainTokenRepresentation[origin][token];
+        ERC20PresetMinterPauser(tokenToMint).mint(gateway,amount);
+        return true;
+    }
 }

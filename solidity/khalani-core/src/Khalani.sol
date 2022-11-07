@@ -21,7 +21,7 @@ struct DiamondArgs {
     bytes initCalldata;
 }
 
-contract Khalini {
+contract Khalani {
 
     constructor(IDiamondCut.FacetCut[] memory _diamondCut, DiamondArgs memory _args) payable {
         require(_args.owner!=address(0), "owner must not be 0x0");
@@ -35,6 +35,7 @@ contract Khalini {
         ds.supportedInterfaces[type(IERC165).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
+
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
 
     }
@@ -50,9 +51,7 @@ contract Khalini {
         }
         // get facet from function selector
         address facet = ds.facetAddressAndSelectorPosition[msg.sig].facetAddress;
-        if(facet == address(0)) {
-            revert FunctionNotFound(msg.sig);
-        }
+        require(facet != address(0), "Diamond: Function does not exist");
         // Execute external function from facet using delegatecall and return any value.
         assembly {
             // copy function selector and any arguments
