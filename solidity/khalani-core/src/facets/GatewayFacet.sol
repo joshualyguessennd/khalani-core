@@ -37,6 +37,10 @@ contract Gateway is Modifiers {
         return true;
     }
 
+    function balance(address user, address token) external returns (uint256) {
+        return Custody._balance(user,token);
+    }
+
     function _lock(address calldata _user,address token, uint256 amount) internal returns(uint256) {
 
         require(_owner!=address(0));

@@ -15,10 +15,21 @@ contract HyperlaneClient is Modifiers, AbacusConnectionClient{
    * @param _destination The ID of the chain we're sending the message to.
    * @param _recipient The address of the recipient we're sending the message to.
    */
-    function initHyperlane(uint32 _khalaDomain , address _khalaInbox) external onlyOwner{
+    function initHyperlane(uint32 _khalaDomain ,
+        address _khalaInbox,
+        address _abacusConnectionManager,
+        address _interchainGasPaymaster)
+        external onlyOwner {
+
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         hs.khalaDomain = _khalaDomain;
         hs.khalaInbox - _khalaInbox;
+
+        __AbacusConnectionClient_initialize(
+            _abacusConnectionManager,
+            _interchainGasPaymaster
+        );
+
     }
 
     function setKhalaDomain(uint32 _khalaDomain) external onlyOwner {

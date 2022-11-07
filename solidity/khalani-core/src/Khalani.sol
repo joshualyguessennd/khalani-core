@@ -21,7 +21,7 @@ struct DiamondArgs {
     bytes initCalldata;
 }
 
-contract Khalini {
+contract Khalani {
 
     constructor(IDiamondCut.FacetCut[] memory _diamondCut, DiamondArgs memory _args) payable {
         require(_args.owner!=address(0), "owner must not be 0x0");

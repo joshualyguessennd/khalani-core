@@ -21,4 +21,9 @@ library Custody {
         emit Withdraw(_user,_amount);
         return true;
     }
+
+    function _balance(address _user, address _token) internal view returns (uint256){
+        AppStorage storage s  =  LibAppStorage.diamondStorage();
+        return s.balances[_user][_token];
+    }
 }
