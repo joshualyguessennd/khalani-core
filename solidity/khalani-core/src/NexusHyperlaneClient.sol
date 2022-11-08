@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import {AbacusConnectionClient}  from "@hyperlane-xyz/core/contracts/AbacusConnectionClient.sol";
 import {INexus} from "./interfaces/INexus.sol";
-import "../lib/hyperlane-monorepo/solidity/interfaces/IMessageRecipient.sol";
+import "../hyperlane-monorepo/solidity/interfaces/IMessageRecipient.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 
 contract NexusHyperlaneClient is IMessageRecipient {

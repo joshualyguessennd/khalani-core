@@ -35,6 +35,13 @@ contract GatewayTest is Test {
         return diamond;
     }
 
+
+    struct DiamondArgs {
+        address owner;
+        address init;
+        bytes initCalldata;
+    }
+
     function setUp() public {
 
         usdc = new MockERC20();

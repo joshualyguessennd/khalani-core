@@ -4,6 +4,3 @@
 [submodule "solidity/khalani-core/lib/openzeppelin-contracts-upgradeable"]
 	path = solidity/khalani-core/lib/openzeppelin-contracts-upgradeable
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
-[submodule "solidity/khalani-core/lib/hyperlane-monorepo"]
-	path = solidity/khalani-core/lib/hyperlane-monorepo
-	url = https://github.com/tvl-labs/hyperlane-monorepo
