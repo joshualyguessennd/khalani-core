@@ -47,7 +47,7 @@ contract Gateway is Modifiers {
 
         SafeERC20Upgradeable.safeTransferFrom(
             IERC20Upgradeable(token),
-            msg.sender,
+            _user,
             address(this),
             amount
         );

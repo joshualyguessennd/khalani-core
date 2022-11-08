@@ -17,6 +17,7 @@ import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 contract GatewayTest is Test {
     Khalani public diamondContract;
     MockERC20 usdc;
+    MockERC20 usdcEth;
 
     MockOutbox outbox;
     MockInbox inbox;
@@ -60,9 +61,10 @@ contract GatewayTest is Test {
 
 
         Gateway gatewayFacet = new Gateway();
-        bytes4[] memory gatewayFacetfunctionSelectors = new bytes4[](2);
+        bytes4[] memory gatewayFacetfunctionSelectors = new bytes4[](3);
         gatewayFacetfunctionSelectors[0] = gatewayFacet.deposit.selector;
         gatewayFacetfunctionSelectors[1] = gatewayFacet.initGateway.selector;
+        gatewayFacetfunctionSelectors[2] = gatewayFacet.balance.selector;
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(gatewayFacet),
         action: IDiamond.FacetCutAction.Add,
@@ -86,24 +88,26 @@ contract GatewayTest is Test {
             "" //initializer data
         );
         diamondContract = diamond;
+        diamondContract.setGateway(address(gatewayFacet));
 
         //hyperlane init
-        HyperlaneClient(address(diamondContract)).initHyperlane(1,address(inbox),address(outbox),MOCK_ADDR_2);
+        HyperlaneClient(address(diamondContract)).initHyperlane(2,address(outbox),address(nexusSideClient));
 
-        nexusSideClient = new NexusHyperlaneClient();
-        MockERC20 usdcEth = new MockERC20();
+        nexusSideClient = new NexusHyperlaneClient(address(inbox));
+        usdcEth = new MockERC20();
         usdcEth.initialize("USDC Eth", "USDC.Eth");
         nexusSideClient.setNexus(address(usdcEth));
     }
 
     function testDeposit(uint256 amountToDeposit) public {
-        Gateway gateway = Gateway(address(diamondContract));
         vm.assume(amountToDeposit>0 && amountToDeposit<=100e18);
         address user  = MOCK_ADDR_1;
         usdc.mint(user,100e18);
         vm.prank(user);
-        gateway.deposit(user, address(usdc), amountToDeposit, abi.encodePacked(MOCK_ADDR_3));
-        assertEq(amountToDeposit,gateway.balance(user,address(usdc)));
+        usdc.approve(address(diamondContract),100e18);
+        Gateway(address(diamondContract)).deposit(user, address(usdc), amountToDeposit, abi.encodePacked(MOCK_ADDR_3));
+        //inbox.processNextPendingMessage();
+        assertEq(amountToDeposit,Gateway(address (diamondContract)).balance(user,address(usdc)));
         //more checks to added
     }
 }

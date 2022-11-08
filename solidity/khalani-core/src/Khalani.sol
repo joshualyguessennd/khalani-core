@@ -9,6 +9,7 @@ import "./libraries/LibOwnership.sol";
 import "./libraries/LibDiamondStorage.sol";
 import "./interfaces/IERC165.sol";
 import "./interfaces/IERC173.sol";
+import "./libraries/LibAppStorage.sol";
 
 // This is used in diamond constructor
 // more arguments are added to this struct
@@ -19,7 +20,7 @@ struct DiamondArgs {
     bytes initCalldata;
 }
 
-contract Khalani {
+contract Khalani is Modifiers {
 
     constructor(IDiamondCut.FacetCut[] memory _diamondCut, DiamondArgs memory _args) payable {
         require(_args.owner!=address(0), "owner must not be 0x0");
@@ -38,6 +39,10 @@ contract Khalani {
 
     }
 
+    //setter
+    function setGateway(address _gateway) external onlyDiamondOwner {
+        s.gateway = _gateway;
+    }
     // Find facet for function that is called and execute the
     // function if a facet is found and return any value.
     fallback() external payable {

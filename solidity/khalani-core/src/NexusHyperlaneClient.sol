@@ -6,15 +6,20 @@ import {AbacusConnectionClient}  from "@hyperlane-xyz/core/contracts/AbacusConne
 import {INexus} from "./interfaces/INexus.sol";
 import "../hyperlane-monorepo/solidity/interfaces/IMessageRecipient.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
+import "@hyperlane-xyz/core/interfaces/IInbox.sol";
 
 contract NexusHyperlaneClient is IMessageRecipient {
     using TypeCasts for bytes32;
+    IInbox inbox;
+
 
     address private gateway;
     address private nexus;
     address private owner;
 
-    constructor() {
+
+    constructor(address _inbox) {
+        inbox = IInbox(_inbox);
         owner = msg.sender;
     }
 

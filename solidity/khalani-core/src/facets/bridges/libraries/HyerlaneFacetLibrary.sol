@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.0;
+import "@hyperlane-xyz/core/interfaces/IOutbox.sol";
 
 struct HyperlaneStorage {
     uint32 khalaDomain;
     address khalaInbox;
+    address outbox;
 }
 
 library HyperlaneFacetLibrary {

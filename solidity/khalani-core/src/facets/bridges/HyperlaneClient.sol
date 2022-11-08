@@ -2,37 +2,29 @@
 pragma solidity >=0.7.0;
 pragma abicoder v2;
 
-import {AbacusConnectionClient} from "@hyperlane-xyz/core/contracts/AbacusConnectionClient.sol";
+import "@hyperlane-xyz/core/interfaces/IOutbox.sol";
 import {Modifiers} from "../../libraries/LibAppStorage.sol";
 import "./libraries/HyerlaneFacetLibrary.sol";
 import "../../../hyperlane-monorepo/solidity/interfaces/IMessageRecipient.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 
-contract HyperlaneClient is Modifiers, AbacusConnectionClient, IMessageRecipient{
+contract HyperlaneClient is Modifiers, IMessageRecipient{
+
     ///events
     event MintMessageSent(uint32 destination, address hostInbox, bytes message);
 
     /**
    * @notice Sends message to an address on a remote chain.
    * @param _khalaDomain The ID of the chain we're sending the message to.
+   * @param _outbox The ID of the chain we're sending the message to.
    * @param _khalaInbox The address of the recipient we're sending the message to.
-   * @param _abacusConnectionManager The address of Hyperlane's abacus connection manager.
-   * @param _interchainGasPaymaster gas paymaster
    */
-    function initHyperlane(uint32 _khalaDomain ,
-        address _khalaInbox,
-        address _abacusConnectionManager,
-        address _interchainGasPaymaster)
+    function initHyperlane(uint32 _khalaDomain , address _outbox, address _khalaInbox)
         external onlyDiamondOwner {
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         hs.khalaDomain = _khalaDomain;
+        hs.outbox = _outbox;
         hs.khalaInbox = _khalaInbox;
-
-        __AbacusConnectionClient_initialize(
-            _abacusConnectionManager,
-            _interchainGasPaymaster
-        );
-
     }
 
     function setKhalaDomain(uint32 _khalaDomain) external onlyDiamondOwner {
@@ -45,11 +37,16 @@ contract HyperlaneClient is Modifiers, AbacusConnectionClient, IMessageRecipient
         hs.khalaInbox = _khalaInbox;
     }
 
-    function sendMintMessage(address _token, uint256 _amount) public onlyGateway {
+    function setHyperlaneOutBox(address _outbox) external onlyDiamondOwner {
+        HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
+        hs.outbox = _outbox;
+    }
+
+    function sendMintMessage(address _token, uint256 _amount) public {
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         require(_token!=address(0x0) , "token address can not be null");
         bytes memory _message = abi.encode(_token,_amount);
-        _outbox().dispatch (
+        IOutbox(hs.outbox).dispatch (
                 hs.khalaDomain,
                 TypeCasts.addressToBytes32(hs.khalaInbox),
                 _message
