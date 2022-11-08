@@ -55,6 +55,7 @@ jobs:
          # sarif_file: ${{ steps.slither.outputs.sarif }}
             
       - name: Running coverage
+        working-directory: solidity/khalani-core
         run: forge coverage --report lcov
 
       - name: Report coverage
