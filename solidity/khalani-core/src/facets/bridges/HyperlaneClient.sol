@@ -5,7 +5,7 @@ pragma abicoder v2;
 import {AbacusConnectionClient} from "@hyperlane-xyz/core/contracts/AbacusConnectionClient.sol";
 import {Modifiers} from "../../libraries/LibAppStorage.sol";
 import "./libraries/HyerlaneFacetLibrary.sol";
-import "../../../lib/hyperlane-monorepo/solidity/interfaces/IMessageRecipient.sol";
+import "../../../hyperlane-monorepo/solidity/interfaces/IMessageRecipient.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 
 contract HyperlaneClient is Modifiers, AbacusConnectionClient, IMessageRecipient{

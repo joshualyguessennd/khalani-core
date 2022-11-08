@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 import "forge-std/Test.sol";
 import "../src/interfaces/IDiamondCut.sol";
-import {Khalani} from "../src/Khalani.sol";
+import "../src/Khalani.sol";
 import "../src/facets/DiamondCutFacet.sol";
 import {HyperlaneClient} from "../src/facets/bridges/HyperlaneClient.sol";
 import "./Mock/MockERC20.sol";
@@ -30,16 +30,21 @@ contract GatewayTest is Test {
     address MOCK_ADDR_5 = 0x0000000000000000000000000000000000000005;
 
     function deployDiamond() internal returns (Khalani) {
+        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
         DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
-        Khalani diamond = new Khalani(address(this), address(diamondCutFacet));
+        bytes4[] memory diamondCutFacetfunctionSelectors = new bytes4[](1);
+        diamondCutFacetfunctionSelectors[0] = diamondCutFacet.diamondCut.selector;
+        cut[0] = IDiamond.FacetCut({
+        facetAddress: address(diamondCutFacet),
+        action: IDiamond.FacetCutAction.Add,
+        functionSelectors: diamondCutFacetfunctionSelectors
+        });
+        DiamondArgs memory args;
+        args.owner  = address(this);
+        args.init = address(0);
+        args.initCalldata = "";
+        Khalani diamond = new Khalani(cut, args);
         return diamond;
-    }
-
-
-    struct DiamondArgs {
-        address owner;
-        address init;
-        bytes initCalldata;
     }
 
     function setUp() public {
