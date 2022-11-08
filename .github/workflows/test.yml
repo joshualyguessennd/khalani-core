@@ -53,4 +53,13 @@ jobs:
         id: upload-1
         with:
           sarif_file: ${{ steps.slither.outputs.sarif }}
+            
+      - name: Running coverage
+        run: forge coverage --report lcov
+
+      - name: Report coverage
+        uses: romeovs/lcov-reporter-action@v0.2.21
+        with:
+          lcov-file: ./lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
