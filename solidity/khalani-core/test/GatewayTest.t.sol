@@ -16,6 +16,15 @@ import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "../src/Nexus.sol";
 
 contract GatewayTest is Test {
+
+    event LogLockToChain(
+        address userAddr,
+        address token,
+        uint256 amount
+    );
+
+    event InterchainMessageReceived(uint32 _origin, address _sender, bytes _message);
+
     Khalani public diamondContract;
     MockERC20 usdc;
     MockERC20 usdcEth;
@@ -112,7 +121,12 @@ contract GatewayTest is Test {
         usdc.mint(user,100e18);
         vm.prank(user);
         usdc.approve(address(diamondContract),100e18);
+        vm.expectEmit(false,false,false,true);
+        emit LogLockToChain(user, address(usdc), amountToDeposit);
         Gateway(address(diamondContract)).deposit(user, address(usdc), amountToDeposit, abi.encodePacked(MOCK_ADDR_3));
+        bytes memory _message = abi.encode(address (usdc), amountToDeposit);
+        vm.expectEmit(false,false,false,true);
+        emit InterchainMessageReceived(1, address(diamondContract), _message);
         inbox.processNextPendingMessage();
         assertEq(amountToDeposit,Gateway(address (diamondContract)).balance(user,address(usdc)));
         assertEq(usdcEth.balanceOf(address(nexusSideClient)),amountToDeposit); // to be minted to ?
