@@ -13,6 +13,7 @@ import "@hyperlane-xyz/core/contracts/mock/MockOutbox.sol";
 import {Gateway} from "../src/facets/GatewayFacet.sol";
 import "../src/NexusHyperlaneClient.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
+import "../src/Nexus.sol";
 
 contract GatewayTest is Test {
     Khalani public diamondContract;
@@ -90,13 +91,19 @@ contract GatewayTest is Test {
         diamondContract = diamond;
         diamondContract.setGateway(address(gatewayFacet));
 
-        //hyperlane init
-        HyperlaneClient(address(diamondContract)).initHyperlane(2,address(outbox),address(nexusSideClient));
-
         nexusSideClient = new NexusHyperlaneClient(address(inbox));
         usdcEth = new MockERC20();
-        usdcEth.initialize("USDC Eth", "USDC.Eth");
-        nexusSideClient.setNexus(address(usdcEth));
+        address nexusOwner = address(nexusSideClient);
+        address nexusGateway = address(nexusSideClient);
+        vm.prank(nexusOwner);
+        Nexus nexus = new Nexus(MOCK_ADDR_4);
+        vm.startPrank(nexusOwner);
+        nexus.addTokenRepresentationMapping(1,address(usdc),address(usdcEth));
+        nexus.setGateway(nexusGateway);
+        vm.stopPrank();
+        nexusSideClient.setNexus(address (nexus));
+        //hyperlane init
+        HyperlaneClient(address(diamondContract)).initHyperlane(2,address(outbox),address(nexusSideClient));
     }
 
     function testDeposit(uint256 amountToDeposit) public {
@@ -106,8 +113,9 @@ contract GatewayTest is Test {
         vm.prank(user);
         usdc.approve(address(diamondContract),100e18);
         Gateway(address(diamondContract)).deposit(user, address(usdc), amountToDeposit, abi.encodePacked(MOCK_ADDR_3));
-        //inbox.processNextPendingMessage();
+        inbox.processNextPendingMessage();
         assertEq(amountToDeposit,Gateway(address (diamondContract)).balance(user,address(usdc)));
+        assertEq(usdcEth.balanceOf(address(nexusSideClient)),amountToDeposit); // to be minted to ?
         //more checks to added
     }
 }

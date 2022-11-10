@@ -37,7 +37,7 @@ contract Gateway is Modifiers {
         return true;
     }
 
-    function balance(address user, address token) external returns (uint256) {
+    function balance(address user, address token) external view returns (uint256) {
         return Custody._balance(user,token);
     }
 
