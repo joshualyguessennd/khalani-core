@@ -16,4 +16,9 @@ contract MockERC20 is ERC20Upgradeable {
     function mint(address receiver, uint256 amount) public {
         _mint(receiver, amount);
     }
+
+
+    function burn(address _account, uint256 _value) public {
+        _burn(_account, _value);
+    }
 }

@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
 
 contract USDCeth is ERC20PresetMinterPauser {
     // address public nexus;
+    address gateway;
 
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
@@ -16,12 +17,8 @@ contract USDCeth is ERC20PresetMinterPauser {
         grantRole(BURNER_ROLE, msg.sender);
     }
 
-    function mint(address _to, uint256 _amount) public override {
-        super._mint(_to, _amount);
-    }
-
-    function burn(uint256 value) public override {
-        require(hasRole(BURNER_ROLE, msg.sender), "Unauthorised");
-        super._burn(msg.sender, value);
+    function burn(address _account, uint256 _value) public {
+        require(hasRole(BURNER_ROLE, msg.sender), "ERC20PresetMinterPauser: must have burner role to burn");
+        super._burn(_account, _value);
     }
 }

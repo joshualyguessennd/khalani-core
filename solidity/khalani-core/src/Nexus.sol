@@ -74,14 +74,15 @@ contract Nexus is INexus{
         chainTokenRepresentation[domain][token] = tokenRepresentation;
     }
 
-    function mintToken(uint32 origin, address token, uint256 amount) public override onlyGateway returns (bool) {
+    function mintToken(uint32 origin,address account, address token, uint256 amount) public override onlyGateway returns (bool) {
         address tokenToMint = chainTokenRepresentation[origin][token];
-        IERC20Minter(tokenToMint).mint(gateway,amount);
+        IERC20Minter(tokenToMint).mint(account,amount);
         return true;
     }
 
-    function burnToken(uint32 origin, address token, uint256 amount) public override onlyGateway returns (bool) {
-        //TBI
+    function burnToken(uint32 origin, address account, address token, uint256 amount) public override onlyGateway returns (bool) {
+        address tokenToBurn = chainTokenRepresentation[origin][token];
+        IERC20Minter(tokenToBurn).burn(account,amount);
         return true;
     }
 }

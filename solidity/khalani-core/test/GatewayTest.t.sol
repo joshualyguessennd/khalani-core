@@ -71,10 +71,11 @@ contract GatewayTest is Test {
 
 
         Gateway gatewayFacet = new Gateway();
-        bytes4[] memory gatewayFacetfunctionSelectors = new bytes4[](3);
+        bytes4[] memory gatewayFacetfunctionSelectors = new bytes4[](4);
         gatewayFacetfunctionSelectors[0] = gatewayFacet.deposit.selector;
         gatewayFacetfunctionSelectors[1] = gatewayFacet.initGateway.selector;
         gatewayFacetfunctionSelectors[2] = gatewayFacet.balance.selector;
+        gatewayFacetfunctionSelectors[3] = gatewayFacet.withdraw.selector;
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(gatewayFacet),
         action: IDiamond.FacetCutAction.Add,
@@ -83,9 +84,10 @@ contract GatewayTest is Test {
 
         HyperlaneClient hyperlaneFacet = new HyperlaneClient();
 
-        bytes4[] memory hyperlaneFacetfunctionSelectors = new bytes4[](2);
+        bytes4[] memory hyperlaneFacetfunctionSelectors = new bytes4[](3);
         hyperlaneFacetfunctionSelectors[0] = hyperlaneFacet.initHyperlane.selector;
         hyperlaneFacetfunctionSelectors[1] = hyperlaneFacet.sendMintMessage.selector;
+        hyperlaneFacetfunctionSelectors[2] = hyperlaneFacet.sendBurnMessage.selector;
         cut[1] = IDiamond.FacetCut({
         facetAddress: address(hyperlaneFacet),
         action: IDiamond.FacetCutAction.Add,
@@ -123,13 +125,32 @@ contract GatewayTest is Test {
         usdc.approve(address(diamondContract),100e18);
         vm.expectEmit(false,false,false,true);
         emit LogLockToChain(user, address(usdc), amountToDeposit);
-        Gateway(address(diamondContract)).deposit(user, address(usdc), amountToDeposit, abi.encodePacked(MOCK_ADDR_3));
+        vm.prank(user);
+        Gateway(address(diamondContract)).deposit(address(usdc), amountToDeposit, abi.encodePacked(MOCK_ADDR_3));
         bytes memory _message = abi.encode(address (usdc), amountToDeposit);
-        vm.expectEmit(false,false,false,true);
+        vm.expectEmit(false,false,false,false);
         emit InterchainMessageReceived(1, address(diamondContract), _message);
         inbox.processNextPendingMessage();
         assertEq(amountToDeposit,Gateway(address (diamondContract)).balance(user,address(usdc)));
-        assertEq(usdcEth.balanceOf(address(nexusSideClient)),amountToDeposit); // to be minted to ?
-        //more checks to added
+        assertEq(usdcEth.balanceOf(address(user)),amountToDeposit); // to be minted to ?
+    }
+
+    function testWithdraw(uint256 amountToDeposit, uint256 amountToWithdraw) public {
+        vm.assume(amountToDeposit>0 && amountToDeposit<=100e18);
+        amountToWithdraw = bound(amountToWithdraw,0,amountToDeposit);
+        address user  = MOCK_ADDR_1;
+        usdc.mint(user,100e18);
+        vm.prank(user);
+        usdc.approve(address(diamondContract),100e18);
+        vm.expectEmit(false,false,false,true);
+        emit LogLockToChain(user, address(usdc), amountToDeposit);
+        vm.prank(user);
+        Gateway(address(diamondContract)).deposit(address(usdc), amountToDeposit, abi.encodePacked(MOCK_ADDR_3));
+        inbox.processNextPendingMessage();
+        vm.prank(user);
+        Gateway(address(diamondContract)).withdraw(address(usdc), amountToWithdraw);
+        inbox.processNextPendingMessage();
+        assertEq(amountToDeposit-amountToWithdraw,Gateway(address (diamondContract)).balance(user,address(usdc)));
+        assertEq(usdcEth.balanceOf(address(user)),amountToDeposit-amountToWithdraw);
     }
 }

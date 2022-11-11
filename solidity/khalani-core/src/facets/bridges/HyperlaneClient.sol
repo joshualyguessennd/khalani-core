@@ -7,11 +7,16 @@ import {Modifiers} from "../../libraries/LibAppStorage.sol";
 import "./libraries/HyerlaneFacetLibrary.sol";
 import "../../../hyperlane-monorepo/solidity/interfaces/IMessageRecipient.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
+import "../GatewayFacet.sol";
+import "forge-std/console.sol";
 
 contract HyperlaneClient is Modifiers, IMessageRecipient{
 
     ///events
     event MintMessageSent(uint32 destination, address hostInbox, bytes message);
+    event BurnMessageSent(uint32 destintion, address hostInbox, bytes _message);
+    //enum
+    enum MirrorTokenAction {Mint, Burn}
 
     /**
    * @notice Sends message to an address on a remote chain.
@@ -42,16 +47,29 @@ contract HyperlaneClient is Modifiers, IMessageRecipient{
         hs.outbox = _outbox;
     }
 
-    function sendMintMessage(address _token, uint256 _amount) public {
+    function sendMintMessage(address _user, address _token, uint256 _amount) public {
+        console.log("message sender is" , msg.sender);
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
-        require(_token!=address(0x0) , "token address can not be null");
-        bytes memory _message = abi.encode(_token,_amount);
+        require(_token != address(0x0), "token address can not be null");
+        bytes memory _message = abi.encode(MirrorTokenAction.Mint,_user,_token,_amount);
         IOutbox(hs.outbox).dispatch (
                 hs.khalaDomain,
                 TypeCasts.addressToBytes32(hs.khalaInbox),
                 _message
             );
         emit MintMessageSent(hs.khalaDomain, hs.khalaInbox, _message);
+    }
+
+    function sendBurnMessage(address _user, address _token, uint256 _amount) public {
+        HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
+        require(_token != address (0x0), "token address can not be null");
+        bytes memory _message = abi.encode(MirrorTokenAction.Burn,_user, _token, _amount);
+        IOutbox(hs.outbox).dispatch (
+            hs.khalaDomain,
+            TypeCasts.addressToBytes32(hs.khalaInbox),
+            _message
+        );
+        emit BurnMessageSent(hs.khalaDomain, hs.khalaInbox, _message);
     }
 
     /**
@@ -65,12 +83,7 @@ contract HyperlaneClient is Modifiers, IMessageRecipient{
         bytes32 _sender,
         bytes memory _message
     ) external override {
-        (address token, uint256 amount) = abi.decode(
-            _message,
-            (address,uint256)
-        );
-        //TBI
-        //INexus(nexus).mintToken(_origin,token,amount);
-        //emit InterchainMessageReceived(_origin, _sender, _message);
+        (address _account, address _token, uint256 _amount) = abi.decode(_message,(address, address, uint256));
+        //TODO :
     }
 }
