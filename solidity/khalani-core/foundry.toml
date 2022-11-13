@@ -11,7 +11,7 @@ remappings = [
     'ds-test/=lib/forge-std/lib/ds-test/src/',
     'forge-std/=lib/forge-std/src/',
     'hardhat/=node_modules/hardhat/',
-    '@hyperlane-xyz/core=lib/hyperlane-monorepo/solidity/',
+    '@hyperlane-xyz/core=hyperlane-monorepo/solidity/',
 ]
 
 [rpc_endpoints]

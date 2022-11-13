@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 // A loupe is a small magnifying glass used to look at diamonds.
 // These functions look at diamonds

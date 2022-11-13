@@ -1,6 +1,9 @@
 name: test
 
-on: workflow_dispatch
+on:
+  push:
+  pull_request:
+    branches: [ "main" ]
 
 env:
   FOUNDRY_PROFILE: ci
@@ -23,14 +26,14 @@ jobs:
           version: nightly
 
       - name: Run Forge build
-        working-directory: soldity/khalani-core
+        working-directory: solidity/khalani-core
         run: |
           forge --version
           forge build --sizes
         id: build
 
       - name: Run Forge tests
-        working-directory: soldity/khalani-core
+        working-directory: solidity/khalani-core
         run: |
           forge test -vvv
         id: test
@@ -40,14 +43,24 @@ jobs:
         continue-on-error: true
         id: slither
         with:
-          target: "soldity/khalani-core/src"
-          slither-config: "soldity/khalani-core/slither.config.json"
-          solc-version: 0.8.17
+          target: "solidity/khalani-core/src"
+          slither-config: "solidity/khalani-core/slither.config.json"
+          solc-version: 0.7.6
           sarif: results.sarif
 
-      - name: Upload SARIF file for core
-        uses: github/codeql-action/upload-sarif@v2
-        id: upload-1
+     # - name: Upload SARIF file for core
+      #  uses: github/codeql-action/upload-sarif@v2
+       # id: upload-1
+        #with:
+         # sarif_file: ${{ steps.slither.outputs.sarif }}
+            
+      - name: Running coverage
+        working-directory: solidity/khalani-core
+        run: forge coverage --report lcov
+
+      - name: Report coverage
+        uses: romeovs/lcov-reporter-action@v0.2.21
         with:
-          sarif_file: ${{ steps.slither.outputs.sarif }}
+          lcov-file: solidity/khalani-core/lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 

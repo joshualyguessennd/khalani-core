@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.1;
+pragma solidity ^0.7.0;
 
+import {LibDiamond} from "./LibDiamond.sol";
 struct AppStorage {
     address gateway;
     address psm;
     address nexus;
-    mapping(address => (address => uint256)) balances; // user -> USDC -> balance
+    mapping(address => mapping(address => uint256)) balances; // user -> USDC -> balance
 }
 
 library LibAppStorage {
@@ -19,13 +20,13 @@ library LibAppStorage {
 contract Modifiers {
     AppStorage internal s;
 
-    modifier onlyOwner() {
+    modifier onlyDiamondOwner() {
         LibDiamond.enforceIsContractOwner();
         _;
     }
 
     modifier onlyGateway() {
-        require(s.gateway == _msgSender(),"LibAppStorage: only Gateway can call this function");
+        require(s.gateway == msg.sender,"LibAppStorage: only Gateway can call this function");
         _;
     }
 }

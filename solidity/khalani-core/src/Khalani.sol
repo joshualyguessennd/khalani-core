@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 import "./interfaces/IDiamondCut.sol";
 import "./interfaces/IDiamondLoupe.sol";
@@ -8,9 +9,7 @@ import "./libraries/LibOwnership.sol";
 import "./libraries/LibDiamondStorage.sol";
 import "./interfaces/IERC165.sol";
 import "./interfaces/IERC173.sol";
-
-// When no function exists for function called
-error FunctionNotFound(bytes4 _functionSelector);
+import "./libraries/LibAppStorage.sol";
 
 // This is used in diamond constructor
 // more arguments are added to this struct
@@ -21,7 +20,7 @@ struct DiamondArgs {
     bytes initCalldata;
 }
 
-contract Khalani {
+contract Khalani is Modifiers {
 
     constructor(IDiamondCut.FacetCut[] memory _diamondCut, DiamondArgs memory _args) payable {
         require(_args.owner!=address(0), "owner must not be 0x0");
@@ -40,11 +39,15 @@ contract Khalani {
 
     }
 
+    //setter
+    function setGateway(address _gateway) external onlyDiamondOwner {
+        s.gateway = _gateway;
+    }
     // Find facet for function that is called and execute the
     // function if a facet is found and return any value.
     fallback() external payable {
-        LibDiamond.DiamondStorage storage ds;
-        bytes32 position = LibDiamond.DIAMOND_STORAGE_POSITION;
+        LibDiamondStorage.DiamondStorage storage ds;
+        bytes32 position = LibDiamondStorage.DIAMOND_STORAGE_POSITION;
         // get diamond storage
         assembly {
             ds.slot := position

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.0;
-
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 /******************************************************************************\
 * Author: Nick Mudge <nick@perfectabstractions.com>, Twitter/Github: @mudgen
 * EIP-2535 Diamonds

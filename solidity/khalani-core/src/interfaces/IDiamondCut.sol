@@ -1,18 +1,10 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 import { IDiamond } from "./IDiamond.sol";
 
 interface IDiamondCut is IDiamond {
-
-    enum FacetCutAction {Add, Replace, Remove}
-    // Add=0, Replace=1, Remove=2
-
-    struct FacetCut {
-        address facetAddress;
-        FacetCutAction action;
-        bytes4[] functionSelectors;
-    }
 
     /// @notice Add/replace/remove any number of functions and optionally execute
     ///         a function with delegatecall

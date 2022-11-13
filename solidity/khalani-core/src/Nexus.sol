@@ -4,8 +4,8 @@ pragma experimental ABIEncoderV2;
 
 import "./balancer/vault/interfaces/IVault.sol";
 import "./balancer/vault/interfaces/IERC20.sol";
-import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
 import "./interfaces/INexus.sol";
+import "./interfaces/IERC20Minter.sol";
 
 contract Nexus is INexus{
     address public owner;
@@ -24,12 +24,12 @@ contract Nexus is INexus{
     }
     ///modifier
     modifier onlyOwner() {
-        require(owner == _msgSender(), "caller not the owner");
+        require(owner == msg.sender, "caller not the owner");
         _;
     }
 
     modifier onlyGateway() {
-        require(gateway == _msgSender(), "caller not gateway");
+        require(gateway == msg.sender, "caller not gateway");
         _;
     }
 
@@ -74,9 +74,14 @@ contract Nexus is INexus{
         chainTokenRepresentation[domain][token] = tokenRepresentation;
     }
 
-    function mintToken(uint32 origin, address token, uint256 amount) public onlyGateway returns (bool) {
+    function mintToken(uint32 origin, address token, uint256 amount) public override onlyGateway returns (bool) {
         address tokenToMint = chainTokenRepresentation[origin][token];
-        ERC20PresetMinterPauser(tokenToMint).mint(gateway,amount);
+        IERC20Minter(tokenToMint).mint(gateway,amount);
+        return true;
+    }
+
+    function burnToken(uint32 origin, address token, uint256 amount) public override onlyGateway returns (bool) {
+        //TBI
         return true;
     }
 }
