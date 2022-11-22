@@ -3,8 +3,10 @@ pragma solidity ^0.7.0;
 
 import {LibDiamond} from "../../diamondCommons/libraries/LibDiamond.sol";
     struct AppStorage {
-    mapping(address => mapping(address => uint256)) balances; // user -> USDC -> balance
-}
+        mapping(address => mapping(address => uint256)) balances; // user -> USDC -> balance
+        mapping(address => address) mirrorToChainToken; //usdceth -> usdc
+        //mapping(address => bool) panToken; // checks if token is pan
+    }
 
 library LibAppStorage {
     function diamondStorage() internal pure returns (AppStorage storage ds) {
@@ -21,5 +23,4 @@ contract Modifiers {
         LibDiamond.enforceIsContractOwner();
         _;
     }
-
 }

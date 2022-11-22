@@ -3,13 +3,13 @@ pragma solidity ^0.7.0;
 import "@hyperlane-xyz/core/interfaces/IOutbox.sol";
 
 struct HyperlaneStorage {
-    uint32 khalaDomain;
-    address khalaInbox;
-    address outbox;
+    uint32 axonDomain;
+    address hyperlaneOutbox;
+    address axonInbox;
 }
 
 library HyperlaneFacetLibrary {
-    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("bridges.hyperlane.storage");
+    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("nexus.bridges.hyperlane.storage");
 
 
     function hyperlaneStorage() internal pure returns (HyperlaneStorage storage ds) {
