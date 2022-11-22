@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.0;
 
-import "../interfaces/ICustody.sol" ;
-import "../interfaces/IAMB.sol" ;
+import "../../interfaces/ICustody.sol" ;
+import "../../interfaces/IAMB.sol" ;
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "../libraries/LibAppStorage.sol";
 import {Custody} from "../libraries/LibCustody.sol";
@@ -23,18 +23,18 @@ contract Gateway is Modifiers {
         uint256 amount
     );
 
-    function initGateway(address _psm, address _nexus) public onlyDiamondOwner {
-        s.psm = _psm;
-        s.nexus = _nexus;
-    }
-
-    function setPSM(address _psm) public onlyDiamondOwner {
-        s.psm = _psm;
-    }
-
-    function setNexus(address _nexus) public onlyDiamondOwner {
-        s.nexus = _nexus;
-    }
+//    function initGateway(address _psm, address _nexus) public onlyDiamondOwner {
+//        s.psm = _psm;
+//        s.nexus = _nexus;
+//    }
+//
+//    function setPSM(address _psm) public onlyDiamondOwner {
+//        s.psm = _psm;
+//    }
+//
+//    function setNexus(address _nexus) public onlyDiamondOwner {
+//        s.nexus = _nexus;
+//    }
 
     function deposit(address token, uint256 amount,  bytes calldata destination) external returns (bool) {
         //deposit in custody

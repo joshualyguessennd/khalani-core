@@ -26,4 +26,5 @@ library Custody {
         AppStorage storage s  =  LibAppStorage.diamondStorage();
         return s.balances[_user][_token];
     }
+
 }

@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.0;
 
-import {LibDiamond} from "./LibDiamond.sol";
-struct AppStorage {
-    address gateway;
-    address psm;
-    address nexus;
+import {LibDiamond} from "../../diamondCommons/libraries/LibDiamond.sol";
+    struct AppStorage {
     mapping(address => mapping(address => uint256)) balances; // user -> USDC -> balance
 }
 
@@ -25,8 +22,4 @@ contract Modifiers {
         _;
     }
 
-    modifier onlyGateway() {
-        require(s.gateway == msg.sender,"LibAppStorage: only Gateway can call this function");
-        _;
-    }
 }

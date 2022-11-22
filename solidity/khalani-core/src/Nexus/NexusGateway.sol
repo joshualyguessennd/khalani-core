@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.7.0;
+
+import "./libraries/LibAppStorage.sol";
+import "../diamondCommons/interfaces/IDiamondCut.sol";
+import "../diamondCommons/interfaces/IDiamondLoupe.sol";
+import "../diamondCommons/interfaces/IERC173.sol";
+import "../diamondCommons/interfaces/IERC165.sol";
+import "../diamondCommons/libraries/LibDiamondStorage.sol";
 pragma abicoder v2;
 
-import "./interfaces/IDiamondCut.sol";
-import "./interfaces/IDiamondLoupe.sol";
-import "./libraries/LibDiamond.sol";
-import "./libraries/LibOwnership.sol";
-import "./libraries/LibDiamondStorage.sol";
-import "./interfaces/IERC165.sol";
-import "./interfaces/IERC173.sol";
-import "./libraries/LibAppStorage.sol";
+
 
 // This is used in diamond constructor
 // more arguments are added to this struct
 // this avoids stack too deep errors
-struct DiamondArgs {
-    address owner;
-    address init;
-    bytes initCalldata;
-}
+    struct DiamondArgs {
+        address owner;
+        address init;
+        bytes initCalldata;
+    }
 
-contract Khalani is Modifiers {
+contract Nexus is Modifiers {
 
     constructor(IDiamondCut.FacetCut[] memory _diamondCut, DiamondArgs memory _args) payable {
         require(_args.owner!=address(0), "owner must not be 0x0");
@@ -39,10 +39,7 @@ contract Khalani is Modifiers {
 
     }
 
-    //setter
-    function setGateway(address _gateway) external onlyDiamondOwner {
-        s.gateway = _gateway;
-    }
+
     // Find facet for function that is called and execute the
     // function if a facet is found and return any value.
     fallback() external payable {
@@ -57,20 +54,20 @@ contract Khalani is Modifiers {
         require(facet != address(0), "Diamond: Function does not exist");
         // Execute external function from facet using delegatecall and return any value.
         assembly {
-            // copy function selector and any arguments
+        // copy function selector and any arguments
             calldatacopy(0, 0, calldatasize())
-             // execute function call using the facet
+        // execute function call using the facet
             let result := delegatecall(gas(), facet, 0, calldatasize(), 0, 0)
-            // get any return value
+        // get any return value
             returndatacopy(0, 0, returndatasize())
-            // return any return value or error back to the caller
+        // return any return value or error back to the caller
             switch result
-                case 0 {
-                    revert(0, returndatasize())
-                }
-                default {
-                    return(0, returndatasize())
-                }
+            case 0 {
+                revert(0, returndatasize())
+            }
+            default {
+                return(0, returndatasize())
+            }
         }
     }
 

@@ -2,23 +2,22 @@
 
 pragma solidity ^0.7.0;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
 
-contract MockERC20 is ERC20Upgradeable {
-    function initialize(string memory _name, string memory _symbol)
-    public
-    initializer
-    {
-        __ERC20_init(_name, _symbol);
-        _mint(msg.sender, 100000e18);
+contract OmniUSD is ERC20PresetMinterPauser {
+
+    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
+
+    constructor(string memory name, string memory symbol) ERC20PresetMinterPauser (name, symbol) {
+
     }
 
-    function mint(address receiver, uint256 amount) public {
-        _mint(receiver, amount);
+    function mint(address _to, uint256 _amount) public override {
+        super._mint(_to, _amount);
     }
 
-
-    function burn(address _account, uint256 _value) public {
-        _burn(_account, _value);
+    function burn(uint256 value) public override {
+        require(hasRole(BURNER_ROLE, msg.sender), "Unauthorised");
+        super._burn(msg.sender, value);
     }
 }

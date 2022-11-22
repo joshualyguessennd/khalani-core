@@ -3,7 +3,7 @@ pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
 library LibDiamondStorage {
-    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("khalini.standard.diamond.storage");
+    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("diamond.standard.diamond.storage");
 
     struct FacetAddressAndSelectorPosition {
         address facetAddress;

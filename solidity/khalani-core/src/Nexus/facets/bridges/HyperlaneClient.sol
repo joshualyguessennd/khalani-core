@@ -5,7 +5,7 @@ pragma abicoder v2;
 import "@hyperlane-xyz/core/interfaces/IOutbox.sol";
 import {Modifiers} from "../../libraries/LibAppStorage.sol";
 import "./libraries/HyerlaneFacetLibrary.sol";
-import "../../../hyperlane-monorepo/solidity/interfaces/IMessageRecipient.sol";
+import "../../../../hyperlane-monorepo/solidity/interfaces/IMessageRecipient.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "../GatewayFacet.sol";
 import "forge-std/console.sol";
