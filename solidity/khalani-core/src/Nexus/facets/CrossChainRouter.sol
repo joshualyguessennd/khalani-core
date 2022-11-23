@@ -33,7 +33,7 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
         uint256 amount
     );
 
-    event LogRelease(
+    event LogReleaseToken(
         address user,
         address token,
         uint256 amount
@@ -98,6 +98,32 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
         }
     }
 
+    /**
+    * @notice release tokens / mint pan tokens and calls hyperlane to bridge tokens and execute call on `toContract` with `data`
+    * mirror token will be minted on axon chain
+    * @param token - addresses of tokens to deposit
+    * @param amount - amounts of tokens to deposit
+    * @param isPan - true when token in a Pan token ex - pan, panEth, panBTC
+    * @param toContract - contract address to execute crossChain call on
+    * @param data - call data to be executed on `toContract`
+    **/
+    function withdrawTokenAndCall(
+        address token,
+        address account,
+        uint256 amount,
+        bool isPan,
+        bytes32 toContract,
+        bytes calldata data
+    ) public nonReentrant {
+        require(data.length>0,"empty call data");
+
+        //call hyperlane
+        if(isPan) {
+            assert(IERC20Mintable(token).mint(account, amount));
+        } else {
+            _release(account, token, amount);
+        }
+    }
     // internal functions
 
     function _lock(
