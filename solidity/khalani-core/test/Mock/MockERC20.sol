@@ -16,9 +16,13 @@ contract MockERC20 is ERC20PresetMinterPauser {
         super._mint(_to, _amount);
     }
 
-    function burn(uint256 value) public override {
-        require(hasRole(BURNER_ROLE, msg.sender), "Unauthorised");
-        super._burn(msg.sender, value);
+    function burn(address _account, uint256 value) public {
+        //require(hasRole(BURNER_ROLE, msg.sender), "Unauthorised");
+        super._burn(_account, value);
     }
 
+    function burn(uint256 value) public override {
+        //require(hasRole(BURNER_ROLE, msg.sender), "Unauthorised");
+        super._burn(msg.sender, value);
+    }
 }

@@ -124,7 +124,7 @@ contract AxonReceiver is Modifiers, ReentrancyGuard {
             chainId
         );
         s.balances[account][token] -= amount;
-        assert(IERC20Mintable(token).burn(address(this), amount));
+        IERC20Mintable(token).burn(address(this), amount);
         _proxyCall(toContract,data);
     }
 

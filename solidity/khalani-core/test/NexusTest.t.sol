@@ -14,7 +14,7 @@ import "../src/diamondCommons/sharedFacets/DiamondCutFacet.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 
 
-contract NexusDeposit is Test {
+contract NexusTest is Test {
     //Eth
     Nexus ethNexus;
     MockERC20 usdc;
@@ -61,9 +61,10 @@ contract NexusDeposit is Test {
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](2);
 
         CrossChainRouter ccr = new CrossChainRouter();
-        bytes4[] memory ccrFunctionSelectors = new bytes4[](2);
+        bytes4[] memory ccrFunctionSelectors = new bytes4[](3);
         ccrFunctionSelectors[0] = ccr.depositTokenAndCall.selector;
         ccrFunctionSelectors[1] = ccr.depositMultiTokenAndCall.selector;
+        ccrFunctionSelectors[2] = ccr.withdrawTokenAndCall.selector;
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(ccr),
         action: IDiamond.FacetCutAction.Add,
@@ -157,5 +158,26 @@ contract NexusDeposit is Test {
         hyperlaneInboxAxon.processNextPendingMessage();
         assertEq(usdcEth.balanceOf(address(axonNexus)),amount1);
         assertEq(usdtEth.balanceOf(address(axonNexus)),amount2);
+    }
+
+    function testWithDrawAndCall(uint256 amountToDeposit, uint256 amountToWithdraw) public {
+        vm.assume(amountToDeposit>0 && amountToDeposit<=100e18);
+        vm.assume(amountToWithdraw>0 && amountToWithdraw<amountToDeposit);
+        address user = MOCK_ADDR_1;
+        usdc.mint(MOCK_ADDR_1,100e18);
+        vm.startPrank(user);
+        usdc.approve(address(ethNexus),amountToDeposit);
+        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit,false,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
+        vm.stopPrank();
+        hyperlaneInboxAxon.processNextPendingMessage();
+        assertEq(usdcEth.balanceOf(address(axonNexus)),amountToDeposit);
+        assertEq(usdc.balanceOf(address(ethNexus)),amountToDeposit);
+        assertEq(usdc.balanceOf(user),100e18 - amountToDeposit);
+        vm.prank(user);
+        CrossChainRouter(address(ethNexus)).withdrawTokenAndCall(address(usdc),amountToWithdraw,false,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
+        hyperlaneInboxAxon.processNextPendingMessage();
+        assertEq(usdcEth.balanceOf(address(axonNexus)),amountToDeposit - amountToWithdraw);
+        assertEq(usdc.balanceOf(address(ethNexus)),amountToDeposit - amountToWithdraw);
+        assertEq(usdc.balanceOf(user),100e18-amountToDeposit+amountToWithdraw);
     }
 }
