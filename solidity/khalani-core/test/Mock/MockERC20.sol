@@ -20,4 +20,5 @@ contract MockERC20 is ERC20PresetMinterPauser {
         require(hasRole(BURNER_ROLE, msg.sender), "Unauthorised");
         super._burn(msg.sender, value);
     }
+
 }
