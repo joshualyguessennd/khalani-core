@@ -12,14 +12,24 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
         address indexed token,
         address indexed user,
         uint256 amount,
-        uint256 toChainId
+        bytes32 toContract,
+        bytes data
+    );
+
+    event LogDepositMultiTokenAndCall(
+        address[] indexed token,
+        address indexed user,
+        uint256[] amounts,
+        bytes32 toContract,
+        bytes data
     );
 
     event LogWithdrawTokenAndCall(
         address indexed token,
         address indexed user,
-        address indexed amount,
-        uint256 fromChainId
+        uint256 amount,
+        bytes32 toContract,
+        bytes data
     );
 
     event LogCrossChainMsg(
@@ -28,13 +38,13 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
     );
 
     event LogLockToken(
-        address user,
+        address indexed user,
         address token,
         uint256 amount
     );
 
     event LogReleaseToken(
-        address user,
+        address indexed user,
         address token,
         uint256 amount
     );
@@ -56,7 +66,13 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
         bytes calldata data
     ) public nonReentrant {
         require(data.length > 0 , "empty call data");
-
+        emit LogDepositAndCall(
+            token,
+            msg.sender,
+            amount,
+            toContract,
+            data
+        );
         //call hyperlane / bridge
 
         if(isPan) {
@@ -87,6 +103,13 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
 
         require(tokens.length == amounts.length && tokens.length == isPan.length, "array length do not match");
 
+        emit LogDepositMultiTokenAndCall (
+            tokens,
+            msg.sender,
+            amounts,
+            toContract,
+            data
+        );
         //call hyperlane / bridge
 
         for(uint i=0; i<tokens.length;i++) {
@@ -109,21 +132,27 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
     **/
     function withdrawTokenAndCall(
         address token,
-        address account,
         uint256 amount,
         bool isPan,
         bytes32 toContract,
         bytes calldata data
     ) public nonReentrant {
         require(data.length>0,"empty call data");
-
+        emit LogWithdrawTokenAndCall(
+            token,
+            msg.sender,
+            amount,
+            toContract,
+            data
+        );
         //call hyperlane
         if(isPan) {
-            assert(IERC20Mintable(token).mint(account, amount));
+            assert(IERC20Mintable(token).mint(msg.sender, amount));
         } else {
-            _release(account, token, amount);
+            _release(msg.sender, token, amount);
         }
     }
+
     // internal functions
 
     function _lock(
@@ -156,6 +185,12 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
         SafeERC20Upgradeable.safeTransfer(
             IERC20Upgradeable(_token),
             _user,
+            _amount
+        );
+
+        emit LogReleaseToken(
+            _user,
+            _token,
             _amount
         );
     }
