@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 import "@hyperlane-xyz/core/contracts/mock/MockOutbox.sol";
 import "@hyperlane-xyz/core/contracts/mock/MockInbox.sol";
-import "./mock/MockERC20.sol";
+import "./Mock/MockERC20.sol";
 import "../src/Nexus/facets/CrossChainRouter.sol";
 import "../src/Nexus/facets/bridges/AxonHyperlaneHandlerFacet.sol";
 import "forge-std/Test.sol";
