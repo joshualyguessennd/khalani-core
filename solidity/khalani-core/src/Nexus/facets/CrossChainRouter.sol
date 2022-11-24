@@ -5,6 +5,7 @@ import "../libraries/LibAppStorage.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20Mintable} from "../../interfaces/IERC20Mintable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol";
+import "./bridges/HyperlaneFacet.sol";
 
 contract CrossChainRouter is Modifiers, ReentrancyGuard {
 
@@ -73,7 +74,15 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
             toContract,
             data
         );
-        //call hyperlane / bridge
+
+        HyperlaneFacet(address(this)).bridgeTokenAndCallViaHyperlane(
+            LibAppStorage.TokenBridgeAction.Deposit,
+            msg.sender,
+            token,
+            amount,
+            toContract,
+            data
+        );
 
         if(isPan) {
             assert(IERC20Mintable(token).burn(msg.sender,amount));
@@ -110,7 +119,15 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
             toContract,
             data
         );
-        //call hyperlane / bridge
+
+        HyperlaneFacet(address(this)).bridgeMultiTokenAndCallViaHyperlane(
+            LibAppStorage.TokenBridgeAction.DepositMulti,
+            msg.sender,
+            tokens,
+            amounts,
+            toContract,
+            data
+        );
 
         for(uint i=0; i<tokens.length;i++) {
             if(isPan[i]) {
@@ -145,7 +162,16 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
             toContract,
             data
         );
-        //call hyperlane
+
+        HyperlaneFacet(address(this)).bridgeTokenAndCallViaHyperlane(
+            LibAppStorage.TokenBridgeAction.Withdraw,
+            msg.sender,
+            token,
+            amount,
+            toContract,
+            data
+        );
+
         if(isPan) {
             assert(IERC20Mintable(token).mint(msg.sender, amount));
         } else {

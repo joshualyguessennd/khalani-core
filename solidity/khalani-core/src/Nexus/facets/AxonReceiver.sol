@@ -52,7 +52,7 @@ contract AxonReceiver is Modifiers, ReentrancyGuard {
         uint256 amount,
         uint32 chainId,
         bytes32 toContract,
-        bytes calldata data
+        bytes memory data
     ) internal nonReentrant {
         require(data.length > 0 , "empty call data");
         LogDepositAndCall(
@@ -81,7 +81,7 @@ contract AxonReceiver is Modifiers, ReentrancyGuard {
         uint256[] memory amounts,
         uint32 chainId,
         bytes32 toContract,
-        bytes calldata data
+        bytes memory data
     ) internal nonReentrant {
         require(data.length > 0 , "empty call data");
         require(tokens.length == amounts.length, "array length do not match");
@@ -113,7 +113,7 @@ contract AxonReceiver is Modifiers, ReentrancyGuard {
         uint256 amount,
         uint32 chainId,
         bytes32 toContract,
-        bytes calldata data
+        bytes memory data
     ) internal nonReentrant {
         require(data.length>0,"empty call data");
         require(s.balances[account][token] >= amount, "CCR_InsufficientBalance");
@@ -128,7 +128,7 @@ contract AxonReceiver is Modifiers, ReentrancyGuard {
         _proxyCall(toContract,data);
     }
 
-    function _proxyCall(bytes32 toContract, bytes calldata data) internal {
+    function _proxyCall(bytes32 toContract, bytes memory data) internal {
         (bool success, bytes memory returnData) = TypeCasts.bytes32ToAddress(toContract).call(data);
         if (!success) {
             assembly {

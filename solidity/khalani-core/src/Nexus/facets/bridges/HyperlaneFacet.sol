@@ -4,11 +4,13 @@ pragma solidity ^0.7.0;
 import "../../libraries/LibAppStorage.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./libraries/HyperlaneFacetLibrary.sol";
+import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
+import "@hyperlane-xyz/core/interfaces/IOutbox.sol";
+
 
 
 // Hyperlane Facet for non Axon chain
 contract HyperlaneFacet is Modifiers, ReentrancyGuard {
-    //calls[i].to.call(calls[i].data);
 
     function initHyperlaneFacet(
         uint32 _axonDomain,
@@ -21,15 +23,39 @@ contract HyperlaneFacet is Modifiers, ReentrancyGuard {
         hs.axonInbox = _axonInbox;
     }
 
-//    function bridgeTokenAndCallViaHyperlane(
-//        address token,
-//        uint256 amount,
-//        bool isPan,
-//        bytes32 calldata toContract,
-//        bytes calldata data
-//    ) public nonReentrant {
-//        Hyperla
-//    }
+    function bridgeTokenAndCallViaHyperlane(
+        LibAppStorage.TokenBridgeAction action,
+        address account,
+        address token,
+        uint256 amount,
+        bytes32  toContract,
+        bytes calldata data
+    ) public nonReentrant {
+        HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
+        bytes memory message = abi.encode(account,token,amount,toContract,data);
+        bytes memory messageWithAction = abi.encode(action,message);
+        IOutbox(hs.hyperlaneOutbox).dispatch(
+            hs.axonDomain,
+            TypeCasts.addressToBytes32(hs.axonInbox),
+            messageWithAction
+        );
+    }
 
-
+    function bridgeMultiTokenAndCallViaHyperlane(
+        LibAppStorage.TokenBridgeAction action,
+        address account,
+        address[] memory tokens,
+        uint256[] memory amounts,
+        bytes32 toContract,
+        bytes calldata data
+    ) public nonReentrant {
+        HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
+        bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
+        bytes memory messageWithAction = abi.encode(action,message);
+        IOutbox(hs.hyperlaneOutbox).dispatch(
+            hs.axonDomain,
+            TypeCasts.addressToBytes32(hs.axonInbox),
+            messageWithAction
+        );
+    }
 }

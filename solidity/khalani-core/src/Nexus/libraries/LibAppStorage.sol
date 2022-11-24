@@ -10,6 +10,13 @@ import {LibDiamond} from "../../diamondCommons/libraries/LibDiamond.sol";
     }
 
 library LibAppStorage {
+
+    enum TokenBridgeAction{
+        Deposit,
+        DepositMulti,
+        Withdraw
+    }
+
     function diamondStorage() internal pure returns (AppStorage storage ds) {
         assembly {
             ds.slot := 0
