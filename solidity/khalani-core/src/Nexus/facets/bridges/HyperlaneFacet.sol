@@ -30,7 +30,7 @@ contract HyperlaneFacet is Modifiers, ReentrancyGuard {
         uint256 amount,
         bytes32  toContract,
         bytes calldata data
-    ) public nonReentrant {
+    ) public {
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         bytes memory message = abi.encode(account,token,amount,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);
@@ -48,7 +48,7 @@ contract HyperlaneFacet is Modifiers, ReentrancyGuard {
         uint256[] memory amounts,
         bytes32 toContract,
         bytes calldata data
-    ) public nonReentrant {
+    ) public {
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);

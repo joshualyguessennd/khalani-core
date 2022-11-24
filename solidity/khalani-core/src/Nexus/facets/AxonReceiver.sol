@@ -62,7 +62,7 @@ contract AxonReceiver is Modifiers, ReentrancyGuard {
             chainId
         );
         s.balances[account][token] += amount;
-        assert(IERC20Mintable(token).mint(address(this),amount));
+        IERC20Mintable(token).mint(address(this),amount);
         _proxyCall(toContract,data);
     }
 
@@ -93,7 +93,7 @@ contract AxonReceiver is Modifiers, ReentrancyGuard {
         );
         for(uint i=0; i<tokens.length;i++) {
             s.balances[account][tokens[i]] += amounts[i];
-            assert(IERC20Mintable(tokens[i]).mint(address(this),amounts[i]));
+            IERC20Mintable(tokens[i]).mint(address(this),amounts[i]);
         }
         _proxyCall(toContract,data);
     }

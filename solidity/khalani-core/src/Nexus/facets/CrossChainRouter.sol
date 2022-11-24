@@ -85,7 +85,7 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
         );
 
         if(isPan) {
-            assert(IERC20Mintable(token).burn(msg.sender,amount));
+            IERC20Mintable(token).burn(msg.sender,amount);
         } else{
             _lock(msg.sender, token, amount);
         }
@@ -131,7 +131,7 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
 
         for(uint i=0; i<tokens.length;i++) {
             if(isPan[i]) {
-                assert(IERC20Mintable(tokens[i]).burn(msg.sender,amounts[i]));
+                IERC20Mintable(tokens[i]).burn(msg.sender,amounts[i]);
             } else {
                 _lock(msg.sender, tokens[i], amounts[i]);
             }
@@ -173,7 +173,7 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
         );
 
         if(isPan) {
-            assert(IERC20Mintable(token).mint(msg.sender, amount));
+            IERC20Mintable(token).mint(msg.sender, amount);
         } else {
             _release(msg.sender, token, amount);
         }
