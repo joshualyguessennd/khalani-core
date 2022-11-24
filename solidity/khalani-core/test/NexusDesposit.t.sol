@@ -61,8 +61,9 @@ contract NexusDeposit is Test {
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](2);
 
         CrossChainRouter ccr = new CrossChainRouter();
-        bytes4[] memory ccrFunctionSelectors = new bytes4[](1);
+        bytes4[] memory ccrFunctionSelectors = new bytes4[](2);
         ccrFunctionSelectors[0] = ccr.depositTokenAndCall.selector;
+        ccrFunctionSelectors[1] = ccr.depositMultiTokenAndCall.selector;
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(ccr),
         action: IDiamond.FacetCutAction.Add,
@@ -70,9 +71,11 @@ contract NexusDeposit is Test {
         });
 
         HyperlaneFacet hyperlaneFacet = new HyperlaneFacet();
-        bytes4[] memory hyperlaneFacetfunctionSelectors = new bytes4[](2);
+        bytes4[] memory hyperlaneFacetfunctionSelectors = new bytes4[](3);
         hyperlaneFacetfunctionSelectors[0] = hyperlaneFacet.bridgeTokenAndCallViaHyperlane.selector;
-        hyperlaneFacetfunctionSelectors[1] = hyperlaneFacet.initHyperlaneFacet.selector;
+        hyperlaneFacetfunctionSelectors[1] = hyperlaneFacet.bridgeMultiTokenAndCallViaHyperlane.selector;
+        hyperlaneFacetfunctionSelectors[2] = hyperlaneFacet.initHyperlaneFacet.selector;
+
         cut[1] = IDiamond.FacetCut({
         facetAddress: address(hyperlaneFacet),
         action: IDiamond.FacetCutAction.Add,
@@ -121,5 +124,38 @@ contract NexusDeposit is Test {
         vm.stopPrank();
         hyperlaneInboxAxon.processNextPendingMessage();
         assertEq(usdcEth.balanceOf(address(axonNexus)),amountToDeposit);
+    }
+
+    function testDepositMultiTokenAndCall(uint256 amount1, uint256 amount2) public {
+        vm.assume(amount1>0 && amount1<=100e18 && amount2>0 && amount2<=100e18);
+        address user = MOCK_ADDR_1;
+        MockERC20 usdt = new MockERC20("USDT", "USDT");
+        MockERC20 usdtEth =  new MockERC20("USDTEth" , "USDTETH");
+        AxonHyperlaneHandlerFacet(address (axonNexus)).addTokenMirror(1,address(usdt),address(usdtEth));
+        usdt.mint(user,100e18);
+        usdc.mint(user,100e18);
+        vm.startPrank(user);
+        usdc.approve(address(ethNexus),amount1);
+        usdt.approve(address(ethNexus),amount2);
+        address[] memory tokens = new address[](2);
+        tokens[0] = address(usdc);
+        tokens[1] = address(usdt);
+        bool[] memory isPan = new bool[](2);
+        isPan[0] = false;
+        isPan[1] = false;
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = amount1;
+        amounts[1] = amount2;
+        CrossChainRouter(address(ethNexus)).depositMultiTokenAndCall(
+            tokens,
+            amounts,
+            isPan,
+            TypeCasts.addressToBytes32(address(usdcEth)),
+            abi.encodeWithSelector(usdcEth.balanceOf.selector,user)
+        );
+        vm.stopPrank();
+        hyperlaneInboxAxon.processNextPendingMessage();
+        assertEq(usdcEth.balanceOf(address(axonNexus)),amount1);
+        assertEq(usdtEth.balanceOf(address(axonNexus)),amount2);
     }
 }
