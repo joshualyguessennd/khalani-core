@@ -9,7 +9,7 @@ pragma experimental ABIEncoderV2;
 contract AxonHyperlaneHandlerFacet is IMessageRecipient, AxonReceiver {
 
     event CrossChainMsgReceived(
-        uint32 indexed msgFrom,
+        uint32 indexed msgOriginChain,
         bytes32 indexed sender,
         bytes message
     );
@@ -27,6 +27,7 @@ contract AxonHyperlaneHandlerFacet is IMessageRecipient, AxonReceiver {
         bytes32 _sender,
         bytes memory _message
     ) external override onlyInbox {
+        emit CrossChainMsgReceived(_origin, _sender, _message);
         (LibAppStorage.TokenBridgeAction action, bytes memory executionMsg) =
         abi.decode(_message, (LibAppStorage.TokenBridgeAction,bytes));
 
