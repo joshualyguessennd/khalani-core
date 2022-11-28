@@ -231,4 +231,27 @@ contract NexusTest is Test {
         assertEq(usdc.balanceOf(user),100e18-amountToDeposit+amountToWithdraw);
     }
 
+    function testWithdrawFail(uint256 amountToDeposit, uint256 amountToWithdraw) public {
+        vm.assume(amountToWithdraw>0 && amountToWithdraw<=100e18);
+        vm.assume(amountToDeposit>0 && amountToDeposit<amountToWithdraw);
+        address user = MOCK_ADDR_1;
+        usdc.mint(MOCK_ADDR_1,100e18);
+        vm.startPrank(user);
+        usdc.approve(address(ethNexus),amountToDeposit);
+        vm.expectEmit(true, true, true, true, address(ethNexus));
+        LogWithdrawTokenAndCall(address(usdc), user, amountToWithdraw, TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
+        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit,false,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
+        vm.stopPrank();
+        hyperlaneInboxAxon.processNextPendingMessage();
+        assertEq(usdcEth.balanceOf(address(axonNexus)),amountToDeposit);
+        assertEq(usdc.balanceOf(address(ethNexus)),amountToDeposit);
+        assertEq(usdc.balanceOf(user),100e18 - amountToDeposit);
+
+        vm.expectRevert("CCR_InsufficientBalance");
+        //trying to withdraw more than available
+        vm.prank(user);
+        CrossChainRouter(address(ethNexus)).withdrawTokenAndCall(address(usdc),amountToWithdraw,false,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
+        //check if balance is still same
+        assertEq(usdc.balanceOf(user),100e18 - amountToDeposit);
+    }
 }
