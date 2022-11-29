@@ -4,6 +4,7 @@ pragma solidity ^0.7.0;
 import "../../../../hyperlane-monorepo/solidity/interfaces/IMessageRecipient.sol";
 import "../AxonReceiver.sol";
 import "../../libraries/LibAppStorage.sol";
+import "./libraries/AxonMsgHandlerLibrary.sol";
 pragma experimental ABIEncoderV2;
 
 contract AxonHyperlaneHandlerFacet is IMessageRecipient, AxonReceiver {
@@ -14,6 +15,11 @@ contract AxonHyperlaneHandlerFacet is IMessageRecipient, AxonReceiver {
         bytes message
     );
 
+    function _onlyNexus(uint32 _origin, bytes32 _sender) internal {
+        AxonMsgHandlerStorage storage ds = AxonMsgHandlerLibrary.axonMsgHandlerStorage();
+        require(ds.chainNexusMap[_origin]==_sender, "AxonHyperlaneHandler : invalid nexus");
+    }
+
     function initializeAxonHandler(address _inbox) public onlyDiamondOwner {
         s.inbox = _inbox;
     }
@@ -22,11 +28,16 @@ contract AxonHyperlaneHandlerFacet is IMessageRecipient, AxonReceiver {
         LibAccountsRegistry._addChainMirrorTokenMapping(chainDomain,token,mirrorToken);
     }
 
+    function addValidNexusForChain(uint32 chainId, bytes32 nexus) public onlyDiamondOwner{
+        AxonMsgHandlerLibrary._setChainNexusMapping(chainId,nexus);
+    }
+
     function handle(
         uint32 _origin,
         bytes32 _sender,
         bytes memory _message
     ) external override onlyInbox {
+        _onlyNexus(_origin, _sender); //keeping as function to avoid deep stack
         emit CrossChainMsgReceived(_origin, _sender, _message);
         (LibAppStorage.TokenBridgeAction action, bytes memory executionMsg) =
         abi.decode(_message, (LibAppStorage.TokenBridgeAction,bytes));

@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./libraries/HyperlaneFacetLibrary.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "@hyperlane-xyz/core/interfaces/IOutbox.sol";
-
+import "forge-std/console.sol";
 
 
 // Hyperlane Facet for non Axon chain
@@ -31,6 +31,7 @@ contract HyperlaneFacet is Modifiers, ReentrancyGuard {
         bytes32  toContract,
         bytes calldata data
     ) public {
+        console.log(msg.sender);
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         bytes memory message = abi.encode(account,token,amount,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);

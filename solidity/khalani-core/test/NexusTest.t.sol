@@ -127,10 +127,11 @@ contract NexusTest is Test {
         cut = new IDiamondCut.FacetCut[](1);
 
         AxonHyperlaneHandlerFacet axonhyperlanehandler = new AxonHyperlaneHandlerFacet();
-        bytes4[] memory axonHyperlaneFunctionSelectors = new bytes4[](3);
+        bytes4[] memory axonHyperlaneFunctionSelectors = new bytes4[](4);
         axonHyperlaneFunctionSelectors[0] = axonhyperlanehandler.initializeAxonHandler.selector;
         axonHyperlaneFunctionSelectors[1] = axonhyperlanehandler.handle.selector;
         axonHyperlaneFunctionSelectors[2] = axonhyperlanehandler.addTokenMirror.selector;
+        axonHyperlaneFunctionSelectors[3] = axonhyperlanehandler.addValidNexusForChain.selector;
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(axonhyperlanehandler),
         action: IDiamond.FacetCutAction.Add,
@@ -145,6 +146,7 @@ contract NexusTest is Test {
         );
         AxonHyperlaneHandlerFacet(address(axonNexus)).initializeAxonHandler(address (hyperlaneInboxAxon));
         AxonHyperlaneHandlerFacet(address (axonNexus)).addTokenMirror(1,address(usdc),address(usdcEth));
+        AxonHyperlaneHandlerFacet(address (axonNexus)).addValidNexusForChain(1,TypeCasts.addressToBytes32(address(ethNexus)));
     }
 
     // Tests for successful deposit and calling a contract on the other chain
@@ -281,5 +283,14 @@ contract NexusTest is Test {
         vm.startPrank(address(hyperlaneInboxAxon));
         AxonHyperlaneHandlerFacet(address(axonNexus)).handle(1,TypeCasts.addressToBytes32(address(ethNexus)),messageWithAction);
         vm.stopPrank();
+
+        //testing only nexus can pass message
+        vm.startPrank(address(hyperlaneInboxAxon));
+        vm.expectRevert("AxonHyperlaneHandler : invalid nexus");
+        AxonHyperlaneHandlerFacet(address(axonNexus)).handle(1,TypeCasts.addressToBytes32(address(MOCK_ADDR_5)),messageWithAction);
+        vm.stopPrank();
+
     }
+
+
 }
