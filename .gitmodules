@@ -7,3 +7,6 @@
 [submodule "solidity/khalani-core/lib/openzeppelin-contracts-upgradeable"]
 	path = solidity/khalani-core/lib/openzeppelin-contracts-upgradeable
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
+[submodule "solidity/khalani-core/lib/sgn-v2-contracts"]
+	path = solidity/khalani-core/lib/sgn-v2-contracts
+	url = https://github.com/celer-network/sgn-v2-contracts
