@@ -36,4 +36,9 @@ contract Modifiers {
         require(msg.sender==s.inbox,"only inbox can call");
         _;
     }
+
+    modifier validRouter() {
+        require(msg.sender == address(this), "BridgeFacet : Invalid Router");
+        _;
+    }
 }

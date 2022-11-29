@@ -268,12 +268,12 @@ contract NexusTest is Test {
     //AxonHyperlaneHandlerFacet access test
     function testAccessAxonReceiver(address caller) public {
         // caller - random address which is not hyperlane inbox
-
+        vm.assume(caller!=address(0x0) && caller!=address(hyperlaneInboxAxon));
         //constructing a valid msg
         bytes memory message = abi.encode(MOCK_ADDR_1,address(usdc),100e18,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,MOCK_ADDR_1));
         bytes memory messageWithAction = abi.encode(LibAppStorage.TokenBridgeAction.Deposit,message);
 
-        vm.assume(caller!=address(0x0) && caller!=address(hyperlaneInboxAxon));
+
         vm.startPrank(caller);
         vm.expectRevert("only inbox can call");
         AxonHyperlaneHandlerFacet(address(axonNexus)).handle(1,TypeCasts.addressToBytes32(address(ethNexus)),messageWithAction);
@@ -292,5 +292,21 @@ contract NexusTest is Test {
 
     }
 
+    function testAccessHyperlaneFacet(address caller) public {
+        vm.assume(caller!=address(0x0) && caller!=address(ethNexus));
+
+        //attempting to call hyperlane facet directly
+        vm.startPrank(caller);
+        vm.expectRevert("BridgeFacet : Invalid Router");
+        HyperlaneFacet(address(ethNexus)).bridgeTokenAndCallViaHyperlane(
+            LibAppStorage.TokenBridgeAction.Deposit,
+            caller,
+            address(usdc),
+            100e18,
+            TypeCasts.addressToBytes32(address(ethNexus)),
+            abi.encodeWithSelector(usdcEth.balanceOf.selector,caller)
+            );
+        vm.stopPrank();
+    }
 
 }

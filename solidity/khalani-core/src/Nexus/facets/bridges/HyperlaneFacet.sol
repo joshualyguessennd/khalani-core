@@ -9,7 +9,7 @@ import "@hyperlane-xyz/core/interfaces/IOutbox.sol";
 import "forge-std/console.sol";
 
 
-// Hyperlane Facet for non Axon chain
+// Hyperlane Facet for non Axon chain //TODO : Should we make this all `internal` ?
 contract HyperlaneFacet is Modifiers, ReentrancyGuard {
 
     function initHyperlaneFacet(
@@ -30,7 +30,7 @@ contract HyperlaneFacet is Modifiers, ReentrancyGuard {
         uint256 amount,
         bytes32  toContract,
         bytes calldata data
-    ) public {
+    ) public validRouter {
         console.log(msg.sender);
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         bytes memory message = abi.encode(account,token,amount,toContract,data);
@@ -49,7 +49,7 @@ contract HyperlaneFacet is Modifiers, ReentrancyGuard {
         uint256[] memory amounts,
         bytes32 toContract,
         bytes calldata data
-    ) public {
+    ) public validRouter {
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);
