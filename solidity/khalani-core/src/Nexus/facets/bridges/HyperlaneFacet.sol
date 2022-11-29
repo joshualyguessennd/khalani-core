@@ -31,7 +31,7 @@ contract HyperlaneFacet is IBridgeFacet, Modifiers, ReentrancyGuard {
         uint256 amount,
         bytes32  toContract,
         bytes calldata data
-    ) public override validRouter  {
+    ) public payable override validRouter  {
         console.log(msg.sender);
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         bytes memory message = abi.encode(account,token,amount,toContract,data);
@@ -50,7 +50,7 @@ contract HyperlaneFacet is IBridgeFacet, Modifiers, ReentrancyGuard {
         uint256[] memory amounts,
         bytes32 toContract,
         bytes calldata data
-    ) public override validRouter {
+    ) public payable override validRouter {
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);

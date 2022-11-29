@@ -10,7 +10,7 @@ interface IBridgeFacet {
         uint256 amount,
         bytes32  toContract,
         bytes calldata data
-    ) external ;
+    ) external payable ;
 
     function bridgeMultiTokenAndCall(
         LibAppStorage.TokenBridgeAction action,
@@ -19,5 +19,5 @@ interface IBridgeFacet {
         uint256[] memory amounts,
         bytes32 toContract,
         bytes calldata data
-    ) external ;
+    ) external payable ;
 }

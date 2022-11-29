@@ -55,7 +55,7 @@ contract AxonReceiver is Modifiers, ReentrancyGuard {
         bytes memory data
     ) internal nonReentrant {
         require(data.length > 0 , "empty call data");
-        LogDepositAndCall(
+        emit LogDepositAndCall(
             token,
             account,
             amount,
@@ -85,7 +85,7 @@ contract AxonReceiver is Modifiers, ReentrancyGuard {
     ) internal nonReentrant {
         require(data.length > 0 , "empty call data");
         require(tokens.length == amounts.length, "array length do not match");
-        LogDepositMultiTokenAndCall(
+        emit LogDepositMultiTokenAndCall(
             tokens,
             account,
             amounts,
@@ -117,7 +117,7 @@ contract AxonReceiver is Modifiers, ReentrancyGuard {
     ) internal nonReentrant {
         require(data.length>0,"empty call data");
         require(s.balances[account][token] >= amount, "CCR_InsufficientBalance");
-        LogWithdrawTokenAndCall(
+        emit LogWithdrawTokenAndCall(
             token,
             account,
             amount,

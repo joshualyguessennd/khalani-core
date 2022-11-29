@@ -5,7 +5,7 @@ import "./libraries/LibAppStorage.sol";
 import "../diamondCommons/interfaces/IDiamondCut.sol";
 import "../diamondCommons/interfaces/IDiamondLoupe.sol";
 import "../diamondCommons/interfaces/IERC173.sol";
-import "../diamondCommons/interfaces/IERC165.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "../diamondCommons/libraries/LibDiamondStorage.sol";
 pragma abicoder v2;
 

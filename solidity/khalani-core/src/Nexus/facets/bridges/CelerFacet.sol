@@ -8,14 +8,16 @@ import "./libraries/CelerFacetLibrary.sol";
 
 contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
 
+    constructor(address _messageBus) MessageApp(_messageBus){
+
+    }
+
     function initCelerFacet(
-        uint64 _axonDomain,
-        address _messageBus,
+        uint32 _axonDomain,
         address _axonInbox
     ) external onlyDiamondOwner {
         CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
         cs.axonDomain = _axonDomain;
-        messageBus = _messageBus;
         cs.axonInbox = _axonInbox;
     }
 
@@ -26,14 +28,15 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
         uint256 amount,
         bytes32  toContract,
         bytes calldata data
-    ) public override validRouter  {
+    ) public payable override validRouter  {
         CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
         bytes memory message = abi.encode(account,token,amount,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);
         sendMessage(
             cs.axonInbox,
             cs.axonDomain,
-            messageWithAction
+            messageWithAction,
+            msg.value
         );
     }
 
@@ -44,14 +47,15 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
         uint256[] memory amounts,
         bytes32 toContract,
         bytes calldata data
-    ) public override validRouter {
+    ) public payable override validRouter {
         CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
         bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);
         sendMessage(
             cs.axonInbox,
             cs.axonDomain,
-            messageWithAction
+            messageWithAction,
+            msg.value
         );
     }
 }

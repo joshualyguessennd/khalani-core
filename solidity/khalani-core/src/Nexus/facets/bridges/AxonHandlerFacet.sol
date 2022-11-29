@@ -8,6 +8,7 @@ import "../../libraries/LibAppStorage.sol";
 import "./libraries/AxonMsgHandlerLibrary.sol";
 import "@sgn-v2-contracts/message/framework/MessageApp.sol";
 import "@hyperlane-xyz/core/contracts/libs/Message.sol";
+import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 
 contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
 
@@ -16,6 +17,10 @@ contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
         bytes32 indexed sender,
         bytes message
     );
+
+    constructor(address _messageBus) MessageApp(_messageBus) {
+
+    }
 
     function _onlyNexus(uint32 _origin, bytes32 _sender) internal {
         AxonMsgHandlerStorage storage ds = AxonMsgHandlerLibrary.axonMsgHandlerStorage();
@@ -69,8 +74,8 @@ contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
         bytes calldata _message,
         address // executor
     ) external payable override onlyMessageBus returns (ExecutionStatus) {
-        _onlyNexus(_origin, _sender); //keeping as function to avoid deep stack
-        emit CrossChainMsgReceived(_origin, _sender, _message);
+        _onlyNexus(uint32(_origin), TypeCasts.addressToBytes32(_sender)); //keeping as function to avoid deep stack
+        emit CrossChainMsgReceived(uint32(_origin), TypeCasts.addressToBytes32(_sender), _message);
         (LibAppStorage.TokenBridgeAction action, bytes memory executionMsg) =
         abi.decode(_message, (LibAppStorage.TokenBridgeAction,bytes));
 
@@ -78,17 +83,17 @@ contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
             (address account, address[] memory tokens, uint256[] memory amounts, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
                 (address, address[], uint256[], bytes32, bytes));
             for(uint i=0; i<tokens.length; i++){
-                tokens[i] = LibAccountsRegistry._getMirrorToken(_origin,tokens[i]);
+                tokens[i] = LibAccountsRegistry._getMirrorToken(uint32(_origin),tokens[i]);
             }
-            depositMultiTokenAndCall(account,tokens,amounts,_origin,toContract,data);
+            depositMultiTokenAndCall(account,tokens,amounts,uint32(_origin),toContract,data);
         } else {
             (address account, address token, uint256 amount, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
                 (address, address, uint256, bytes32, bytes));
-            token = LibAccountsRegistry._getMirrorToken(_origin,token);
+            token = LibAccountsRegistry._getMirrorToken(uint32(_origin),token);
             if(action == LibAppStorage.TokenBridgeAction.Deposit) {
-                depositTokenAndCall(account,token,amount,_origin,toContract,data);
+                depositTokenAndCall(account,token,amount,uint32(_origin),toContract,data);
             } else if (action == LibAppStorage.TokenBridgeAction.Withdraw) {
-                withdrawTokenAndCall(account,token,amount,_origin,toContract,data);
+                withdrawTokenAndCall(account,token,amount,uint32(_origin),toContract,data);
             }
         }
         return ExecutionStatus.Success;
