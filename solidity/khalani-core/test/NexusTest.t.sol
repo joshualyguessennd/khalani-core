@@ -105,8 +105,8 @@ contract NexusTest is Test {
 
         HyperlaneFacet hyperlaneFacet = new HyperlaneFacet();
         bytes4[] memory hyperlaneFacetfunctionSelectors = new bytes4[](3);
-        hyperlaneFacetfunctionSelectors[0] = hyperlaneFacet.bridgeTokenAndCallViaHyperlane.selector;
-        hyperlaneFacetfunctionSelectors[1] = hyperlaneFacet.bridgeMultiTokenAndCallViaHyperlane.selector;
+        hyperlaneFacetfunctionSelectors[0] = hyperlaneFacet.bridgeTokenAndCall.selector;
+        hyperlaneFacetfunctionSelectors[1] = hyperlaneFacet.bridgeMultiTokenAndCall.selector;
         hyperlaneFacetfunctionSelectors[2] = hyperlaneFacet.initHyperlaneFacet.selector;
 
         cut[1] = IDiamond.FacetCut({
@@ -299,7 +299,7 @@ contract NexusTest is Test {
         //attempting to call hyperlane facet directly
         vm.startPrank(caller);
         vm.expectRevert("BridgeFacet : Invalid Router");
-        HyperlaneFacet(address(ethNexus)).bridgeTokenAndCallViaHyperlane(
+        HyperlaneFacet(address(ethNexus)).bridgeTokenAndCall(
             LibAppStorage.TokenBridgeAction.Deposit,
             caller,
             address(usdc),

@@ -75,7 +75,7 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
             data
         );
 
-        HyperlaneFacet(address(this)).bridgeTokenAndCallViaHyperlane(
+        IBridgeFacet(address(this)).bridgeTokenAndCall(
             LibAppStorage.TokenBridgeAction.Deposit,
             msg.sender,
             token,
@@ -120,7 +120,7 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
             data
         );
 
-        HyperlaneFacet(address(this)).bridgeMultiTokenAndCallViaHyperlane(
+        IBridgeFacet(address(this)).bridgeMultiTokenAndCall(
             LibAppStorage.TokenBridgeAction.DepositMulti,
             msg.sender,
             tokens,
@@ -163,7 +163,7 @@ contract CrossChainRouter is Modifiers, ReentrancyGuard {
             data
         );
 
-        HyperlaneFacet(address(this)).bridgeTokenAndCallViaHyperlane(
+        IBridgeFacet(address(this)).bridgeTokenAndCall(
             LibAppStorage.TokenBridgeAction.Withdraw,
             msg.sender,
             token,

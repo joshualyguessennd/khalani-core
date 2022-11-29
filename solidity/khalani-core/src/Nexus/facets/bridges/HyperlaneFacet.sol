@@ -7,10 +7,11 @@ import "./libraries/HyperlaneFacetLibrary.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "@hyperlane-xyz/core/interfaces/IOutbox.sol";
 import "forge-std/console.sol";
+import "../../interfaces/IBridgeFacet.sol";
 
 
 // Hyperlane Facet for non Axon chain //TODO : Should we make this all `internal` ?
-contract HyperlaneFacet is Modifiers, ReentrancyGuard {
+contract HyperlaneFacet is IBridgeFacet, Modifiers, ReentrancyGuard {
 
     function initHyperlaneFacet(
         uint32 _axonDomain,
@@ -23,14 +24,14 @@ contract HyperlaneFacet is Modifiers, ReentrancyGuard {
         hs.axonInbox = _axonInbox;
     }
 
-    function bridgeTokenAndCallViaHyperlane(
+    function bridgeTokenAndCall(
         LibAppStorage.TokenBridgeAction action,
         address account,
         address token,
         uint256 amount,
         bytes32  toContract,
         bytes calldata data
-    ) public validRouter {
+    ) public override validRouter  {
         console.log(msg.sender);
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         bytes memory message = abi.encode(account,token,amount,toContract,data);
@@ -42,14 +43,14 @@ contract HyperlaneFacet is Modifiers, ReentrancyGuard {
         );
     }
 
-    function bridgeMultiTokenAndCallViaHyperlane(
+    function bridgeMultiTokenAndCall(
         LibAppStorage.TokenBridgeAction action,
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
         bytes32 toContract,
         bytes calldata data
-    ) public validRouter {
+    ) public override validRouter {
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);
