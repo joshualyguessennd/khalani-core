@@ -12,6 +12,7 @@ import "../src/Nexus/NexusGateway.sol";
 import "../src/diamondCommons/interfaces/IDiamondCut.sol";
 import "../src/diamondCommons/sharedFacets/DiamondCutFacet.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
+import "../src/Nexus/libraries/LibAppStorage.sol";
 
 
 contract NexusTest is Test {
@@ -146,6 +147,7 @@ contract NexusTest is Test {
         AxonHyperlaneHandlerFacet(address (axonNexus)).addTokenMirror(1,address(usdc),address(usdcEth));
     }
 
+    // Tests for successful deposit and calling a contract on the other chain
     function testDepositAndCall(uint256 amountToDeposit) public {
         vm.assume(amountToDeposit>0 && amountToDeposit<=100e18);
         address user = MOCK_ADDR_1;
@@ -163,6 +165,7 @@ contract NexusTest is Test {
         assertEq(usdcEth.balanceOf(address(axonNexus)),amountToDeposit);
     }
 
+    // Tests for successful deposit of multiple tokens and calling a contract on the other chain
     function testDepositMultiTokenAndCall(uint256 amount1, uint256 amount2) public {
         vm.assume(amount1>0 && amount1<=100e18 && amount2>0 && amount2<=100e18);
         address user = MOCK_ADDR_1;
@@ -206,6 +209,7 @@ contract NexusTest is Test {
         assertEq(usdtEth.balanceOf(address(axonNexus)),amount2);
     }
 
+    // Tests for successful withdrawal of a token and calling a contract on the other chain
     function testWithDrawAndCall(uint256 amountToDeposit, uint256 amountToWithdraw) public {
         vm.assume(amountToDeposit>0 && amountToDeposit<=100e18);
         vm.assume(amountToWithdraw>0 && amountToWithdraw<amountToDeposit);
@@ -231,6 +235,7 @@ contract NexusTest is Test {
         assertEq(usdc.balanceOf(user),100e18-amountToDeposit+amountToWithdraw);
     }
 
+    // Failing test -  Attempting to withdraw more amounts of token than locked
     function testWithdrawFail(uint256 amountToDeposit, uint256 amountToWithdraw) public {
         vm.assume(amountToWithdraw>0 && amountToWithdraw<=100e18);
         vm.assume(amountToDeposit>0 && amountToDeposit<amountToWithdraw);
@@ -251,7 +256,30 @@ contract NexusTest is Test {
         //trying to withdraw more than available
         vm.prank(user);
         CrossChainRouter(address(ethNexus)).withdrawTokenAndCall(address(usdc),amountToWithdraw,false,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
-        //check if balance is still same
+        //check if balance is still same i.e withdraw did not take place
         assertEq(usdc.balanceOf(user),100e18 - amountToDeposit);
+        assertEq(usdc.balanceOf(address(ethNexus)), amountToDeposit);
+    }
+
+    // Access control check tests
+
+    //AxonHyperlaneHandlerFacet access test
+    function testAccessAxonReceiver(address caller) public {
+        // caller - random address which is not hyperlane inbox
+
+        //constructing a valid msg
+        bytes memory message = abi.encode(MOCK_ADDR_1,address(usdc),100e18,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,MOCK_ADDR_1));
+        bytes memory messageWithAction = abi.encode(LibAppStorage.TokenBridgeAction.Deposit,message);
+
+        vm.assume(caller!=address(0x0) && caller!=address(hyperlaneInboxAxon));
+        vm.startPrank(caller);
+        vm.expectRevert("only inbox can call");
+        AxonHyperlaneHandlerFacet(address(axonNexus)).handle(1,TypeCasts.addressToBytes32(address(ethNexus)),messageWithAction);
+        vm.stopPrank();
+
+        // trying a call with hyperlaneInboxAxon
+        vm.startPrank(address(hyperlaneInboxAxon));
+        AxonHyperlaneHandlerFacet(address(axonNexus)).handle(1,TypeCasts.addressToBytes32(address(ethNexus)),messageWithAction);
+        vm.stopPrank();
     }
 }
