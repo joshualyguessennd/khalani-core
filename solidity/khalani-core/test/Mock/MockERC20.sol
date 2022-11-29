@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Unlicensed
 
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
+import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 
 contract MockERC20 is ERC20PresetMinterPauser {
 

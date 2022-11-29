@@ -1,4 +1,4 @@
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
 interface IERC20Mintable {
     function mint(address account, uint256 amount) external;

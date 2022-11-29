@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "../../../../hyperlane-monorepo/solidity/interfaces/IMessageRecipient.sol";
+import "@hyperlane-xyz/core/interfaces/IMessageRecipient.sol";
 import "../AxonReceiver.sol";
 import "../../libraries/LibAppStorage.sol";
 import "./libraries/AxonMsgHandlerLibrary.sol";
 import "@sgn-v2-contracts/message/framework/MessageApp.sol";
-import "../../../../hyperlane-monorepo/solidity/contracts/libs/Message.sol";
+import "@hyperlane-xyz/core/contracts/libs/Message.sol";
 
 contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
 
