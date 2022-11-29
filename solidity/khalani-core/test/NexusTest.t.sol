@@ -6,7 +6,7 @@ import "@hyperlane-xyz/core/contracts/mock/MockOutbox.sol";
 import "@hyperlane-xyz/core/contracts/mock/MockInbox.sol";
 import "./Mock/MockERC20.sol";
 import "../src/Nexus/facets/CrossChainRouter.sol";
-import "../src/Nexus/facets/bridges/AxonHyperlaneHandlerFacet.sol";
+import "../src/Nexus/facets/bridges/AxonHandlerFacet.sol";
 import "forge-std/Test.sol";
 import "../src/Nexus/NexusGateway.sol";
 import "../src/diamondCommons/interfaces/IDiamondCut.sol";
