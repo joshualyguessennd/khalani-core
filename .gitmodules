@@ -10,3 +10,6 @@
 [submodule "solidity/khalani-core/lib/sgn-v2-contracts"]
 	path = solidity/khalani-core/lib/sgn-v2-contracts
 	url = https://github.com/celer-network/sgn-v2-contracts
+[submodule "solidity/khalani-core/lib/hyperlane-monorepo"]
+	path = solidity/khalani-core/lib/hyperlane-monorepo
+	url = https://github.com/hyperlane-xyz/hyperlane-monorepo
