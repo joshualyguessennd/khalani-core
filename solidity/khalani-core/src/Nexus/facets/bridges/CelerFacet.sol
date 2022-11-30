@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import "../../interfaces/IBridgeFacet.sol";
 import "@sgn-v2-contracts/message/framework/MessageApp.sol";
 import "./libraries/CelerFacetLibrary.sol";
-import "forge-std/console.sol";
+
 
 contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
 
@@ -38,8 +38,6 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
         CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
         bytes memory message = abi.encode(account,token,amount,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);
-        console.log("messageBus is",messageBus);
-        console.log("calling celer");
         sendMessage(
             cs.axonInbox,
             cs.axonDomain,
