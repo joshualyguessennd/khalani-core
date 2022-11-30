@@ -22,13 +22,18 @@ contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
 
     }
 
+    function setBus(address _messageBus) internal {
+        messageBus = _messageBus;
+    }
+
     function _onlyNexus(uint32 _origin, bytes32 _sender) internal {
         AxonMsgHandlerStorage storage ds = AxonMsgHandlerLibrary.axonMsgHandlerStorage();
         require(ds.chainNexusMap[_origin]==_sender, "AxonHyperlaneHandler : invalid nexus");
     }
 
-    function initializeAxonHandler(address _inbox) public onlyDiamondOwner {
+    function initializeAxonHandler(address _inbox, address _messageBus) public onlyDiamondOwner {
         s.inbox = _inbox;
+        setBus(_messageBus);
     }
 
     function addTokenMirror(uint32 chainDomain, address token, address mirrorToken) public onlyDiamondOwner {

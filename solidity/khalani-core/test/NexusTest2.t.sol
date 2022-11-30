@@ -13,9 +13,11 @@ import "../src/diamondCommons/interfaces/IDiamondCut.sol";
 import "../src/diamondCommons/sharedFacets/DiamondCutFacet.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "../src/Nexus/libraries/LibAppStorage.sol";
+import "./Mock/MockCelerMessageBus.sol";
+import "../src/Nexus/facets/bridges/CelerFacet.sol";
 
 
-contract NexusTest is Test {
+contract NexusTest2 is Test {
     //events
     event LogDepositAndCall(
         address indexed token,
@@ -50,12 +52,12 @@ contract NexusTest is Test {
     //Eth
     Nexus ethNexus;
     MockERC20 usdc;
-    MockOutbox hyperlaneOutboxEth;
+    MockCelerMessageBus chain1Bus;
+    MockCelerMessageBus chain2Bus;
 
     //Axon
     Nexus axonNexus;
     MockERC20 usdcEth;
-    MockInbox hyperlaneInboxAxon;
 
     address MOCK_ADDR_1 = 0x0000000000000000000000000000000000000001;
     address MOCK_ADDR_2 = 0x0000000000000000000000000000000000000002;
@@ -82,13 +84,16 @@ contract NexusTest is Test {
     }
 
     function setUp() public {
+        chain1Bus = new MockCelerMessageBus(1);
+        console.log("chain1bus is ",address(chain1Bus));
+        chain2Bus = new MockCelerMessageBus(2);
+        chain1Bus.addChainBus(2,address(chain2Bus));
+        chain2Bus.addChainBus(1,address (chain1Bus));
         ethNexus = deployDiamond();
         axonNexus = deployDiamond();
         //Eth Setup
         usdc = new MockERC20("USDC", "USDC");
         usdcEth = new MockERC20("USDCeth","USDCETH");
-        hyperlaneInboxAxon = new MockInbox();
-        hyperlaneOutboxEth = new MockOutbox(1,address(hyperlaneInboxAxon));
 
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](2);
 
@@ -103,16 +108,16 @@ contract NexusTest is Test {
         functionSelectors: ccrFunctionSelectors
         });
 
-        HyperlaneFacet hyperlaneFacet = new HyperlaneFacet();
-        bytes4[] memory hyperlaneFacetfunctionSelectors = new bytes4[](3);
-        hyperlaneFacetfunctionSelectors[0] = hyperlaneFacet.bridgeTokenAndCall.selector;
-        hyperlaneFacetfunctionSelectors[1] = hyperlaneFacet.bridgeMultiTokenAndCall.selector;
-        hyperlaneFacetfunctionSelectors[2] = hyperlaneFacet.initHyperlaneFacet.selector;
+        CelerFacet celerFacet = new CelerFacet(address(chain1Bus));
+        bytes4[] memory celerFacetfunctionSelectors = new bytes4[](4);
+        celerFacetfunctionSelectors[0] = celerFacet.bridgeTokenAndCall.selector;
+        celerFacetfunctionSelectors[1] = celerFacet.bridgeMultiTokenAndCall.selector;
+        celerFacetfunctionSelectors[2] = celerFacet.initCelerFacet.selector;
 
         cut[1] = IDiamond.FacetCut({
-        facetAddress: address(hyperlaneFacet),
+        facetAddress: address(celerFacet),
         action: IDiamond.FacetCutAction.Add,
-        functionSelectors: hyperlaneFacetfunctionSelectors
+        functionSelectors: celerFacetfunctionSelectors
         });
 
         DiamondCutFacet(address(ethNexus)).diamondCut(
@@ -121,17 +126,18 @@ contract NexusTest is Test {
             "" //initializer data
         );
 
-        HyperlaneFacet(address(ethNexus)).initHyperlaneFacet(2, address(hyperlaneOutboxEth), address(axonNexus));
+        CelerFacet(address(ethNexus)).initCelerFacet(2, address(axonNexus), address(chain1Bus));
 
         //Axon side setup
         cut = new IDiamondCut.FacetCut[](1);
 
-        AxonHandlerFacet axonhyperlanehandler = new AxonHandlerFacet(MOCK_ADDR_5);
-        bytes4[] memory axonHyperlaneFunctionSelectors = new bytes4[](4);
+        AxonHandlerFacet axonhyperlanehandler = new AxonHandlerFacet(address(chain2Bus));
+        bytes4[] memory axonHyperlaneFunctionSelectors = new bytes4[](5);
         axonHyperlaneFunctionSelectors[0] = axonhyperlanehandler.initializeAxonHandler.selector;
         axonHyperlaneFunctionSelectors[1] = axonhyperlanehandler.handle.selector;
         axonHyperlaneFunctionSelectors[2] = axonhyperlanehandler.addTokenMirror.selector;
         axonHyperlaneFunctionSelectors[3] = axonhyperlanehandler.addValidNexusForChain.selector;
+        axonHyperlaneFunctionSelectors[4] = bytes4(keccak256(bytes("executeMessage(address,uint64,bytes,address)")));
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(axonhyperlanehandler),
         action: IDiamond.FacetCutAction.Add,
@@ -144,13 +150,14 @@ contract NexusTest is Test {
             address(0), //initializer address
             "" //initializer data
         );
-        AxonHandlerFacet(address(axonNexus)).initializeAxonHandler(address (hyperlaneInboxAxon), MOCK_ADDR_4);
+
+        AxonHandlerFacet(address(axonNexus)).initializeAxonHandler(MOCK_ADDR_2, address(chain2Bus));
         AxonHandlerFacet(address (axonNexus)).addTokenMirror(1,address(usdc),address(usdcEth));
         AxonHandlerFacet(address (axonNexus)).addValidNexusForChain(1,TypeCasts.addressToBytes32(address(ethNexus)));
     }
 
     // Tests for successful deposit and calling a contract on the other chain
-    function testDepositAndCall(uint256 amountToDeposit) public {
+    function testDepositAndCallCeler(uint256 amountToDeposit) public {
         address user = MOCK_ADDR_1;
 
         usdc.mint(MOCK_ADDR_1,amountToDeposit);
@@ -160,14 +167,13 @@ contract NexusTest is Test {
         emit LogDepositAndCall(address(usdc), user, amountToDeposit, TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
         CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit,false,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
         vm.stopPrank();
-        vm.expectEmit(true, true, false, false, address(axonNexus));
-        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
-        hyperlaneInboxAxon.processNextPendingMessage();
+//        vm.expectEmit(true, true, false, false, address(axonNexus));
+//        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
         assertEq(usdcEth.balanceOf(address(axonNexus)),amountToDeposit);
     }
 
     // Tests for successful deposit of multiple tokens and calling a contract on the other chain
-    function testDepositMultiTokenAndCall(uint256 amount1, uint256 amount2) public {
+    function testDepositMultiTokenAndCallCeler(uint256 amount1, uint256 amount2) public {
         address user = MOCK_ADDR_1;
         MockERC20 usdt = new MockERC20("USDT", "USDT");
         MockERC20 usdtEth =  new MockERC20("USDTEth" , "USDTETH");
@@ -202,9 +208,9 @@ contract NexusTest is Test {
             abi.encodeWithSelector(usdcEth.balanceOf.selector,user)
         );
         vm.stopPrank();
-        vm.expectEmit(true, true, false, false, address(axonNexus));
-        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
-        hyperlaneInboxAxon.processNextPendingMessage();
+//        vm.expectEmit(true, true, false, false, address(axonNexus));
+//        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
+//        hyperlaneInboxAxon.processNextPendingMessage();
         assertEq(usdcEth.balanceOf(address(axonNexus)),amount1);
         assertEq(usdtEth.balanceOf(address(axonNexus)),amount2);
     }
@@ -220,15 +226,15 @@ contract NexusTest is Test {
         emit LogWithdrawTokenAndCall(address(usdc), user, amountToWithdraw, TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
         CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit,false,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
         vm.stopPrank();
-        hyperlaneInboxAxon.processNextPendingMessage();
+        //hyperlaneInboxAxon.processNextPendingMessage();
         assertEq(usdcEth.balanceOf(address(axonNexus)),amountToDeposit);
         assertEq(usdc.balanceOf(address(ethNexus)),amountToDeposit);
         assertEq(usdc.balanceOf(user),type(uint256).max - amountToDeposit);
         vm.prank(user);
         CrossChainRouter(address(ethNexus)).withdrawTokenAndCall(address(usdc),amountToWithdraw,false,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
-        vm.expectEmit(true, true, false, false, address(axonNexus));
-        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
-        hyperlaneInboxAxon.processNextPendingMessage();
+//        vm.expectEmit(true, true, false, false, address(axonNexus));
+//        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
+//        hyperlaneInboxAxon.processNextPendingMessage();
         assertEq(usdcEth.balanceOf(address(axonNexus)),amountToDeposit - amountToWithdraw);
         assertEq(usdc.balanceOf(address(ethNexus)),amountToDeposit - amountToWithdraw);
         assertEq(usdc.balanceOf(user),type(uint256).max - amountToDeposit+amountToWithdraw);
@@ -245,7 +251,7 @@ contract NexusTest is Test {
         emit LogWithdrawTokenAndCall(address(usdc), user, amountToWithdraw, TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
         CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit,false,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
         vm.stopPrank();
-        hyperlaneInboxAxon.processNextPendingMessage();
+        //hyperlaneInboxAxon.processNextPendingMessage();
         assertEq(usdcEth.balanceOf(address(axonNexus)),amountToDeposit);
         assertEq(usdc.balanceOf(address(ethNexus)),amountToDeposit);
         assertEq(usdc.balanceOf(user),type(uint256).max - amountToDeposit);
@@ -262,47 +268,47 @@ contract NexusTest is Test {
     // Access control check tests
 
     //AxonHyperlaneHandlerFacet access test
-    function testAccessAxonReceiver(address caller) public {
-        // caller - random address which is not hyperlane inbox
-        vm.assume(caller!=address(0x0) && caller!=address(hyperlaneInboxAxon));
-        //constructing a valid msg
-        bytes memory message = abi.encode(MOCK_ADDR_1,address(usdc),100e18,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,MOCK_ADDR_1));
-        bytes memory messageWithAction = abi.encode(LibAppStorage.TokenBridgeAction.Deposit,message);
-
-
-        vm.startPrank(caller);
-        vm.expectRevert("only inbox can call");
-        AxonHandlerFacet(address(axonNexus)).handle(1,TypeCasts.addressToBytes32(address(ethNexus)),messageWithAction);
-        vm.stopPrank();
-
-        // trying a call with hyperlaneInboxAxon
-        vm.startPrank(address(hyperlaneInboxAxon));
-        AxonHandlerFacet(address(axonNexus)).handle(1,TypeCasts.addressToBytes32(address(ethNexus)),messageWithAction);
-        vm.stopPrank();
-
-        //testing only nexus can pass message
-        vm.startPrank(address(hyperlaneInboxAxon));
-        vm.expectRevert("AxonHyperlaneHandler : invalid nexus");
-        AxonHandlerFacet(address(axonNexus)).handle(1,TypeCasts.addressToBytes32(address(MOCK_ADDR_5)),messageWithAction);
-        vm.stopPrank();
-
-    }
+//    function testAccessAxonReceiver(address caller) public {
+//        // caller - random address which is not hyperlane inbox
+//        vm.assume(caller!=address(0x0) && caller!=address(hyperlaneInboxAxon));
+//        //constructing a valid msg
+//        bytes memory message = abi.encode(MOCK_ADDR_1,address(usdc),100e18,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,MOCK_ADDR_1));
+//        bytes memory messageWithAction = abi.encode(LibAppStorage.TokenBridgeAction.Deposit,message);
+//
+//
+//        vm.startPrank(caller);
+//        vm.expectRevert("only inbox can call");
+//        AxonHandlerFacet(address(axonNexus)).handle(1,TypeCasts.addressToBytes32(address(ethNexus)),messageWithAction);
+//        vm.stopPrank();
+//
+//        // trying a call with hyperlaneInboxAxon
+//        vm.startPrank(address(hyperlaneInboxAxon));
+//        AxonHandlerFacet(address(axonNexus)).handle(1,TypeCasts.addressToBytes32(address(ethNexus)),messageWithAction);
+//        vm.stopPrank();
+//
+//        //testing only nexus can pass message
+//        vm.startPrank(address(hyperlaneInboxAxon));
+//        vm.expectRevert("AxonHyperlaneHandler : invalid nexus");
+//        AxonHandlerFacet(address(axonNexus)).handle(1,TypeCasts.addressToBytes32(address(MOCK_ADDR_5)),messageWithAction);
+//        vm.stopPrank();
+//
+//    }
 
     //testing hyperlane facet security
-    function testAccessHyperlaneFacet(address caller) public {
+    function testAccessCelerFacet(address caller) public {
         vm.assume(caller!=address(0x0) && caller!=address(ethNexus));
 
         //attempting to call hyperlane facet directly
         vm.startPrank(caller);
         vm.expectRevert("BridgeFacet : Invalid Router");
-        HyperlaneFacet(address(ethNexus)).bridgeTokenAndCall(
+        IBridgeFacet(address(ethNexus)).bridgeTokenAndCall(
             LibAppStorage.TokenBridgeAction.Deposit,
             caller,
             address(usdc),
             100e18,
             TypeCasts.addressToBytes32(address(ethNexus)),
             abi.encodeWithSelector(usdcEth.balanceOf.selector,caller)
-            );
+        );
         vm.stopPrank();
     }
 

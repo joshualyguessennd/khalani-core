@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "../../interfaces/IBridgeFacet.sol";
 import "@sgn-v2-contracts/message/framework/MessageApp.sol";
 import "./libraries/CelerFacetLibrary.sol";
+import "forge-std/console.sol";
 
 contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
 
@@ -14,13 +15,18 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
 
     function initCelerFacet(
         uint32 _axonDomain,
-        address _axonInbox
+        address _axonInbox,
+        address _messageBus
     ) external onlyDiamondOwner {
         CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
+        setMessageBusI(_messageBus);
         cs.axonDomain = _axonDomain;
         cs.axonInbox = _axonInbox;
     }
 
+    function setMessageBusI(address _messageBus) internal {
+        messageBus = _messageBus;
+    }
     function bridgeTokenAndCall(
         LibAppStorage.TokenBridgeAction action,
         address account,
@@ -32,6 +38,8 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
         CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
         bytes memory message = abi.encode(account,token,amount,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);
+        console.log("messageBus is",messageBus);
+        console.log("calling celer");
         sendMessage(
             cs.axonInbox,
             cs.axonDomain,
