@@ -10,3 +10,6 @@
 [submodule "solidity/khalani-core/lib/hyperlane-monorepo"]
 	path = solidity/khalani-core/lib/hyperlane-monorepo
 	url = https://github.com/hyperlane-xyz/hyperlane-monorepo
+[submodule "solidity/khalani-core/lib/openzeppelin-contracts"]
+	path = solidity/khalani-core/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
