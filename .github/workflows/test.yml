@@ -45,7 +45,7 @@ jobs:
         with:
           target: "solidity/khalani-core/src"
           slither-config: "solidity/khalani-core/slither.config.json"
-          solc-version: 0.8.6
+          solc-version: 0.8.17
           sarif: results.sarif
 
      # - name: Upload SARIF file for core
