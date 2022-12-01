@@ -2,12 +2,11 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/LibAppStorage.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IERC20Mintable} from "../../interfaces/IERC20Mintable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "./bridges/HyperlaneFacet.sol";
 
-contract CrossChainRouter is Modifiers, ReentrancyGuard {
+contract CrossChainRouter is Modifiers {
 
     event LogDepositAndCall(
         address indexed token,

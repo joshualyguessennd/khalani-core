@@ -7,7 +7,7 @@ import {IERC20Mintable} from "../../interfaces/IERC20Mintable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "../libraries/LibAccountsRegistry.sol";
 import {TypeCasts} from "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
-contract AxonReceiver is Modifiers, ReentrancyGuard {
+contract AxonReceiver is Modifiers {
 
 
     event LogDepositAndCall(

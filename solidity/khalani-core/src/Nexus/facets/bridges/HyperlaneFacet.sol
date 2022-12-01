@@ -10,7 +10,7 @@ import "../../interfaces/IBridgeFacet.sol";
 
 
 // Hyperlane Facet for non Axon chain //TODO : Should we make this all `internal` ?
-contract HyperlaneFacet is IBridgeFacet, Modifiers, ReentrancyGuard {
+contract HyperlaneFacet is IBridgeFacet, Modifiers {
 
     function initHyperlaneFacet(
         uint32 _axonDomain,
