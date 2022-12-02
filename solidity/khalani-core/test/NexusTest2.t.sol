@@ -159,7 +159,8 @@ contract NexusTest2 is Test {
     // Tests for successful deposit and calling a contract on the other chain
     function testDepositAndCallCeler(uint256 amountToDeposit) public {
         address user = MOCK_ADDR_1;
-
+        vm.prank(address(axonNexus));
+        address userKhalaAccount = LibAccountsRegistry.getDeployedInterchainAccount(user);
         usdc.mint(MOCK_ADDR_1,amountToDeposit);
         vm.startPrank(user);
         usdc.approve(address(gwNexus),amountToDeposit);
@@ -169,12 +170,14 @@ contract NexusTest2 is Test {
         vm.stopPrank();
 //        vm.expectEmit(true, true, false, false, address(axonNexus));
 //        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(gwNexus)), abi.encode(""));
-        assertEq(usdcgW.balanceOf(address(axonNexus)),amountToDeposit);
+        assertEq(usdcgW.balanceOf(address(userKhalaAccount)),amountToDeposit);
     }
 
     // Tests for successful deposit of multiple tokens and calling a contract on the other chain
     function testDepositMultiTokenAndCallCeler(uint256 amount1, uint256 amount2) public {
         address user = MOCK_ADDR_1;
+        vm.prank(address(axonNexus));
+        address userKhalaAccount = LibAccountsRegistry.getDeployedInterchainAccount(user);
         MockERC20 usdt = new MockERC20("USDT", "USDT");
         MockERC20 usdtgW =  new MockERC20("USDTgW" , "USDTETH");
         AxonHandlerFacet(address (axonNexus)).addTokenMirror(1,address(usdt),address(usdtgW));
@@ -211,14 +214,16 @@ contract NexusTest2 is Test {
 //        vm.expectEmit(true, true, false, false, address(axonNexus));
 //        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(gwNexus)), abi.encode(""));
 //        hyperlaneInboxAxon.processNextPendingMessage();
-        assertEq(usdcgW.balanceOf(address(axonNexus)),amount1);
-        assertEq(usdtgW.balanceOf(address(axonNexus)),amount2);
+        assertEq(usdcgW.balanceOf(address(userKhalaAccount)),amount1);
+        assertEq(usdtgW.balanceOf(address(userKhalaAccount)),amount2);
     }
 
     // Tests for successful withdrawal of a token and calling a contract on the other chain
     function testWithDrawAndCall(uint256 amountToDeposit, uint256 amountToWithdraw) public {
         vm.assume(amountToWithdraw<amountToDeposit);
         address user = MOCK_ADDR_1;
+        vm.prank(address(axonNexus));
+        address userKhalaAccount = LibAccountsRegistry.getDeployedInterchainAccount(user);
         usdc.mint(MOCK_ADDR_1,type(uint256).max);
         vm.startPrank(user);
         usdc.approve(address(gwNexus),amountToDeposit);
@@ -227,7 +232,7 @@ contract NexusTest2 is Test {
         CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,false,TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
         vm.stopPrank();
         //hyperlaneInboxAxon.processNextPendingMessage();
-        assertEq(usdcgW.balanceOf(address(axonNexus)),amountToDeposit);
+        assertEq(usdcgW.balanceOf(address(userKhalaAccount)),amountToDeposit);
         assertEq(usdc.balanceOf(address(gwNexus)),amountToDeposit);
         assertEq(usdc.balanceOf(user),type(uint256).max - amountToDeposit);
         vm.prank(user);
@@ -235,7 +240,7 @@ contract NexusTest2 is Test {
 //        vm.expectEmit(true, true, false, false, address(axonNexus));
 //        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(gwNexus)), abi.encode(""));
 //        hyperlaneInboxAxon.processNextPendingMessage();
-        assertEq(usdcgW.balanceOf(address(axonNexus)),amountToDeposit - amountToWithdraw);
+        assertEq(usdcgW.balanceOf(address(userKhalaAccount)),amountToDeposit - amountToWithdraw);
         assertEq(usdc.balanceOf(address(gwNexus)),amountToDeposit - amountToWithdraw);
         assertEq(usdc.balanceOf(user),type(uint256).max - amountToDeposit+amountToWithdraw);
     }
@@ -244,6 +249,8 @@ contract NexusTest2 is Test {
     function testWithdrawFail(uint256 amountToDeposit, uint256 amountToWithdraw) public {
         vm.assume(amountToDeposit>0 && amountToDeposit<amountToWithdraw);
         address user = MOCK_ADDR_1;
+        vm.prank(address(axonNexus));
+        address userKhalaAccount = LibAccountsRegistry.getDeployedInterchainAccount(user);
         usdc.mint(MOCK_ADDR_1,type(uint256).max);
         vm.startPrank(user);
         usdc.approve(address(gwNexus),amountToDeposit);
@@ -252,7 +259,7 @@ contract NexusTest2 is Test {
         CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,false,TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
         vm.stopPrank();
         //hyperlaneInboxAxon.processNextPendingMessage();
-        assertEq(usdcgW.balanceOf(address(axonNexus)),amountToDeposit);
+        assertEq(usdcgW.balanceOf(address(userKhalaAccount)),amountToDeposit);
         assertEq(usdc.balanceOf(address(gwNexus)),amountToDeposit);
         assertEq(usdc.balanceOf(user),type(uint256).max - amountToDeposit);
 

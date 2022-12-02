@@ -62,7 +62,8 @@ contract AxonReceiver is Modifiers {
             chainId
         );
         s.balances[account][token] += amount;
-        IERC20Mintable(token).mint(address(this),amount);
+        address khalaInterChainAddress = LibAccountsRegistry.getDeployedInterchainAccount(account);
+        IERC20Mintable(token).mint(khalaInterChainAddress,amount);
         _proxyCall(toContract,data);
     }
 
@@ -91,9 +92,10 @@ contract AxonReceiver is Modifiers {
             amounts,
             chainId
         );
+        address khalaInterChainAddress = LibAccountsRegistry.getDeployedInterchainAccount(account);
         for(uint i=0; i<tokens.length;i++) {
             s.balances[account][tokens[i]] += amounts[i];
-            IERC20Mintable(tokens[i]).mint(address(this),amounts[i]);
+            IERC20Mintable(tokens[i]).mint(khalaInterChainAddress,amounts[i]);
         }
         _proxyCall(toContract,data);
     }
@@ -124,7 +126,8 @@ contract AxonReceiver is Modifiers {
             chainId
         );
         s.balances[account][token] -= amount;
-        IERC20Mintable(token).burn(address(this), amount);
+        address khalaInterChainAddress = LibAccountsRegistry.getInterchainAccount(account);
+        IERC20Mintable(token).burn(khalaInterChainAddress, amount);
         _proxyCall(toContract,data);
     }
 
