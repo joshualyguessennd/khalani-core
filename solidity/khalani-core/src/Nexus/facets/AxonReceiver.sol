@@ -55,15 +55,15 @@ contract AxonReceiver is Modifiers {
         bytes memory data
     ) internal nonReentrant {
         require(data.length > 0 , "empty call data");
+        s.balances[account][token] += amount;
+        IERC20Mintable(token).mint(address(this),amount);
+        _proxyCall(toContract,data);
         emit LogDepositAndCall(
             token,
             account,
             amount,
             chainId
         );
-        s.balances[account][token] += amount;
-        IERC20Mintable(token).mint(address(this),amount);
-        _proxyCall(toContract,data);
     }
 
     /**
@@ -85,17 +85,18 @@ contract AxonReceiver is Modifiers {
     ) internal nonReentrant {
         require(data.length > 0 , "empty call data");
         require(tokens.length == amounts.length, "array length do not match");
+
+        for(uint i=0; i<tokens.length;i++) {
+            s.balances[account][tokens[i]] += amounts[i];
+            IERC20Mintable(tokens[i]).mint(address(this),amounts[i]);
+        }
+        _proxyCall(toContract,data);
         emit LogDepositMultiTokenAndCall(
             tokens,
             account,
             amounts,
             chainId
         );
-        for(uint i=0; i<tokens.length;i++) {
-            s.balances[account][tokens[i]] += amounts[i];
-            IERC20Mintable(tokens[i]).mint(address(this),amounts[i]);
-        }
-        _proxyCall(toContract,data);
     }
 
     /**
@@ -117,15 +118,15 @@ contract AxonReceiver is Modifiers {
     ) internal nonReentrant {
         require(data.length>0,"empty call data");
         require(s.balances[account][token] >= amount, "CCR_InsufficientBalance");
+        s.balances[account][token] -= amount;
+        IERC20Mintable(token).burn(address(this), amount);
+        _proxyCall(toContract,data);
         emit LogWithdrawTokenAndCall(
             token,
             account,
             amount,
             chainId
         );
-        s.balances[account][token] -= amount;
-        IERC20Mintable(token).burn(address(this), amount);
-        _proxyCall(toContract,data);
     }
 
     function _proxyCall(bytes32 toContract, bytes memory data) internal {
