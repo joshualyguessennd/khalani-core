@@ -66,14 +66,6 @@ contract CrossChainRouter is Modifiers {
         bytes calldata data
     ) public nonReentrant {
         require(data.length > 0 , "empty call data");
-        emit LogDepositAndCall(
-            token,
-            msg.sender,
-            amount,
-            toContract,
-            data
-        );
-
         IBridgeFacet(address(this)).bridgeTokenAndCall(
             LibAppStorage.TokenBridgeAction.Deposit,
             msg.sender,
@@ -88,6 +80,13 @@ contract CrossChainRouter is Modifiers {
         } else{
             _lock(msg.sender, token, amount);
         }
+        emit LogDepositAndCall(
+            token,
+            msg.sender,
+            amount,
+            toContract,
+            data
+        );
     }
 
     /**
@@ -111,14 +110,6 @@ contract CrossChainRouter is Modifiers {
 
         require(tokens.length == amounts.length && tokens.length == isPan.length, "array length do not match");
 
-        emit LogDepositMultiTokenAndCall (
-            tokens,
-            msg.sender,
-            amounts,
-            toContract,
-            data
-        );
-
         IBridgeFacet(address(this)).bridgeMultiTokenAndCall(
             LibAppStorage.TokenBridgeAction.DepositMulti,
             msg.sender,
@@ -135,6 +126,14 @@ contract CrossChainRouter is Modifiers {
                 _lock(msg.sender, tokens[i], amounts[i]);
             }
         }
+
+        emit LogDepositMultiTokenAndCall (
+            tokens,
+            msg.sender,
+            amounts,
+            toContract,
+            data
+        );
     }
 
     /**
@@ -154,14 +153,6 @@ contract CrossChainRouter is Modifiers {
         bytes calldata data
     ) public nonReentrant {
         require(data.length>0,"empty call data");
-        emit LogWithdrawTokenAndCall(
-            token,
-            msg.sender,
-            amount,
-            toContract,
-            data
-        );
-
         IBridgeFacet(address(this)).bridgeTokenAndCall(
             LibAppStorage.TokenBridgeAction.Withdraw,
             msg.sender,
@@ -176,6 +167,14 @@ contract CrossChainRouter is Modifiers {
         } else {
             _release(msg.sender, token, amount);
         }
+        emit LogWithdrawTokenAndCall(
+            token,
+            msg.sender,
+            amount,
+            toContract,
+            data
+        );
+
     }
 
     // internal functions

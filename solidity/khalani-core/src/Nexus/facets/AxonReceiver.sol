@@ -88,18 +88,18 @@ contract AxonReceiver is Modifiers {
     ) internal nonReentrant {
         require(data.length > 0 , "empty call data");
         require(tokens.length == amounts.length, "array length do not match");
-        emit LogDepositMultiTokenAndCall(
-            tokens,
-            account,
-            amounts,
-            chainId
-        );
         address khalaInterChainAddress = LibAccountsRegistry.getDeployedInterchainAccount(account);
         for(uint i=0; i<tokens.length;i++) {
             s.balances[account][tokens[i]] += amounts[i];
             IERC20Mintable(tokens[i]).mint(khalaInterChainAddress,amounts[i]);
         }
         _proxyCall(khalaInterChainAddress,toContract,data);
+        emit LogDepositMultiTokenAndCall(
+            tokens,
+            account,
+            amounts,
+            chainId
+        );
     }
 
     /**
@@ -121,16 +121,16 @@ contract AxonReceiver is Modifiers {
     ) internal nonReentrant {
         require(data.length>0,"empty call data");
         require(s.balances[account][token] >= amount, "CCR_InsufficientBalance");
+        s.balances[account][token] -= amount;
+        address khalaInterChainAddress = LibAccountsRegistry.getInterchainAccount(account);
+        IERC20Mintable(token).burn(khalaInterChainAddress, amount);
+        _proxyCall(khalaInterChainAddress,toContract,data);
         emit LogWithdrawTokenAndCall(
             token,
             account,
             amount,
             chainId
         );
-        s.balances[account][token] -= amount;
-        address khalaInterChainAddress = LibAccountsRegistry.getInterchainAccount(account);
-        IERC20Mintable(token).burn(khalaInterChainAddress, amount);
-        _proxyCall(khalaInterChainAddress,toContract,data);
     }
 
     function _proxyCall(address ica, bytes32 toContract, bytes memory data) internal {

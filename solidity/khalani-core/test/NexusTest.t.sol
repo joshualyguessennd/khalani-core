@@ -13,6 +13,7 @@ import "../src/diamondCommons/interfaces/IDiamondCut.sol";
 import "../src/diamondCommons/sharedFacets/DiamondCutFacet.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "../src/Nexus/libraries/LibAppStorage.sol";
+import "./Mock/MockCounter.sol";
 
 
 contract NexusTest is Test {
@@ -45,6 +46,11 @@ contract NexusTest is Test {
         uint32 indexed msgOriginChain,
         bytes32 indexed sender,
         bytes message
+    );
+
+    event InterchainAccountCreated(
+        address sender,
+        address account
     );
 
     //Eth
@@ -248,8 +254,6 @@ contract NexusTest is Test {
         usdc.mint(MOCK_ADDR_1,type(uint256).max);
         vm.startPrank(user);
         usdc.approve(address(ethNexus),amountToDeposit);
-        vm.expectEmit(true, true, true, true, address(ethNexus));
-        emit LogWithdrawTokenAndCall(address(usdc), user, amountToWithdraw, TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
         CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit,false,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
         vm.stopPrank();
         hyperlaneInboxAxon.processNextPendingMessage();
@@ -311,5 +315,28 @@ contract NexusTest is Test {
             abi.encodeWithSelector(usdcEth.balanceOf.selector,caller)
             );
         vm.stopPrank();
+    }
+
+    //inter-chain account call test
+    function testICACreationAndCall(uint256 amountToDeposit,uint256 countToIncrease) public {
+        address user = MOCK_ADDR_1;
+
+        address userKhalaAccount = 0xd608F373346c539bF2218CeE8f75E5071630080e;
+
+        // dummy contract for ica call - call to this contract is inly possible through `userKhalaAccount`
+        MockCounter counter = new MockCounter(userKhalaAccount);
+
+        usdc.mint(MOCK_ADDR_1,amountToDeposit);
+        vm.startPrank(user);
+        usdc.approve(address(ethNexus),amountToDeposit);
+        vm.expectEmit(true, true, true , true,address(ethNexus));
+        emit LogDepositAndCall(address(usdc), user, amountToDeposit, TypeCasts.addressToBytes32(address(counter)),abi.encodeWithSelector(counter.increaseCount.selector,countToIncrease));
+        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit,false,TypeCasts.addressToBytes32(address(counter)),abi.encodeWithSelector(counter.increaseCount.selector,countToIncrease));
+        vm.stopPrank();
+        vm.expectEmit(true, true, false, false, address(axonNexus));
+        emit InterchainAccountCreated(MOCK_ADDR_1, userKhalaAccount);
+        hyperlaneInboxAxon.processNextPendingMessage();
+        assertEq(usdcEth.balanceOf(userKhalaAccount),amountToDeposit);
+        assertEq(counter.getCount(),countToIncrease);
     }
 }

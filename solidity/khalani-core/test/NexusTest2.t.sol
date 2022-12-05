@@ -254,8 +254,6 @@ contract NexusTest2 is Test {
         usdc.mint(MOCK_ADDR_1,type(uint256).max);
         vm.startPrank(user);
         usdc.approve(address(gwNexus),amountToDeposit);
-        vm.expectEmit(true, true, true, true, address(gwNexus));
-        emit LogWithdrawTokenAndCall(address(usdc), user, amountToWithdraw, TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
         CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,false,TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
         vm.stopPrank();
         //hyperlaneInboxAxon.processNextPendingMessage();

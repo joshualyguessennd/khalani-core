@@ -36,7 +36,7 @@ library LibAccountsRegistry {
         return ds.chainMirrorToken[_domain][_token];
     }
 
-    function getInterchainAccount(address _sender) public view returns (address)
+    function getInterchainAccount(address _sender) internal view returns (address)
     {
         return _getInterchainAccount(_salt(_sender));
     }
