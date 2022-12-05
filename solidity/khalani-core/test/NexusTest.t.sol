@@ -323,7 +323,7 @@ contract NexusTest is Test {
 
         address userKhalaAccount = 0xd608F373346c539bF2218CeE8f75E5071630080e;
 
-        // dummy contract for ica call - call to this contract is inly possible through `userKhalaAccount`
+        // dummy contract for ica call - call to this contract is only possible through `userKhalaAccount` - this will test if the call is going correctly from ICA proxy
         MockCounter counter = new MockCounter(userKhalaAccount);
 
         usdc.mint(MOCK_ADDR_1,amountToDeposit);
