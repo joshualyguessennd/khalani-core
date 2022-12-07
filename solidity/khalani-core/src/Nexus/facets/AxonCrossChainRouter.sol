@@ -6,9 +6,9 @@ import {IERC20Mintable} from "../../interfaces/IERC20Mintable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "./bridges/HyperlaneFacet.sol";
 
-contract CrossChainRouter is Modifiers {
+contract AxonCrossChainRouter is Modifiers {
 
-    event LogDepositAndCall(
+    event LogWithdrawAndCall(
         address indexed token,
         address indexed user,
         uint256 amount,
@@ -16,18 +16,10 @@ contract CrossChainRouter is Modifiers {
         bytes data
     );
 
-    event LogDepositMultiTokenAndCall(
+    event LogWithdrawMultiTokenAndCall(
         address[] indexed token,
         address indexed user,
-        uint256[] amounts,
-        bytes32 toContract,
-        bytes data
-    );
-
-    event LogWithdrawTokenAndCall(
-        address indexed token,
-        address indexed user,
-        uint256 amount,
+        uint256[] amount,
         bytes32 toContract,
         bytes data
     );
@@ -37,7 +29,7 @@ contract CrossChainRouter is Modifiers {
         bytes message
     );
 
-    event LogLockToken(
+    event LogBurnToken(
         address indexed user,
         address token,
         uint256 amount
@@ -50,21 +42,23 @@ contract CrossChainRouter is Modifiers {
     );
 
     /**
-    * @notice locks token / burn pan token and calls hyperlane to bridge token and execute call on `toContract` with `data`
-    * mirror token will be minted on axon chain
-    * @param token - address of token to deposit
-    * @param amount - amount of tokens to deposit
+    * @notice burn mirror tokens and calls hyperplane  / celer to bridge token and execute call on `toContract` with `data`
+    * pan will be minted and other chain token will be released
+    * @param token - address of token to be withdrawn
+    * @param amount - amount of tokens to be withdrawn
     * @param isPan - true when token in a Pan token ex - pan, panEth, panBTC
     * @param toContract - contract address to execute crossChain call on
     * @param data - call data to be executed on `toContract`
     **/
-    function depositTokenAndCall(
+    function withdrawTokenAndCall(
         address token,
         uint256 amount,
         bool isPan,
         bytes32 toContract,
         bytes calldata data
     ) public nonReentrant {
+        IERC20Mintable(token).burn(msg.sender,amount);
+
         IBridgeFacet(address(this)).bridgeTokenAndCall(
             LibAppStorage.TokenBridgeAction.Deposit,
             msg.sender,
@@ -74,12 +68,9 @@ contract CrossChainRouter is Modifiers {
             data
         );
 
-        if(isPan) {
-            IERC20Mintable(token).burn(msg.sender,amount);
-        } else{
-            _lock(msg.sender, token, amount);
-        }
-        emit LogDepositAndCall(
+
+
+        emit LogWithdrawAndCall(
             token,
             msg.sender,
             amount,
@@ -89,15 +80,15 @@ contract CrossChainRouter is Modifiers {
     }
 
     /**
-    * @notice locks tokens / burn pan tokens and calls hyperlane to bridge tokens and execute call on `toContract` with `data`
-    * mirror token will be minted on axon chain
+    * @notice burn mirror tokens and calls hyperplane  / celer to bridge token and execute call on `toContract` with `data`
+    * pan will be minted and other chain token will be released
     * @param tokens - addresses of tokens to deposit
     * @param amounts - amounts of tokens to deposit
     * @param isPan - true when token in a Pan token ex - pan, panEth, panBTC
     * @param toContract - contract address to execute crossChain call on
     * @param data - call data to be executed on `toContract`
     **/
-    function depositMultiTokenAndCall(
+    function withdrawMultiTokenAndCall(
         address[] memory tokens,
         uint256[] memory amounts,
         bool[] memory isPan,
@@ -106,7 +97,14 @@ contract CrossChainRouter is Modifiers {
     ) public nonReentrant {
         require(tokens.length == amounts.length && tokens.length == isPan.length, "array length do not match");
 
-        emit LogDepositMultiTokenAndCall (
+        for(uint i; i<tokens.length;) {
+            IERC20Mintable(tokens[i]).burn(msg.sender,amounts[i]);
+            unchecked {
+                ++i;
+            }
+        }
+
+        emit LogWithdrawMultiTokenAndCall (
             tokens,
             msg.sender,
             amounts,
@@ -115,7 +113,7 @@ contract CrossChainRouter is Modifiers {
         );
 
         IBridgeFacet(address(this)).bridgeMultiTokenAndCall(
-            LibAppStorage.TokenBridgeAction.DepositMulti,
+            LibAppStorage.TokenBridgeAction.WithdrawMulti,
             msg.sender,
             tokens,
             amounts,
@@ -123,20 +121,7 @@ contract CrossChainRouter is Modifiers {
             data
         );
 
-        for(uint i; i<tokens.length;) {
-            if(isPan[i]) {
-                IERC20Mintable(tokens[i]).burn(msg.sender,amounts[i]);
-            } else {
-                _lock(msg.sender, tokens[i], amounts[i]);
-            }
-
-            unchecked {
-                ++i;
-            }
-
-        }
-
-        emit LogDepositMultiTokenAndCall (
+        emit LogWithdrawMultiTokenAndCall (
             tokens,
             msg.sender,
             amounts,
@@ -145,22 +130,20 @@ contract CrossChainRouter is Modifiers {
         );
     }
 
-    // internal functions
-
-    function _lock(
+    function _release(
         address _user,
         address _token,
         uint256 _amount
     ) internal {
-        s.balances[_user][_token] += _amount;
-        SafeERC20Upgradeable.safeTransferFrom(
+        require(s.balances[_user][_token] >= _amount, "CCR_InsufficientBalance");
+        s.balances[_user][_token] -= _amount;
+        SafeERC20Upgradeable.safeTransfer(
             IERC20Upgradeable(_token),
             _user,
-            address(this),
             _amount
         );
 
-        emit LogLockToken(
+        emit LogReleaseToken(
             _user,
             _token,
             _amount

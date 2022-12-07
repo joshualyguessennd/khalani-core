@@ -15,7 +15,8 @@ library LibAppStorage {
     enum TokenBridgeAction{
         Deposit,
         DepositMulti,
-        Withdraw
+        Withdraw,
+        WithdrawMulti
     }
 
     function diamondStorage() internal pure returns (AppStorage storage ds) {

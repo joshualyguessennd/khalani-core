@@ -9,27 +9,20 @@ import "../libraries/LibAccountsRegistry.sol";
 import {TypeCasts} from "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "../interfaces/IProxyCall.sol";
 
-contract AxonReceiver is Modifiers {
+contract Receiver is Modifiers {
 
 
-    event LogDepositAndCall(
+    event LogWithdrawAndCall(
         address indexed token,
         address indexed user,
         uint256 amount,
         uint32 fromChainId
     );
 
-    event LogDepositMultiTokenAndCall(
+    event LogWithdrawMultiTokenAndCall(
         address[]  indexed token,
         address indexed user,
         uint256[]  amounts,
-        uint32 fromChainId
-    );
-
-    event LogWithdrawTokenAndCall(
-        address indexed token,
-        address indexed user,
-        uint256 amount,
         uint32 fromChainId
     );
 
@@ -37,6 +30,12 @@ contract AxonReceiver is Modifiers {
         address indexed recipient,
         bytes message,
         uint32 fromChainId
+    );
+
+    event LogReleaseToken(
+        address indexed user,
+        address token,
+        uint256 amount
     );
 
 
@@ -48,19 +47,21 @@ contract AxonReceiver is Modifiers {
     * @param toContract - contract address to execute crossChain call on
     * @param data - call data to be executed on `toContract`
     **/
-    function depositTokenAndCall(
+    function withdrawTokenAndCall(
         address account,
         address token,
         uint256 amount,
-        uint32 chainId,
+        bool isPan,
         bytes32 toContract,
         bytes memory data
     ) internal nonReentrant {
-        address khalaInterChainAddress = LibAccountsRegistry.getDeployedInterchainAccount(account);
-        s.balances[account][token] += amount;
-        IERC20Mintable(token).mint(khalaInterChainAddress,amount);
-        _proxyCall(khalaInterChainAddress,toContract,data);
-        emit LogDepositAndCall(
+        if(isPan){
+            IERC20Mintable(token).mint(account,amount);
+        } else{
+            _release(account,token,amount);
+        }
+        // call ?
+        emit LogWithdrawAndCall(
             token,
             account,
             amount,
@@ -77,25 +78,28 @@ contract AxonReceiver is Modifiers {
     * @param toContract - contract address to execute crossChain call on
     * @param data - call data to be executed on `toContract`
     **/
-    function depositMultiTokenAndCall(
+    function withdrawMultiTokenAndCall(
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
-        uint32 chainId,
+        bool[] memory isPan,
         bytes32 toContract,
         bytes memory data
     ) internal nonReentrant {
         require(tokens.length == amounts.length, "array length do not match");
-        address khalaInterChainAddress = LibAccountsRegistry.getDeployedInterchainAccount(account);
         for(uint i; i<tokens.length;) {
-            s.balances[account][tokens[i]] += amounts[i];
-            IERC20Mintable(tokens[i]).mint(khalaInterChainAddress,amounts[i]);
+            if(isPan[i]){
+                IERC20Mintable(tokens[i]).mint(account,amounts[i]);
+            } else{
+                _release(account,tokens[i],amounts[i]);
+            }
+
             unchecked {
                 ++i;
             }
         }
-        _proxyCall(khalaInterChainAddress,toContract,data);
-        emit LogDepositMultiTokenAndCall(
+        //call ?
+        emit LogWithdrawMultiTokenAndCall(
             tokens,
             account,
             amounts,
@@ -103,7 +107,21 @@ contract AxonReceiver is Modifiers {
         );
     }
 
-    function _proxyCall(address ica, bytes32 toContract, bytes memory data) internal {
-        IProxyCall(ica).sendProxyCall(TypeCasts.bytes32ToAddress(toContract),data);
+    function _release(
+        address _user,
+        address _token,
+        uint256 _amount
+    ) internal {
+        SafeERC20Upgradeable.safeTransfer(
+            IERC20Upgradeable(_token),
+            _user,
+            _amount
+        );
+
+        emit LogReleaseToken(
+            _user,
+            _token,
+            _amount
+        );
     }
 }
