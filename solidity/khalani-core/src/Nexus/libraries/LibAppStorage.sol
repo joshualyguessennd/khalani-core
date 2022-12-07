@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 struct AppStorage {
    mapping(address => mapping(address => uint256)) balances; // user -> USDC -> balance
    mapping(address => address) mirrorToChainToken; //usdceth -> usdc
-   address inbox;
+   address hyperlaneInbox;
    //mapping(address => bool) panToken; // checks if token is pan
 }
 
@@ -34,7 +34,7 @@ contract Modifiers is ReentrancyGuard {
     }
 
     modifier onlyInbox() {
-        require(msg.sender==s.inbox,"only inbox can call");
+        require(msg.sender==s.hyperlaneInbox,"only inbox can call");
         _;
     }
 
