@@ -6,12 +6,11 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./libraries/HyperlaneFacetLibrary.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "@hyperlane-xyz/core/interfaces/IOutbox.sol";
-import "forge-std/console.sol";
 import "../../interfaces/IBridgeFacet.sol";
 
 
 // Hyperlane Facet for non Axon chain //TODO : Should we make this all `internal` ?
-contract HyperlaneFacet is IBridgeFacet, Modifiers, ReentrancyGuard {
+contract HyperlaneFacet is IBridgeFacet, Modifiers {
 
     function initHyperlaneFacet(
         uint32 _axonDomain,
@@ -32,7 +31,6 @@ contract HyperlaneFacet is IBridgeFacet, Modifiers, ReentrancyGuard {
         bytes32  toContract,
         bytes calldata data
     ) public payable override validRouter  {
-        console.log(msg.sender);
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         bytes memory message = abi.encode(account,token,amount,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);

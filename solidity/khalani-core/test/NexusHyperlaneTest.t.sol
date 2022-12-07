@@ -15,7 +15,7 @@ import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "../src/Nexus/libraries/LibAppStorage.sol";
 
 
-contract NexusTest is Test {
+contract NexusHyperlaneTest is Test {
     //events
     event LogDepositAndCall(
         address indexed token,
@@ -144,17 +144,16 @@ contract NexusTest is Test {
             address(0), //initializer address
             "" //initializer data
         );
-        AxonHandlerFacet(address(axonNexus)).initializeAxonHandler(address (hyperlaneInboxAxon));
+        AxonHandlerFacet(address(axonNexus)).initializeAxonHandler(address (hyperlaneInboxAxon), MOCK_ADDR_4);
         AxonHandlerFacet(address (axonNexus)).addTokenMirror(1,address(usdc),address(usdcEth));
         AxonHandlerFacet(address (axonNexus)).addValidNexusForChain(1,TypeCasts.addressToBytes32(address(ethNexus)));
     }
 
     // Tests for successful deposit and calling a contract on the other chain
     function testDepositAndCall(uint256 amountToDeposit) public {
-        vm.assume(amountToDeposit>0 && amountToDeposit<=100e18);
         address user = MOCK_ADDR_1;
 
-        usdc.mint(MOCK_ADDR_1,100e18);
+        usdc.mint(MOCK_ADDR_1,amountToDeposit);
         vm.startPrank(user);
         usdc.approve(address(ethNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(ethNexus));
@@ -169,13 +168,12 @@ contract NexusTest is Test {
 
     // Tests for successful deposit of multiple tokens and calling a contract on the other chain
     function testDepositMultiTokenAndCall(uint256 amount1, uint256 amount2) public {
-        vm.assume(amount1>0 && amount1<=100e18 && amount2>0 && amount2<=100e18);
         address user = MOCK_ADDR_1;
         MockERC20 usdt = new MockERC20("USDT", "USDT");
         MockERC20 usdtEth =  new MockERC20("USDTEth" , "USDTETH");
         AxonHandlerFacet(address (axonNexus)).addTokenMirror(1,address(usdt),address(usdtEth));
-        usdt.mint(user,100e18);
-        usdc.mint(user,100e18);
+        usdt.mint(user,amount2);
+        usdc.mint(user,amount1);
         vm.startPrank(user);
         usdc.approve(address(ethNexus),amount1);
         usdt.approve(address(ethNexus),amount2);
@@ -213,10 +211,9 @@ contract NexusTest is Test {
 
     // Tests for successful withdrawal of a token and calling a contract on the other chain
     function testWithDrawAndCall(uint256 amountToDeposit, uint256 amountToWithdraw) public {
-        vm.assume(amountToDeposit>0 && amountToDeposit<=100e18);
-        vm.assume(amountToWithdraw>0 && amountToWithdraw<amountToDeposit);
+        vm.assume(amountToWithdraw<amountToDeposit);
         address user = MOCK_ADDR_1;
-        usdc.mint(MOCK_ADDR_1,100e18);
+        usdc.mint(MOCK_ADDR_1,type(uint256).max);
         vm.startPrank(user);
         usdc.approve(address(ethNexus),amountToDeposit);
         vm.expectEmit(true, true, true, true, address(ethNexus));
@@ -226,7 +223,7 @@ contract NexusTest is Test {
         hyperlaneInboxAxon.processNextPendingMessage();
         assertEq(usdcEth.balanceOf(address(axonNexus)),amountToDeposit);
         assertEq(usdc.balanceOf(address(ethNexus)),amountToDeposit);
-        assertEq(usdc.balanceOf(user),100e18 - amountToDeposit);
+        assertEq(usdc.balanceOf(user),type(uint256).max - amountToDeposit);
         vm.prank(user);
         CrossChainRouter(address(ethNexus)).withdrawTokenAndCall(address(usdc),amountToWithdraw,false,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
         vm.expectEmit(true, true, false, false, address(axonNexus));
@@ -234,32 +231,30 @@ contract NexusTest is Test {
         hyperlaneInboxAxon.processNextPendingMessage();
         assertEq(usdcEth.balanceOf(address(axonNexus)),amountToDeposit - amountToWithdraw);
         assertEq(usdc.balanceOf(address(ethNexus)),amountToDeposit - amountToWithdraw);
-        assertEq(usdc.balanceOf(user),100e18-amountToDeposit+amountToWithdraw);
+        assertEq(usdc.balanceOf(user),type(uint256).max - amountToDeposit+amountToWithdraw);
     }
 
     // Failing test -  Attempting to withdraw more amounts of token than locked
     function testWithdrawFail(uint256 amountToDeposit, uint256 amountToWithdraw) public {
-        vm.assume(amountToWithdraw>0 && amountToWithdraw<=100e18);
         vm.assume(amountToDeposit>0 && amountToDeposit<amountToWithdraw);
         address user = MOCK_ADDR_1;
-        usdc.mint(MOCK_ADDR_1,100e18);
+        usdc.mint(MOCK_ADDR_1,type(uint256).max);
         vm.startPrank(user);
         usdc.approve(address(ethNexus),amountToDeposit);
-        vm.expectEmit(true, true, true, true, address(ethNexus));
-        emit LogWithdrawTokenAndCall(address(usdc), user, amountToWithdraw, TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
+
         CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit,false,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
         vm.stopPrank();
         hyperlaneInboxAxon.processNextPendingMessage();
         assertEq(usdcEth.balanceOf(address(axonNexus)),amountToDeposit);
         assertEq(usdc.balanceOf(address(ethNexus)),amountToDeposit);
-        assertEq(usdc.balanceOf(user),100e18 - amountToDeposit);
+        assertEq(usdc.balanceOf(user),type(uint256).max - amountToDeposit);
 
         vm.expectRevert("CCR_InsufficientBalance");
         //trying to withdraw more than available
         vm.prank(user);
         CrossChainRouter(address(ethNexus)).withdrawTokenAndCall(address(usdc),amountToWithdraw,false,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
         //check if balance is still same i.e withdraw did not take place
-        assertEq(usdc.balanceOf(user),100e18 - amountToDeposit);
+        assertEq(usdc.balanceOf(user), type(uint256).max - amountToDeposit);
         assertEq(usdc.balanceOf(address(ethNexus)), amountToDeposit);
     }
 

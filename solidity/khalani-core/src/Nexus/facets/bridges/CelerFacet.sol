@@ -6,6 +6,7 @@ import "../../interfaces/IBridgeFacet.sol";
 import "@sgn-v2-contracts/message/framework/MessageApp.sol";
 import "./libraries/CelerFacetLibrary.sol";
 
+
 contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
 
     constructor(address _messageBus) MessageApp(_messageBus){
@@ -14,13 +15,18 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
 
     function initCelerFacet(
         uint32 _axonDomain,
-        address _axonInbox
+        address _axonInbox,
+        address _messageBus
     ) external onlyDiamondOwner {
         CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
+        setMessageBusI(_messageBus);
         cs.axonDomain = _axonDomain;
         cs.axonInbox = _axonInbox;
     }
 
+    function setMessageBusI(address _messageBus) internal {
+        messageBus = _messageBus;
+    }
     function bridgeTokenAndCall(
         LibAppStorage.TokenBridgeAction action,
         address account,

@@ -7,7 +7,7 @@ import {IERC20Mintable} from "../../interfaces/IERC20Mintable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "../libraries/LibAccountsRegistry.sol";
 import {TypeCasts} from "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
-contract AxonReceiver is Modifiers, ReentrancyGuard {
+contract AxonReceiver is Modifiers {
 
 
     event LogDepositAndCall(
@@ -54,16 +54,15 @@ contract AxonReceiver is Modifiers, ReentrancyGuard {
         bytes32 toContract,
         bytes memory data
     ) internal nonReentrant {
-        require(data.length > 0 , "empty call data");
+        s.balances[account][token] += amount;
+        IERC20Mintable(token).mint(address(this),amount);
+        _proxyCall(toContract,data);
         emit LogDepositAndCall(
             token,
             account,
             amount,
             chainId
         );
-        s.balances[account][token] += amount;
-        IERC20Mintable(token).mint(address(this),amount);
-        _proxyCall(toContract,data);
     }
 
     /**
@@ -83,19 +82,22 @@ contract AxonReceiver is Modifiers, ReentrancyGuard {
         bytes32 toContract,
         bytes memory data
     ) internal nonReentrant {
-        require(data.length > 0 , "empty call data");
         require(tokens.length == amounts.length, "array length do not match");
+
+        for(uint i; i<tokens.length;) {
+            s.balances[account][tokens[i]] += amounts[i];
+            IERC20Mintable(tokens[i]).mint(address(this),amounts[i]);
+            unchecked {
+                ++i;
+            }
+        }
+        _proxyCall(toContract,data);
         emit LogDepositMultiTokenAndCall(
             tokens,
             account,
             amounts,
             chainId
         );
-        for(uint i=0; i<tokens.length;i++) {
-            s.balances[account][tokens[i]] += amounts[i];
-            IERC20Mintable(tokens[i]).mint(address(this),amounts[i]);
-        }
-        _proxyCall(toContract,data);
     }
 
     /**
@@ -115,17 +117,16 @@ contract AxonReceiver is Modifiers, ReentrancyGuard {
         bytes32 toContract,
         bytes memory data
     ) internal nonReentrant {
-        require(data.length>0,"empty call data");
         require(s.balances[account][token] >= amount, "CCR_InsufficientBalance");
+        s.balances[account][token] -= amount;
+        IERC20Mintable(token).burn(address(this), amount);
+        _proxyCall(toContract,data);
         emit LogWithdrawTokenAndCall(
             token,
             account,
             amount,
             chainId
         );
-        s.balances[account][token] -= amount;
-        IERC20Mintable(token).burn(address(this), amount);
-        _proxyCall(toContract,data);
     }
 
     function _proxyCall(bytes32 toContract, bytes memory data) internal {

@@ -2,12 +2,13 @@
 pragma solidity ^0.8.0;
 
 import {LibDiamond} from "../../diamondCommons/libraries/LibDiamond.sol";
-    struct AppStorage {
-        mapping(address => mapping(address => uint256)) balances; // user -> USDC -> balance
-        mapping(address => address) mirrorToChainToken; //usdceth -> usdc
-        address inbox;
-        //mapping(address => bool) panToken; // checks if token is pan
-    }
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+struct AppStorage {
+   mapping(address => mapping(address => uint256)) balances; // user -> USDC -> balance
+   mapping(address => address) mirrorToChainToken; //usdceth -> usdc
+   address hyperlaneInbox;
+   //mapping(address => bool) panToken; // checks if token is pan
+}
 
 library LibAppStorage {
 
@@ -24,7 +25,7 @@ library LibAppStorage {
     }
 }
 
-contract Modifiers {
+contract Modifiers is ReentrancyGuard {
     AppStorage internal s;
 
     modifier onlyDiamondOwner() {
@@ -33,7 +34,7 @@ contract Modifiers {
     }
 
     modifier onlyInbox() {
-        require(msg.sender==s.inbox,"only inbox can call");
+        require(msg.sender==s.hyperlaneInbox,"only inbox can call");
         _;
     }
 
