@@ -79,7 +79,6 @@ contract CrossChainRouter is Modifiers {
         } else{
             _lock(msg.sender, token, amount);
         }
-
         emit LogDepositAndCall(
             token,
             msg.sender,
@@ -106,6 +105,14 @@ contract CrossChainRouter is Modifiers {
         bytes calldata data
     ) public nonReentrant {
         require(tokens.length == amounts.length && tokens.length == isPan.length, "array length do not match");
+
+        emit LogDepositMultiTokenAndCall (
+            tokens,
+            msg.sender,
+            amounts,
+            toContract,
+            data
+        );
 
         IBridgeFacet(address(this)).bridgeMultiTokenAndCall(
             LibAppStorage.TokenBridgeAction.DepositMulti,
