@@ -16,7 +16,7 @@ import "../src/Nexus/libraries/LibAppStorage.sol";
 import "./Mock/MockCounter.sol";
 
 
-contract NexusTest is Test {
+contract NexusHyperlaneTest is Test {
     //events
     event LogDepositAndCall(
         address indexed token,

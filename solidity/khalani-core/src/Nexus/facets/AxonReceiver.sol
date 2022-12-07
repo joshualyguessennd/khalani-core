@@ -56,18 +56,16 @@ contract AxonReceiver is Modifiers {
         bytes32 toContract,
         bytes memory data
     ) internal nonReentrant {
+        address khalaInterChainAddress = LibAccountsRegistry.getDeployedInterchainAccount(account);
         s.balances[account][token] += amount;
-        IERC20Mintable(token).mint(address(this),amount);
-        _proxyCall(toContract,data);
+        IERC20Mintable(token).mint(khalaInterChainAddress,amount);
+        _proxyCall(khalaInterChainAddress,toContract,data);
         emit LogDepositAndCall(
             token,
             account,
             amount,
             chainId
         );
-        s.balances[account][token] += amount;
-        IERC20Mintable(token).mint(address(this),amount);
-        _proxyCall(toContract,data);
     }
 
     /**

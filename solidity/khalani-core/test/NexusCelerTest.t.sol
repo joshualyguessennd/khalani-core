@@ -17,7 +17,7 @@ import "./Mock/MockCelerMessageBus.sol";
 import "../src/Nexus/facets/bridges/CelerFacet.sol";
 
 
-contract NexusTest2 is Test {
+contract NexusCelerTest is Test {
     //events
     event LogDepositAndCall(
         address indexed token,
