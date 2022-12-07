@@ -18,12 +18,12 @@ contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
         bytes message
     );
 
-    constructor(address _messageBus) MessageApp(_messageBus) {
+    constructor(address _celerMessageBus) MessageApp(_celerMessageBus) {
 
     }
 
-    function setBus(address _messageBus) internal {
-        messageBus = _messageBus;
+    function setCelerMessageBus(address _celerMessageBus) internal {
+        messageBus = _celerMessageBus;
     }
 
     function _onlyNexus(uint32 _origin, bytes32 _sender) internal {
@@ -31,9 +31,9 @@ contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
         require(ds.chainNexusMap[_origin]==_sender, "AxonHyperlaneHandler : invalid nexus");
     }
 
-    function initializeAxonHandler(address _inbox, address _messageBus) public onlyDiamondOwner {
-        s.inbox = _inbox;
-        setBus(_messageBus);
+    function initializeAxonHandler(address _hyperlaneInbox, address _celerMessageBus) public onlyDiamondOwner {
+        s.hyperlaneInbox = _hyperlaneInbox;
+        setCelerMessageBus(_celerMessageBus);
     }
 
     function addTokenMirror(uint32 chainDomain, address token, address mirrorToken) public onlyDiamondOwner {
@@ -57,8 +57,12 @@ contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
         if(action == LibAppStorage.TokenBridgeAction.DepositMulti) {
             (address account, address[] memory tokens, uint256[] memory amounts, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
             (address, address[], uint256[], bytes32, bytes));
-            for(uint i=0; i<tokens.length; i++){
+            for(uint i; i<tokens.length;){
                 tokens[i] = LibAccountsRegistry._getMirrorToken(_origin,tokens[i]);
+
+                unchecked {
+                    ++i;
+                }
             }
             depositMultiTokenAndCall(account,tokens,amounts,_origin,toContract,data);
         } else {
@@ -87,8 +91,11 @@ contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
         if(action == LibAppStorage.TokenBridgeAction.DepositMulti) {
             (address account, address[] memory tokens, uint256[] memory amounts, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
                 (address, address[], uint256[], bytes32, bytes));
-            for(uint i=0; i<tokens.length; i++){
+            for(uint i; i<tokens.length;){
                 tokens[i] = LibAccountsRegistry._getMirrorToken(uint32(_origin),tokens[i]);
+                unchecked{
+                    ++i;
+                }
             }
             depositMultiTokenAndCall(account,tokens,amounts,uint32(_origin),toContract,data);
         } else {

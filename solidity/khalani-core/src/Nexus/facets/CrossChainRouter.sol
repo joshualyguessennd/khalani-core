@@ -65,7 +65,6 @@ contract CrossChainRouter is Modifiers {
         bytes32 toContract,
         bytes calldata data
     ) public nonReentrant {
-        require(data.length > 0 , "empty call data");
         IBridgeFacet(address(this)).bridgeTokenAndCall(
             LibAppStorage.TokenBridgeAction.Deposit,
             msg.sender,
@@ -105,10 +104,15 @@ contract CrossChainRouter is Modifiers {
         bytes32 toContract,
         bytes calldata data
     ) public nonReentrant {
-
-        require(data.length > 0 , "empty call data");
-
         require(tokens.length == amounts.length && tokens.length == isPan.length, "array length do not match");
+
+        emit LogDepositMultiTokenAndCall (
+            tokens,
+            msg.sender,
+            amounts,
+            toContract,
+            data
+        );
 
         IBridgeFacet(address(this)).bridgeMultiTokenAndCall(
             LibAppStorage.TokenBridgeAction.DepositMulti,
@@ -119,12 +123,17 @@ contract CrossChainRouter is Modifiers {
             data
         );
 
-        for(uint i=0; i<tokens.length;i++) {
+        for(uint i; i<tokens.length;) {
             if(isPan[i]) {
                 IERC20Mintable(tokens[i]).burn(msg.sender,amounts[i]);
             } else {
                 _lock(msg.sender, tokens[i], amounts[i]);
             }
+
+            unchecked {
+                ++i;
+            }
+
         }
 
         emit LogDepositMultiTokenAndCall (
@@ -152,7 +161,6 @@ contract CrossChainRouter is Modifiers {
         bytes32 toContract,
         bytes calldata data
     ) public nonReentrant {
-        require(data.length>0,"empty call data");
         IBridgeFacet(address(this)).bridgeTokenAndCall(
             LibAppStorage.TokenBridgeAction.Withdraw,
             msg.sender,
@@ -174,7 +182,6 @@ contract CrossChainRouter is Modifiers {
             toContract,
             data
         );
-
     }
 
     // internal functions
