@@ -59,11 +59,12 @@ contract AxonCrossChainRouter is Modifiers {
     ) public nonReentrant {
         IERC20Mintable(token).burn(msg.sender,amount);
 
-        IBridgeFacet(address(this)).bridgeTokenAndCall(
+        IBridgeFacet(address(this)).bridgeTokenAndCallback(
             LibAppStorage.TokenBridgeAction.Deposit,
             msg.sender,
             token,
             amount,
+            isPan,
             toContract,
             data
         );
@@ -104,11 +105,12 @@ contract AxonCrossChainRouter is Modifiers {
             }
         }
 
-        IBridgeFacet(address(this)).bridgeMultiTokenAndCall(
+        IBridgeFacet(address(this)).bridgeMultiTokenAndCallback(
             LibAppStorage.TokenBridgeAction.WithdrawMulti,
             msg.sender,
             tokens,
             amounts,
+            isPan,
             toContract,
             data
         );

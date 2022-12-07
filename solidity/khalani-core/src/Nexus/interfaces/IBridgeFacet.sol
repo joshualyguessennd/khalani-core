@@ -12,7 +12,7 @@ interface IBridgeFacet {
         bytes calldata data
     ) external payable ;
 
-    function bridgeTokenAndCall(
+    function bridgeTokenAndCallback(
         LibAppStorage.TokenBridgeAction action,
         address account,
         address token,
@@ -31,7 +31,7 @@ interface IBridgeFacet {
         bytes calldata data
     ) external payable ;
 
-    function bridgeMultiTokenAndCall(
+    function bridgeMultiTokenAndCallback(
         LibAppStorage.TokenBridgeAction action,
         address account,
         address[] memory tokens,

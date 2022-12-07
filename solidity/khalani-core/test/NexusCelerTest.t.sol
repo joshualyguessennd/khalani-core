@@ -98,10 +98,9 @@ contract NexusCelerTest is Test {
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](2);
 
         CrossChainRouter ccr = new CrossChainRouter();
-        bytes4[] memory ccrFunctionSelectors = new bytes4[](3);
+        bytes4[] memory ccrFunctionSelectors = new bytes4[](2);
         ccrFunctionSelectors[0] = ccr.depositTokenAndCall.selector;
         ccrFunctionSelectors[1] = ccr.depositMultiTokenAndCall.selector;
-        ccrFunctionSelectors[2] = ccr.withdrawTokenAndCall.selector;
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(ccr),
         action: IDiamond.FacetCutAction.Add,
@@ -219,56 +218,56 @@ contract NexusCelerTest is Test {
     }
 
     // Tests for successful withdrawal of a token and calling a contract on the other chain
-    function testWithDrawAndCall(uint256 amountToDeposit, uint256 amountToWithdraw) public {
-        vm.assume(amountToWithdraw<amountToDeposit);
-        address user = MOCK_ADDR_1;
-        vm.prank(address(axonNexus));
-        address userKhalaAccount = LibAccountsRegistry.getDeployedInterchainAccount(user);
-        usdc.mint(MOCK_ADDR_1,type(uint256).max);
-        vm.startPrank(user);
-        usdc.approve(address(gwNexus),amountToDeposit);
-        vm.expectEmit(true, true, true, true, address(gwNexus));
-        emit LogWithdrawTokenAndCall(address(usdc), user, amountToWithdraw, TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
-        CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,false,TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
-        vm.stopPrank();
-        //hyperlaneInboxAxon.processNextPendingMessage();
-        assertEq(usdcgW.balanceOf(address(userKhalaAccount)),amountToDeposit);
-        assertEq(usdc.balanceOf(address(gwNexus)),amountToDeposit);
-        assertEq(usdc.balanceOf(user),type(uint256).max - amountToDeposit);
-        vm.prank(user);
-        CrossChainRouter(address(gwNexus)).withdrawTokenAndCall(address(usdc),amountToWithdraw,false,TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
-//        vm.expectEmit(true, true, false, false, address(axonNexus));
-//        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(gwNexus)), abi.encode(""));
-//        hyperlaneInboxAxon.processNextPendingMessage();
-        assertEq(usdcgW.balanceOf(address(userKhalaAccount)),amountToDeposit - amountToWithdraw);
-        assertEq(usdc.balanceOf(address(gwNexus)),amountToDeposit - amountToWithdraw);
-        assertEq(usdc.balanceOf(user),type(uint256).max - amountToDeposit+amountToWithdraw);
-    }
-
-    // Failing test -  Attempting to withdraw more amounts of token than locked
-    function testWithdrawFail(uint256 amountToDeposit, uint256 amountToWithdraw) public {
-        vm.assume(amountToDeposit>0 && amountToDeposit<amountToWithdraw);
-        address user = MOCK_ADDR_1;
-        vm.prank(address(axonNexus));
-        address userKhalaAccount = LibAccountsRegistry.getDeployedInterchainAccount(user);
-        usdc.mint(MOCK_ADDR_1,type(uint256).max);
-        vm.startPrank(user);
-        usdc.approve(address(gwNexus),amountToDeposit);
-        CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,false,TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
-        vm.stopPrank();
-        //hyperlaneInboxAxon.processNextPendingMessage();
-        assertEq(usdcgW.balanceOf(address(userKhalaAccount)),amountToDeposit);
-        assertEq(usdc.balanceOf(address(gwNexus)),amountToDeposit);
-        assertEq(usdc.balanceOf(user),type(uint256).max - amountToDeposit);
-
-        vm.expectRevert("CCR_InsufficientBalance");
-        //trying to withdraw more than available
-        vm.prank(user);
-        CrossChainRouter(address(gwNexus)).withdrawTokenAndCall(address(usdc),amountToWithdraw,false,TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
-        //check if balance is still same i.e withdraw did not take place
-        assertEq(usdc.balanceOf(user), type(uint256).max - amountToDeposit);
-        assertEq(usdc.balanceOf(address(gwNexus)), amountToDeposit);
-    }
+//    function testWithDrawAndCall(uint256 amountToDeposit, uint256 amountToWithdraw) public {
+//        vm.assume(amountToWithdraw<amountToDeposit);
+//        address user = MOCK_ADDR_1;
+//        vm.prank(address(axonNexus));
+//        address userKhalaAccount = LibAccountsRegistry.getDeployedInterchainAccount(user);
+//        usdc.mint(MOCK_ADDR_1,type(uint256).max);
+//        vm.startPrank(user);
+//        usdc.approve(address(gwNexus),amountToDeposit);
+//        vm.expectEmit(true, true, true, true, address(gwNexus));
+//        emit LogWithdrawTokenAndCall(address(usdc), user, amountToWithdraw, TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
+//        CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,false,TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
+//        vm.stopPrank();
+//        //hyperlaneInboxAxon.processNextPendingMessage();
+//        assertEq(usdcgW.balanceOf(address(userKhalaAccount)),amountToDeposit);
+//        assertEq(usdc.balanceOf(address(gwNexus)),amountToDeposit);
+//        assertEq(usdc.balanceOf(user),type(uint256).max - amountToDeposit);
+//        vm.prank(user);
+//        CrossChainRouter(address(gwNexus)).withdrawTokenAndCall(address(usdc),amountToWithdraw,false,TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
+////        vm.expectEmit(true, true, false, false, address(axonNexus));
+////        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(gwNexus)), abi.encode(""));
+////        hyperlaneInboxAxon.processNextPendingMessage();
+//        assertEq(usdcgW.balanceOf(address(userKhalaAccount)),amountToDeposit - amountToWithdraw);
+//        assertEq(usdc.balanceOf(address(gwNexus)),amountToDeposit - amountToWithdraw);
+//        assertEq(usdc.balanceOf(user),type(uint256).max - amountToDeposit+amountToWithdraw);
+//    }
+//
+//    // Failing test -  Attempting to withdraw more amounts of token than locked
+//    function testWithdrawFail(uint256 amountToDeposit, uint256 amountToWithdraw) public {
+//        vm.assume(amountToDeposit>0 && amountToDeposit<amountToWithdraw);
+//        address user = MOCK_ADDR_1;
+//        vm.prank(address(axonNexus));
+//        address userKhalaAccount = LibAccountsRegistry.getDeployedInterchainAccount(user);
+//        usdc.mint(MOCK_ADDR_1,type(uint256).max);
+//        vm.startPrank(user);
+//        usdc.approve(address(gwNexus),amountToDeposit);
+//        CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,false,TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
+//        vm.stopPrank();
+//        //hyperlaneInboxAxon.processNextPendingMessage();
+//        assertEq(usdcgW.balanceOf(address(userKhalaAccount)),amountToDeposit);
+//        assertEq(usdc.balanceOf(address(gwNexus)),amountToDeposit);
+//        assertEq(usdc.balanceOf(user),type(uint256).max - amountToDeposit);
+//
+//        vm.expectRevert("CCR_InsufficientBalance");
+//        //trying to withdraw more than available
+//        vm.prank(user);
+//        CrossChainRouter(address(gwNexus)).withdrawTokenAndCall(address(usdc),amountToWithdraw,false,TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
+//        //check if balance is still same i.e withdraw did not take place
+//        assertEq(usdc.balanceOf(user), type(uint256).max - amountToDeposit);
+//        assertEq(usdc.balanceOf(address(gwNexus)), amountToDeposit);
+//    }
 
     // Access control check tests
 

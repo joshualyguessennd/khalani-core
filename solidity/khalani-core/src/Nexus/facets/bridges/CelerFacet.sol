@@ -46,7 +46,7 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
         );
     }
 
-    function bridgeTokenAndCall(
+    function bridgeTokenAndCallback(
         LibAppStorage.TokenBridgeAction action,
         address account,
         address token,
@@ -85,7 +85,7 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
         );
     }
 
-    function bridgeMultiTokenAndCall(
+    function bridgeMultiTokenAndCallback(
         LibAppStorage.TokenBridgeAction action,
         address account,
         address[] memory tokens,

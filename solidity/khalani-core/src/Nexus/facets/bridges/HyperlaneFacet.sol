@@ -41,7 +41,7 @@ contract HyperlaneFacet is IBridgeFacet, Modifiers {
         );
     }
 
-    function bridgeTokenAndCall(
+    function bridgeTokenAndCallback(
         LibAppStorage.TokenBridgeAction action,
         address account,
         address token,
@@ -78,7 +78,7 @@ contract HyperlaneFacet is IBridgeFacet, Modifiers {
         );
     }
 
-    function bridgeMultiTokenAndCall(
+    function bridgeMultiTokenAndCallback(
         LibAppStorage.TokenBridgeAction action,
         address account,
         address[] memory tokens,
