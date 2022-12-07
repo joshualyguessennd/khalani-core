@@ -7,6 +7,8 @@ import {IERC20Mintable} from "../../interfaces/IERC20Mintable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "../libraries/LibAccountsRegistry.sol";
 import {TypeCasts} from "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
+import "../interfaces/IProxyCall.sol";
+
 contract AxonReceiver is Modifiers {
 
 
@@ -54,9 +56,10 @@ contract AxonReceiver is Modifiers {
         bytes32 toContract,
         bytes memory data
     ) internal nonReentrant {
+        address khalaInterChainAddress = LibAccountsRegistry.getDeployedInterchainAccount(account);
         s.balances[account][token] += amount;
-        IERC20Mintable(token).mint(address(this),amount);
-        _proxyCall(toContract,data);
+        IERC20Mintable(token).mint(khalaInterChainAddress,amount);
+        _proxyCall(khalaInterChainAddress,toContract,data);
         emit LogDepositAndCall(
             token,
             account,
@@ -83,15 +86,15 @@ contract AxonReceiver is Modifiers {
         bytes memory data
     ) internal nonReentrant {
         require(tokens.length == amounts.length, "array length do not match");
-
+        address khalaInterChainAddress = LibAccountsRegistry.getDeployedInterchainAccount(account);
         for(uint i; i<tokens.length;) {
             s.balances[account][tokens[i]] += amounts[i];
-            IERC20Mintable(tokens[i]).mint(address(this),amounts[i]);
+            IERC20Mintable(tokens[i]).mint(khalaInterChainAddress,amounts[i]);
             unchecked {
                 ++i;
             }
         }
-        _proxyCall(toContract,data);
+        _proxyCall(khalaInterChainAddress,toContract,data);
         emit LogDepositMultiTokenAndCall(
             tokens,
             account,
@@ -119,8 +122,9 @@ contract AxonReceiver is Modifiers {
     ) internal nonReentrant {
         require(s.balances[account][token] >= amount, "CCR_InsufficientBalance");
         s.balances[account][token] -= amount;
-        IERC20Mintable(token).burn(address(this), amount);
-        _proxyCall(toContract,data);
+        address khalaInterChainAddress = LibAccountsRegistry.getInterchainAccount(account);
+        IERC20Mintable(token).burn(khalaInterChainAddress, amount);
+        _proxyCall(khalaInterChainAddress,toContract,data);
         emit LogWithdrawTokenAndCall(
             token,
             account,
@@ -129,12 +133,7 @@ contract AxonReceiver is Modifiers {
         );
     }
 
-    function _proxyCall(bytes32 toContract, bytes memory data) internal {
-        (bool success, bytes memory returnData) = TypeCasts.bytes32ToAddress(toContract).call(data);
-        if (!success) {
-            assembly {
-                revert(add(returnData, 32), returnData)
-            }
-        }
+    function _proxyCall(address ica, bytes32 toContract, bytes memory data) internal {
+        IProxyCall(ica).sendProxyCall(TypeCasts.bytes32ToAddress(toContract),data);
     }
 }
