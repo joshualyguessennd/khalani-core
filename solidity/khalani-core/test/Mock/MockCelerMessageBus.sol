@@ -10,12 +10,6 @@ contract MockCelerMessageBus is IMessageBus{
     uint64 chainId;
     mapping(uint64 => address) chainMessageBus;
 
-//    struct RouteInfo {
-//        address sender;
-//        address receiver;
-//        uint64 srcChainId;
-//        bytes32 srcTxHash; // src chain msg tx hash
-//    }
     constructor(uint64 _chainId) {
         chainId = _chainId;
     }
