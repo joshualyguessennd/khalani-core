@@ -41,6 +41,25 @@ contract HyperlaneFacet is IBridgeFacet, Modifiers {
         );
     }
 
+    function bridgeTokenAndCall(
+        LibAppStorage.TokenBridgeAction action,
+        address account,
+        address token,
+        uint256 amount,
+        bool isPan,
+        bytes32  toContract,
+        bytes calldata data
+    ) public payable override validRouter  {
+        HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
+        bytes memory message = abi.encode(account,token,amount,isPan,toContract,data);
+        bytes memory messageWithAction = abi.encode(action,message);
+        IOutbox(hs.hyperlaneOutbox).dispatch(
+            hs.axonDomain,
+            TypeCasts.addressToBytes32(hs.axonInbox),
+            messageWithAction
+        );
+    }
+
     function bridgeMultiTokenAndCall(
         LibAppStorage.TokenBridgeAction action,
         address account,
@@ -51,6 +70,25 @@ contract HyperlaneFacet is IBridgeFacet, Modifiers {
     ) public payable override validRouter {
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
+        bytes memory messageWithAction = abi.encode(action,message);
+        IOutbox(hs.hyperlaneOutbox).dispatch(
+            hs.axonDomain,
+            TypeCasts.addressToBytes32(hs.axonInbox),
+            messageWithAction
+        );
+    }
+
+    function bridgeMultiTokenAndCall(
+        LibAppStorage.TokenBridgeAction action,
+        address account,
+        address[] memory tokens,
+        uint256[] memory amounts,
+        bool[] memory isPan,
+        bytes32 toContract,
+        bytes calldata data
+    ) public payable override validRouter {
+        HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
+        bytes memory message = abi.encode(account,tokens,amounts,isPan,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);
         IOutbox(hs.hyperlaneOutbox).dispatch(
             hs.axonDomain,

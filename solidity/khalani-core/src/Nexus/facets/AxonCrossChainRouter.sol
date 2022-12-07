@@ -104,14 +104,6 @@ contract AxonCrossChainRouter is Modifiers {
             }
         }
 
-        emit LogWithdrawMultiTokenAndCall (
-            tokens,
-            msg.sender,
-            amounts,
-            toContract,
-            data
-        );
-
         IBridgeFacet(address(this)).bridgeMultiTokenAndCall(
             LibAppStorage.TokenBridgeAction.WithdrawMulti,
             msg.sender,
@@ -136,7 +128,6 @@ contract AxonCrossChainRouter is Modifiers {
         uint256 _amount
     ) internal {
         require(s.balances[_user][_token] >= _amount, "CCR_InsufficientBalance");
-        s.balances[_user][_token] -= _amount;
         SafeERC20Upgradeable.safeTransfer(
             IERC20Upgradeable(_token),
             _user,

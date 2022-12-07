@@ -21,7 +21,7 @@ library LibAppReceiver {
         ds.mirrorChainToken[_mirrorToken] = _chainToken;
     }
 
-    function _getChainToken(address _mirrorToken) internal {
+    function _getChainToken(address _mirrorToken) internal returns (address){
         AppReceiverStorage storage ds = appReceiverStorage();
         return ds.mirrorChainToken[_mirrorToken];
     }

@@ -15,15 +15,13 @@ contract Receiver is Modifiers {
     event LogWithdrawAndCall(
         address indexed token,
         address indexed user,
-        uint256 amount,
-        uint32 fromChainId
+        uint256 amount
     );
 
     event LogWithdrawMultiTokenAndCall(
         address[]  indexed token,
         address indexed user,
-        uint256[]  amounts,
-        uint32 fromChainId
+        uint256[]  amounts
     );
 
     event LogCrossChainMsg(
@@ -43,7 +41,7 @@ contract Receiver is Modifiers {
     * @notice mint mirror token and calls and execute call on `toContract` with `data`
     * @param token - address of token to deposit
     * @param amount - amount of tokens to deposit
-    * @param chainId - chain's domain from where call was received on axon
+    * @param isPan - if token is a pan token pass true
     * @param toContract - contract address to execute crossChain call on
     * @param data - call data to be executed on `toContract`
     **/
@@ -64,8 +62,7 @@ contract Receiver is Modifiers {
         emit LogWithdrawAndCall(
             token,
             account,
-            amount,
-            chainId
+            amount
         );
     }
 
@@ -74,7 +71,7 @@ contract Receiver is Modifiers {
     * @notice account - address of account
     * @param tokens - addresses of tokens to deposit
     * @param amounts - amounts of tokens to deposit
-    * @param chainId - chain's domain from where call was received on axon
+    * @param isPan - if token is a pan token pass true
     * @param toContract - contract address to execute crossChain call on
     * @param data - call data to be executed on `toContract`
     **/
@@ -102,8 +99,7 @@ contract Receiver is Modifiers {
         emit LogWithdrawMultiTokenAndCall(
             tokens,
             account,
-            amounts,
-            chainId
+            amounts
         );
     }
 

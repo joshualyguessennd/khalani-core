@@ -46,6 +46,26 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
         );
     }
 
+    function bridgeTokenAndCall(
+        LibAppStorage.TokenBridgeAction action,
+        address account,
+        address token,
+        uint256 amount,
+        bool isPan,
+        bytes32  toContract,
+        bytes calldata data
+    ) public payable override validRouter  {
+        CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
+        bytes memory message = abi.encode(account,token,amount,isPan,toContract,data);
+        bytes memory messageWithAction = abi.encode(action,message);
+        sendMessage(
+            cs.axonInbox,
+            cs.axonDomain,
+            messageWithAction,
+            msg.value
+        );
+    }
+
     function bridgeMultiTokenAndCall(
         LibAppStorage.TokenBridgeAction action,
         address account,
@@ -56,6 +76,26 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
     ) public payable override validRouter {
         CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
         bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
+        bytes memory messageWithAction = abi.encode(action,message);
+        sendMessage(
+            cs.axonInbox,
+            cs.axonDomain,
+            messageWithAction,
+            msg.value
+        );
+    }
+
+    function bridgeMultiTokenAndCall(
+        LibAppStorage.TokenBridgeAction action,
+        address account,
+        address[] memory tokens,
+        uint256[] memory amounts,
+        bool[] memory isPan,
+        bytes32 toContract,
+        bytes calldata data
+    ) public payable override validRouter {
+        CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
+        bytes memory message = abi.encode(account,tokens,amounts,isPan,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);
         sendMessage(
             cs.axonInbox,
