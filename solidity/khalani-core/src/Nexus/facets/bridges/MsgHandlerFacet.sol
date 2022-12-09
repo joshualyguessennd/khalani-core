@@ -53,8 +53,8 @@ contract MsgHandlerFacet is IMessageRecipient, MessageApp, Receiver {
         abi.decode(_message, (LibAppStorage.TokenBridgeAction,bytes));
 
         if(action == LibAppStorage.TokenBridgeAction.WithdrawMulti) {
-            (address account, address[] memory tokens, uint256[] memory amounts, bool[] memory isPan, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
-                (address, address[], uint256[], bool[], bytes32, bytes));
+            (address account, address[] memory tokens, uint256[] memory amounts, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
+                (address, address[], uint256[], bytes32, bytes));
             for(uint i; i<tokens.length;){
                 tokens[i] = LibAppReceiver._getChainToken(tokens[i]);
 
@@ -62,13 +62,13 @@ contract MsgHandlerFacet is IMessageRecipient, MessageApp, Receiver {
                     ++i;
                }
             }
-            withdrawMultiTokenAndCall(account,tokens,amounts,isPan,toContract,data);
+            withdrawMultiTokenAndCall(account,tokens,amounts,toContract,data);
         } else {
-            (address account, address token, uint256 amount, bool isPan, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
-                (address, address, uint256, bool, bytes32, bytes));
+            (address account, address token, uint256 amount, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
+                (address, address, uint256, bytes32, bytes));
             token = LibAppReceiver._getChainToken(token);
             if(action == LibAppStorage.TokenBridgeAction.Withdraw) {
-                withdrawTokenAndCall(account,token,amount,isPan,toContract,data);
+                withdrawTokenAndCall(account,token,amount,toContract,data);
             }
         }
     }
@@ -85,21 +85,21 @@ contract MsgHandlerFacet is IMessageRecipient, MessageApp, Receiver {
         abi.decode(_message, (LibAppStorage.TokenBridgeAction,bytes));
 
         if(action == LibAppStorage.TokenBridgeAction.DepositMulti) {
-            (address account, address[] memory tokens, uint256[] memory amounts, bool[] memory isPan, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
-                (address, address[], uint256[], bool[], bytes32, bytes));
+            (address account, address[] memory tokens, uint256[] memory amounts, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
+                (address, address[], uint256[], bytes32, bytes));
             for(uint i; i<tokens.length;){
                 tokens[i] = LibAppReceiver._getChainToken(tokens[i]);
                 unchecked{
                     ++i;
                 }
             }
-            withdrawMultiTokenAndCall(account,tokens,amounts,isPan,toContract,data);
+            withdrawMultiTokenAndCall(account,tokens,amounts,toContract,data);
         } else {
-            (address account, address token, uint256 amount, bool isPan, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
-                (address, address, uint256, bool, bytes32, bytes));
+            (address account, address token, uint256 amount, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
+                (address, address, uint256, bytes32, bytes));
             token = LibAppReceiver._getChainToken(token);
             if(action == LibAppStorage.TokenBridgeAction.Deposit) {
-                withdrawTokenAndCall(account,token,amount,isPan,toContract,data);
+                withdrawTokenAndCall(account,token,amount,toContract,data);
             }
         }
         return ExecutionStatus.Success;

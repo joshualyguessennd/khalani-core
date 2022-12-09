@@ -4,7 +4,8 @@ pragma solidity ^0.8.0;
 import "../libraries/LibAppStorage.sol";
 import {IERC20Mintable} from "../../interfaces/IERC20Mintable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "./bridges/HyperlaneFacet.sol";
+import "../interfaces/IMultiBridgeFacet.sol";
+import "../interfaces/IKhalaInterchainAccount.sol";
 
 contract AxonCrossChainRouter is Modifiers {
 
@@ -46,31 +47,45 @@ contract AxonCrossChainRouter is Modifiers {
     * pan will be minted and other chain token will be released
     * @param token - address of token to be withdrawn
     * @param amount - amount of tokens to be withdrawn
-    * @param isPan - true when token in a Pan token ex - pan, panEth, panBTC
     * @param toContract - contract address to execute crossChain call on
     * @param data - call data to be executed on `toContract`
     **/
     function withdrawTokenAndCall(
-        address ica,
-        address account,
+        uint chainId,
         address token,
         uint256 amount,
-        bool isPan,
         bytes32 toContract,
         bytes calldata data
     ) public nonReentrant {
-        IERC20Mintable(token).burn(ica,amount);
+        IERC20Mintable(token).burn(msg.sender,amount);
+        address _eoa = IKhalaInterchainAccount(msg.sender).getEOA();
 
-        IBridgeFacet(address(this)).bridgeTokenAndCallback(
-            LibAppStorage.TokenBridgeAction.Withdraw,
-            account,
-            token,
-            amount,
-            isPan,
-            toContract,
-            data
-        );
+        AppStorage storage ds = LibAppStorage.diamondStorage();
+        if(ds.godwokenChainId == chainId) {
 
+            IMultiBridgeFacet(address(this)).bridgeTokenAndCallbackViaCeler(
+                LibAppStorage.TokenBridgeAction.Withdraw,
+                uint64(chainId),
+                _eoa,
+                token,
+                amount,
+                toContract,
+                data
+            );
+
+        } else {
+
+            IMultiBridgeFacet(address(this)).bridgeTokenAndCallbackViaHyperlane(
+                LibAppStorage.TokenBridgeAction.Withdraw,
+                uint32(chainId),
+                _eoa,
+                token,
+                amount,
+                toContract,
+                data
+            );
+
+        }
 
 
         emit LogWithdrawAndCall(
@@ -87,37 +102,53 @@ contract AxonCrossChainRouter is Modifiers {
     * pan will be minted and other chain token will be released
     * @param tokens - addresses of tokens to deposit
     * @param amounts - amounts of tokens to deposit
-    * @param isPan - true when token in a Pan token ex - pan, panEth, panBTC
     * @param toContract - contract address to execute crossChain call on
     * @param data - call data to be executed on `toContract`
     **/
     function withdrawMultiTokenAndCall(
-        address ica,
-        address account,
+        uint chainId,
         address[] memory tokens,
         uint256[] memory amounts,
-        bool[] memory isPan,
         bytes32 toContract,
         bytes calldata data
     ) public nonReentrant {
-        require(tokens.length == amounts.length && tokens.length == isPan.length, "array length do not match");
+        require(tokens.length == amounts.length , "array length do not match");
+
+        address _eoa = IKhalaInterchainAccount(msg.sender).getEOA();
 
         for(uint i; i<tokens.length;) {
-            IERC20Mintable(tokens[i]).burn(ica,amounts[i]);
+            IERC20Mintable(tokens[i]).burn(msg.sender,amounts[i]);
             unchecked {
                 ++i;
             }
         }
 
-        IBridgeFacet(address(this)).bridgeMultiTokenAndCallback(
-            LibAppStorage.TokenBridgeAction.WithdrawMulti,
-            account,
-            tokens,
-            amounts,
-            isPan,
-            toContract,
-            data
-        );
+        AppStorage storage ds = LibAppStorage.diamondStorage();
+        if(ds.godwokenChainId == chainId) {
+
+            IMultiBridgeFacet(address(this)).bridgeMultiTokenAndCallbackViaCeler(
+                LibAppStorage.TokenBridgeAction.WithdrawMulti,
+                uint64(chainId),
+                _eoa,
+                tokens,
+                amounts,
+                toContract,
+                data
+            );
+
+        } else {
+
+            IMultiBridgeFacet(address(this)).bridgeMultiTokenAndCallbackViaHyperlane(
+                LibAppStorage.TokenBridgeAction.WithdrawMulti,
+                uint32(chainId),
+                _eoa,
+                tokens,
+                amounts,
+                toContract,
+                data
+            );
+
+        }
 
         emit LogWithdrawMultiTokenAndCall (
             tokens,
@@ -127,24 +158,4 @@ contract AxonCrossChainRouter is Modifiers {
             data
         );
     }
-
-    function _release(
-        address _user,
-        address _token,
-        uint256 _amount
-    ) internal {
-        require(s.balances[_user][_token] >= _amount, "CCR_InsufficientBalance");
-        SafeERC20Upgradeable.safeTransfer(
-            IERC20Upgradeable(_token),
-            _user,
-            _amount
-        );
-
-        emit LogReleaseToken(
-            _user,
-            _token,
-            _amount
-        );
-    }
-
 }

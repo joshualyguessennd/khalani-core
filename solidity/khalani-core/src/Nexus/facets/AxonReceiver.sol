@@ -7,7 +7,7 @@ import {IERC20Mintable} from "../../interfaces/IERC20Mintable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "../libraries/LibAccountsRegistry.sol";
 import {TypeCasts} from "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
-import "../interfaces/IProxyCall.sol";
+import "../interfaces/IKhalaInterchainAccount.sol";
 
 contract AxonReceiver is Modifiers {
 
@@ -57,9 +57,16 @@ contract AxonReceiver is Modifiers {
         bytes memory data
     ) internal nonReentrant {
         address khalaInterChainAddress = LibAccountsRegistry.getDeployedInterchainAccount(account);
-        s.balances[account][token] += amount;
         IERC20Mintable(token).mint(khalaInterChainAddress,amount);
-        _proxyCall(khalaInterChainAddress,toContract,data);
+
+        IKhalaInterchainAccount(khalaInterChainAddress).sendProxyCall(
+                token,
+                amount,
+                chainId,
+                TypeCasts.bytes32ToAddress(toContract),
+                data
+        );
+
         emit LogDepositAndCall(
             token,
             account,
@@ -88,22 +95,25 @@ contract AxonReceiver is Modifiers {
         require(tokens.length == amounts.length, "array length do not match");
         address khalaInterChainAddress = LibAccountsRegistry.getDeployedInterchainAccount(account);
         for(uint i; i<tokens.length;) {
-            s.balances[account][tokens[i]] += amounts[i];
             IERC20Mintable(tokens[i]).mint(khalaInterChainAddress,amounts[i]);
             unchecked {
                 ++i;
             }
         }
-        _proxyCall(khalaInterChainAddress,toContract,data);
+
+        IKhalaInterchainAccount(khalaInterChainAddress).sendProxyCallForMultiTokens(
+                tokens,
+                amounts,
+                chainId,
+                TypeCasts.bytes32ToAddress(toContract),
+                data
+        );
+
         emit LogDepositMultiTokenAndCall(
             tokens,
             account,
             amounts,
             chainId
         );
-    }
-
-    function _proxyCall(address ica, bytes32 toContract, bytes memory data) internal {
-        try IProxyCall(ica).sendProxyCall(TypeCasts.bytes32ToAddress(toContract),data)
     }
 }

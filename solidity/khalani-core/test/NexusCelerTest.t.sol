@@ -165,7 +165,7 @@ contract NexusCelerTest is Test {
         usdc.approve(address(gwNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(gwNexus));
         emit LogDepositAndCall(address(usdc), user, amountToDeposit, TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
-        CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,false,TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
+        CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
         vm.stopPrank();
 //        vm.expectEmit(true, true, false, false, address(axonNexus));
 //        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(gwNexus)), abi.encode(""));
@@ -188,9 +188,6 @@ contract NexusCelerTest is Test {
         address[] memory tokens = new address[](2);
         tokens[0] = address(usdc);
         tokens[1] = address(usdt);
-        bool[] memory isPan = new bool[](2);
-        isPan[0] = false;
-        isPan[1] = false;
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = amount1;
         amounts[1] = amount2;
@@ -205,7 +202,6 @@ contract NexusCelerTest is Test {
         CrossChainRouter(address(gwNexus)).depositMultiTokenAndCall(
             tokens,
             amounts,
-            isPan,
             TypeCasts.addressToBytes32(address(usdcgW)),
             abi.encodeWithSelector(usdcgW.balanceOf.selector,user)
         );

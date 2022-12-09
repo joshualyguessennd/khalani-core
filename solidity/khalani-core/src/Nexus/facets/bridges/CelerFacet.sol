@@ -19,13 +19,13 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
         address _messageBus
     ) external onlyDiamondOwner {
         CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
-        setMessageBusI(_messageBus);
+        setCelerMessageBus(_messageBus);
         cs.axonDomain = _axonDomain;
         cs.axonInbox = _axonInbox;
     }
 
-    function setMessageBusI(address _messageBus) internal {
-        messageBus = _messageBus;
+    function setCelerMessageBus(address _celerMessageBus) internal {
+        messageBus = _celerMessageBus;
     }
     function bridgeTokenAndCall(
         LibAppStorage.TokenBridgeAction action,
@@ -37,26 +37,6 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
     ) public payable override validRouter  {
         CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
         bytes memory message = abi.encode(account,token,amount,toContract,data);
-        bytes memory messageWithAction = abi.encode(action,message);
-        sendMessage(
-            cs.axonInbox,
-            cs.axonDomain,
-            messageWithAction,
-            msg.value
-        );
-    }
-
-    function bridgeTokenAndCallback(
-        LibAppStorage.TokenBridgeAction action,
-        address account,
-        address token,
-        uint256 amount,
-        bool isPan,
-        bytes32  toContract,
-        bytes calldata data
-    ) public payable override validRouter  {
-        CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
-        bytes memory message = abi.encode(account,token,amount,isPan,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);
         sendMessage(
             cs.axonInbox,
@@ -85,23 +65,4 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
         );
     }
 
-    function bridgeMultiTokenAndCallback(
-        LibAppStorage.TokenBridgeAction action,
-        address account,
-        address[] memory tokens,
-        uint256[] memory amounts,
-        bool[] memory isPan,
-        bytes32 toContract,
-        bytes calldata data
-    ) public payable override validRouter {
-        CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
-        bytes memory message = abi.encode(account,tokens,amounts,isPan,toContract,data);
-        bytes memory messageWithAction = abi.encode(action,message);
-        sendMessage(
-            cs.axonInbox,
-            cs.axonDomain,
-            messageWithAction,
-            msg.value
-        );
-    }
 }
