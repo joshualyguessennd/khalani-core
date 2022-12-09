@@ -51,17 +51,19 @@ contract AxonCrossChainRouter is Modifiers {
     * @param data - call data to be executed on `toContract`
     **/
     function withdrawTokenAndCall(
+        address ica,
+        address account,
         address token,
         uint256 amount,
         bool isPan,
         bytes32 toContract,
         bytes calldata data
     ) public nonReentrant {
-        IERC20Mintable(token).burn(msg.sender,amount);
+        IERC20Mintable(token).burn(ica,amount);
 
         IBridgeFacet(address(this)).bridgeTokenAndCallback(
-            LibAppStorage.TokenBridgeAction.Deposit,
-            msg.sender,
+            LibAppStorage.TokenBridgeAction.Withdraw,
+            account,
             token,
             amount,
             isPan,
@@ -90,6 +92,8 @@ contract AxonCrossChainRouter is Modifiers {
     * @param data - call data to be executed on `toContract`
     **/
     function withdrawMultiTokenAndCall(
+        address ica,
+        address account,
         address[] memory tokens,
         uint256[] memory amounts,
         bool[] memory isPan,
@@ -99,7 +103,7 @@ contract AxonCrossChainRouter is Modifiers {
         require(tokens.length == amounts.length && tokens.length == isPan.length, "array length do not match");
 
         for(uint i; i<tokens.length;) {
-            IERC20Mintable(tokens[i]).burn(msg.sender,amounts[i]);
+            IERC20Mintable(tokens[i]).burn(ica,amounts[i]);
             unchecked {
                 ++i;
             }
@@ -107,7 +111,7 @@ contract AxonCrossChainRouter is Modifiers {
 
         IBridgeFacet(address(this)).bridgeMultiTokenAndCallback(
             LibAppStorage.TokenBridgeAction.WithdrawMulti,
-            msg.sender,
+            account,
             tokens,
             amounts,
             isPan,

@@ -26,9 +26,11 @@ contract MsgHandlerFacet is IMessageRecipient, MessageApp, Receiver {
         messageBus = _celerMessageBus;
     }
 
-    function initializeMsgHandler(address _hyperlaneInbox, address _celerMessageBus) public onlyDiamondOwner {
+    function initializeMsgHandler(address _hyperlaneInbox, address _celerMessageBus, address _axonNexus) public onlyDiamondOwner {
+        LibAppReceiver.AppReceiverStorage storage ds = LibAppReceiver.appReceiverStorage();
         s.hyperlaneInbox = _hyperlaneInbox;
         setCelerMessageBus(_celerMessageBus);
+        ds.axonNexus = _axonNexus;
     }
 
     function addChainTokenForMirrorToken(address token, address mirrorToken) public onlyDiamondOwner {
@@ -87,9 +89,9 @@ contract MsgHandlerFacet is IMessageRecipient, MessageApp, Receiver {
                 (address, address[], uint256[], bool[], bytes32, bytes));
             for(uint i; i<tokens.length;){
                 tokens[i] = LibAppReceiver._getChainToken(tokens[i]);
-            unchecked{
-                ++i;
-            }
+                unchecked{
+                    ++i;
+                }
             }
             withdrawMultiTokenAndCall(account,tokens,amounts,isPan,toContract,data);
         } else {

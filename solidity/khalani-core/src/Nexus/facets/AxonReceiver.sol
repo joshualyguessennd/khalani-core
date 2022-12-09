@@ -104,6 +104,6 @@ contract AxonReceiver is Modifiers {
     }
 
     function _proxyCall(address ica, bytes32 toContract, bytes memory data) internal {
-        IProxyCall(ica).sendProxyCall(TypeCasts.bytes32ToAddress(toContract),data);
+        try IProxyCall(ica).sendProxyCall(TypeCasts.bytes32ToAddress(toContract),data)
     }
 }
