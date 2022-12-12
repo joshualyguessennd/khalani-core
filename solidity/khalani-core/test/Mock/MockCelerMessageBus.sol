@@ -7,14 +7,27 @@ import "@sgn-v2-contracts/message/framework/MessageReceiverApp.sol";
 pragma abicoder v2;
 
 contract MockCelerMessageBus is IMessageBus{
-    uint64 chainId;
-    mapping(uint64 => address) chainMessageBus;
-
-    constructor(uint64 _chainId) {
-        chainId = _chainId;
+    uint64 _chainIdThis;
+    MockCelerMessageBus otherBus;
+    mapping(uint => address) chainMessageBus;
+    uint totalMsg = 0;
+    uint msgProcessed = 0;
+    struct Params{
+        bytes _message;
+        MsgDataTypes.RouteInfo _route;
+        bytes[] _sigs;
+        address[] _signers;
+        uint256[] _powers;
+        uint chainId;
     }
 
-    function addChainBus(uint64 chain, address bus) external {
+    mapping(uint => Params) pendingMsg;
+
+    constructor(uint64 _chainId) {
+        _chainIdThis = _chainId;
+    }
+
+    function addChainBus(uint chain, address bus) external {
         chainMessageBus[chain] = bus;
     }
 
@@ -33,17 +46,28 @@ contract MockCelerMessageBus is IMessageBus{
         uint256 _dstChainId,
         bytes calldata _message
     ) external payable {
-        address msgBusDst = chainMessageBus[uint64(_dstChainId)];
         MsgDataTypes.RouteInfo memory _route;
         _route.sender = msg.sender;
-        _route.srcChainId = chainId;
+        _route.srcChainId = _chainIdThis;
         _route.receiver = _receiver;
         bytes[] memory _sigs;
         address[] memory _signers;
         uint256[] memory _powers;
-        IMessageBus(msgBusDst).executeMessage(_message, _route, _sigs, _signers, _powers);
+        MockCelerMessageBus(chainMessageBus[_dstChainId]).addMsg(Params({
+            _message : _message,
+            _route : _route,
+            _sigs : _sigs,
+            _signers : _signers,
+            _powers : _powers,
+            chainId : _dstChainId
+            })
+        );
     }
 
+    function addMsg(Params calldata p) external {
+        pendingMsg[totalMsg] = p;
+        ++totalMsg;
+    }
     // same as above, except that receiver is an non-evm chain address,
     function sendMessage(
         bytes calldata _receiver,
@@ -155,4 +179,10 @@ contract MockCelerMessageBus is IMessageBus{
     function pegVault() external virtual view returns (address){return address(0x0);}
 
     function pegVaultV2() external virtual view returns (address){return address(0x0);}
+
+    function processNextPendingMsg() external {
+        Params memory params = pendingMsg[msgProcessed];
+        IMessageBus(address(this)).executeMessage(params._message, params._route, params._sigs, params._signers, params._powers);
+        ++msgProcessed;
+    }
 }

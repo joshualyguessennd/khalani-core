@@ -58,7 +58,7 @@ contract AxonCrossChainRouter is Modifiers {
         bytes calldata data
     ) public nonReentrant {
         IERC20Mintable(token).burn(msg.sender,amount);
-        address _eoa = IKhalaInterchainAccount(msg.sender).getEOA();
+        address _eoa = IKhalaInterchainAccount(msg.sender).eoa();
 
         AppStorage storage ds = LibAppStorage.diamondStorage();
         if(ds.godwokenChainId == chainId) {
@@ -114,7 +114,7 @@ contract AxonCrossChainRouter is Modifiers {
     ) public nonReentrant {
         require(tokens.length == amounts.length , "array length do not match");
 
-        address _eoa = IKhalaInterchainAccount(msg.sender).getEOA();
+        address _eoa = IKhalaInterchainAccount(msg.sender).eoa();
 
         for(uint i; i<tokens.length;) {
             IERC20Mintable(tokens[i]).burn(msg.sender,amounts[i]);

@@ -220,6 +220,7 @@ contract NexusCelerTest is Test {
         vm.stopPrank();
 //        vm.expectEmit(true, true, false, false, address(axonNexus));
 //        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(gwNexus)), abi.encode(""));
+        chain2Bus.processNextPendingMsg();
         assertEq(usdcgW.balanceOf(address(userKhalaAccount)),amountToDeposit);
     }
 
@@ -260,6 +261,7 @@ contract NexusCelerTest is Test {
 //        vm.expectEmit(true, true, false, false, address(axonNexus));
 //        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(gwNexus)), abi.encode(""));
 //        hyperlaneInboxAxon.processNextPendingMessage();
+        chain2Bus.processNextPendingMsg();
         assertEq(usdcgW.balanceOf(address(userKhalaAccount)),amount1);
         assertEq(usdtgW.balanceOf(address(userKhalaAccount)),amount2);
     }
@@ -316,7 +318,7 @@ contract NexusCelerTest is Test {
     function testICACreationAndCallCeler(uint256 amountToDeposit,uint256 countToIncrease) public {
         address user = MOCK_ADDR_1;
 
-        address userKhalaAccount = 0x5300D4541528A33ef8EdcdCACb4369C1eb9261E4;
+        address userKhalaAccount = 0x961958718af75ea617Eae05b6E956c576B27535f;
 
         // dummy contract for ica call - call to this contract is only possible through `userKhalaAccount` - this will test if the call is going correctly from ICA proxy
         MockCounter counter = new MockCounter(userKhalaAccount);
@@ -328,6 +330,7 @@ contract NexusCelerTest is Test {
         emit LogDepositAndCall(address(usdc), user, amountToDeposit, TypeCasts.addressToBytes32(address(counter)),abi.encodeWithSelector(counter.increaseCount.selector,countToIncrease));
         CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,TypeCasts.addressToBytes32(address(counter)),abi.encodeWithSelector(counter.increaseCount.selector,countToIncrease));
         vm.stopPrank();
+        chain2Bus.processNextPendingMsg();
         assertEq(usdcgW.balanceOf(userKhalaAccount),amountToDeposit);
         assertEq(counter.getCount(),countToIncrease);
     }
@@ -346,6 +349,8 @@ contract NexusCelerTest is Test {
         emit LogDepositAndCall(address(usdc), user, amountToDeposit, TypeCasts.addressToBytes32(address(mockLp)),abi.encodeWithSelector(mockLp.addLiquidity.selector,amountToDeposit));
         CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,TypeCasts.addressToBytes32(address(mockLp)),abi.encodeWithSelector(mockLp.addLiquidity.selector,amountToDeposit));
         vm.stopPrank();
+        chain2Bus.processNextPendingMsg();
+        chain1Bus.processNextPendingMsg();
         assertEq(usdc.balanceOf(user),amountToDeposit);
     }
 
@@ -378,6 +383,8 @@ contract NexusCelerTest is Test {
         emit LogDepositMultiTokenAndCall(tokens,user,amounts,TypeCasts.addressToBytes32(address(mockLp)),abi.encodeWithSelector(mockLp.addLiqiuidity2.selector,[amount1,amount2]));
         CrossChainRouter(address(gwNexus)).depositMultiTokenAndCall(tokens,amounts,TypeCasts.addressToBytes32(address(mockLp)),abi.encodeWithSelector(mockLp.addLiqiuidity2.selector,[amount1,amount2]));
         vm.stopPrank();
+        chain2Bus.processNextPendingMsg();
+        chain1Bus.processNextPendingMsg();
         assertEq(usdc.balanceOf(user),amount1);
         assertEq(usdt.balanceOf(user),amount2);
     }

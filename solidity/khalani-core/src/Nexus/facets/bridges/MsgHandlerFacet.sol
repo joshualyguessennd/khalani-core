@@ -10,7 +10,7 @@ import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "../../libraries/LibAppReceiver.sol";
 import "../Receiver.sol";
 
-contract MsgHandlerFacet is IMessageRecipient, MessageApp, Receiver {
+contract MsgHandlerFacet is IMessageRecipient, Receiver, MessageApp {
 
     event CrossChainMsgReceived(
         uint32 indexed msgOriginChain,

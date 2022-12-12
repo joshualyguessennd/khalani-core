@@ -9,7 +9,7 @@ import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 
 contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
 
-    address private eoa;
+    address public eoa;
 
     constructor() {
         _transferOwnership(msg.sender);
@@ -17,10 +17,6 @@ contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
 
     function initialize(address _eoa) public initializer {
         eoa = _eoa;
-    }
-
-    function getEOA() external returns (address){
-        return eoa;
     }
 
     function sendProxyCall(address token, uint256 amount, uint chainId, address to, bytes calldata data) external onlyOwner {

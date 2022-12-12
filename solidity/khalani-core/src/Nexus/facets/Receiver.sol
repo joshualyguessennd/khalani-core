@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "../libraries/LibAccountsRegistry.sol";
 import {TypeCasts} from "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "../interfaces/IKhalaInterchainAccount.sol";
+import "forge-std/console.sol";
 
 contract Receiver is Modifiers {
 
@@ -97,6 +98,8 @@ contract Receiver is Modifiers {
         uint256 _amount
     ) internal {
         AppStorage storage ds = LibAppStorage.diamondStorage();
+        console.log("dspan is",ds.pan);
+        console.log("token is",_token);
         if(ds.pan == _token){
             IERC20Mintable(_token).mint(_user,_amount);
         } else {
@@ -112,14 +115,5 @@ contract Receiver is Modifiers {
             _token,
             _amount
         );
-    }
-
-    function isPanToken(
-        address _token
-    ) internal returns(bool){
-        {
-            return true;
-        }
-        return false;
     }
 }

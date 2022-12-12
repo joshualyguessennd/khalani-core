@@ -18,6 +18,6 @@ interface IKhalaInterchainAccount {
         address to,
         bytes calldata data) external;
 
-    function getEOA(
+    function eoa(
     ) external returns (address);
 }
