@@ -84,7 +84,7 @@ contract MsgHandlerFacet is IMessageRecipient, MessageApp, Receiver {
         (LibAppStorage.TokenBridgeAction action, bytes memory executionMsg) =
         abi.decode(_message, (LibAppStorage.TokenBridgeAction,bytes));
 
-        if(action == LibAppStorage.TokenBridgeAction.DepositMulti) {
+        if(action == LibAppStorage.TokenBridgeAction.WithdrawMulti) {
             (address account, address[] memory tokens, uint256[] memory amounts, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
                 (address, address[], uint256[], bytes32, bytes));
             for(uint i; i<tokens.length;){
@@ -98,7 +98,7 @@ contract MsgHandlerFacet is IMessageRecipient, MessageApp, Receiver {
             (address account, address token, uint256 amount, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
                 (address, address, uint256, bytes32, bytes));
             token = LibAppReceiver._getChainToken(token);
-            if(action == LibAppStorage.TokenBridgeAction.Deposit) {
+            if(action == LibAppStorage.TokenBridgeAction.Withdraw) {
                 withdrawTokenAndCall(account,token,amount,toContract,data);
             }
         }

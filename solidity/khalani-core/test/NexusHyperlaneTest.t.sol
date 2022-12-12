@@ -339,7 +339,7 @@ contract NexusHyperlaneTest is Test {
     }
 
     //testing scenario - adding liquidity fail
-    //successful withdrawal should refund back tokens to users
+    //successful withdrawal should refund back tokens to user's address on source chain
     function testWithdrawAndCall(uint amountToDeposit) public{
         mockLp.setFail(true);
         address user = MOCK_ADDR_1;

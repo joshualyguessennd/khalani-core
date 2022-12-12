@@ -24,7 +24,7 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
     ) external onlyDiamondOwner {
         AppStorage storage appStorage = LibAppStorage.diamondStorage();
         appStorage.godwokenChainId = _godwokenChainId;
-        setCelerMessageBus(_celerMessageBus);
+        setCelerMessageBus(_celerMessageBus); // TODO : Do we need this ?
         LibAxonMultiBridgeFacet.MultiBridgeStorage storage ds = LibAxonMultiBridgeFacet.multiBridgeFacetStorage();
         ds.hyperlaneOutbox = hyperlaneOutbox;
     }
