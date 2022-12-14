@@ -2,9 +2,7 @@
 pragma solidity ^0.8.0;
 
 struct HyperlaneStorage {
-    uint32 axonDomain;
-    address hyperlaneOutbox;
-    address axonInbox;
+    address hyperlaneMailbox;
 }
 
 library HyperlaneFacetLibrary {

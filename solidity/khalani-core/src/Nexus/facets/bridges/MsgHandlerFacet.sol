@@ -9,6 +9,8 @@ import "@hyperlane-xyz/core/contracts/libs/Message.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "../../libraries/LibAppReceiver.sol";
 import "../Receiver.sol";
+import {HyperlaneStorage} from "./libraries/HyperlaneFacetLibrary.sol";
+import "./libraries/HyperlaneFacetLibrary.sol";
 
 contract MsgHandlerFacet is IMessageRecipient, Receiver, MessageApp {
 
@@ -22,24 +24,19 @@ contract MsgHandlerFacet is IMessageRecipient, Receiver, MessageApp {
 
     }
 
-    function setCelerMessageBus(address _celerMessageBus) internal {
-        messageBus = _celerMessageBus;
+    modifier onlyInbox() {
+        HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
+        require(msg.sender==hs.hyperlaneMailbox,"only inbox can call");
+        _;
     }
 
-    function initializeMsgHandler(address _hyperlaneInbox, address _celerMessageBus, address _axonNexus) public onlyDiamondOwner {
-        LibAppReceiver.AppReceiverStorage storage ds = LibAppReceiver.appReceiverStorage();
-        s.hyperlaneInbox = _hyperlaneInbox;
-        setCelerMessageBus(_celerMessageBus);
-        ds.axonNexus = _axonNexus;
-    }
 
     function addChainTokenForMirrorToken(address token, address mirrorToken) public onlyDiamondOwner {
         LibAppReceiver._addChainTokenForMirrorToken(mirrorToken,token);
     }
 
     function _onlyNexus(address _sender) internal {
-        LibAppReceiver.AppReceiverStorage storage ds = LibAppReceiver.appReceiverStorage();
-        require(_sender == ds.axonNexus,"invalid nexus");
+        require(_sender == s.axonReceiver,"invalid nexus");
     }
 
     function handle(

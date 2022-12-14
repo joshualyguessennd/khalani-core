@@ -9,8 +9,9 @@ import "./libraries/AxonMsgHandlerLibrary.sol";
 import "@sgn-v2-contracts/message/framework/MessageApp.sol";
 import "@hyperlane-xyz/core/contracts/libs/Message.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
+import "./libraries/LibAxonMultiBridgeFacet.sol";
 
-contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
+contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
 
     event CrossChainMsgReceived(
         uint32 indexed msgOriginChain,
@@ -22,6 +23,12 @@ contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
 
     }
 
+    modifier onlyInbox() {
+        LibAxonMultiBridgeFacet.MultiBridgeStorage storage ds = LibAxonMultiBridgeFacet.multiBridgeFacetStorage();    
+        require(msg.sender==ds.hyperlaneMailbox,"only inbox can call");
+        _;
+    }
+
     function setCelerMessageBus(address _celerMessageBus) internal {
         messageBus = _celerMessageBus;
     }
@@ -29,11 +36,6 @@ contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
     function _onlyNexus(uint32 _origin, bytes32 _sender) internal {
         AxonMsgHandlerStorage storage ds = AxonMsgHandlerLibrary.axonMsgHandlerStorage();
         require(ds.chainNexusMap[_origin]==_sender, "AxonHyperlaneHandler : invalid nexus");
-    }
-
-    function initializeAxonHandler(address _hyperlaneInbox, address _celerMessageBus) public onlyDiamondOwner {
-        s.hyperlaneInbox = _hyperlaneInbox;
-        setCelerMessageBus(_celerMessageBus);
     }
 
     function addTokenMirror(uint32 chainDomain, address token, address mirrorToken) public onlyDiamondOwner {

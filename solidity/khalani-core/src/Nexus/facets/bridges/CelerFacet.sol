@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import "../../interfaces/IBridgeFacet.sol";
 import "@sgn-v2-contracts/message/framework/MessageApp.sol";
-import "./libraries/CelerFacetLibrary.sol";
 
 
 contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
@@ -14,14 +13,9 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
     }
 
     function initCelerFacet(
-        uint32 _axonDomain,
-        address _axonInbox,
         address _messageBus
     ) external onlyDiamondOwner {
-        CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
         setCelerMessageBus(_messageBus);
-        cs.axonDomain = _axonDomain;
-        cs.axonInbox = _axonInbox;
     }
 
     function setCelerMessageBus(address _celerMessageBus) internal {
@@ -35,12 +29,11 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
         bytes32  toContract,
         bytes calldata data
     ) public payable override validRouter  {
-        CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
         bytes memory message = abi.encode(account,token,amount,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);
         sendMessage(
-            cs.axonInbox,
-            cs.axonDomain,
+            s.axonReceiver,
+            uint64(s.axonChainId),
             messageWithAction,
             msg.value
         );
@@ -54,12 +47,11 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
         bytes32 toContract,
         bytes calldata data
     ) public payable override validRouter {
-        CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
         bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);
         sendMessage(
-            cs.axonInbox,
-            cs.axonDomain,
+            s.axonReceiver,
+            uint64(s.axonChainId),
             messageWithAction,
             msg.value
         );

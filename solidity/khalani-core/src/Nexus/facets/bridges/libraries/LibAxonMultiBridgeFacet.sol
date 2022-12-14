@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 library LibAxonMultiBridgeFacet {
     struct MultiBridgeStorage {
         mapping (uint => address) chainInboxMap;
-        address hyperlaneOutbox;
+        address hyperlaneMailbox;
     }
 
     bytes32 internal constant DIAMOND_STORAGE_POSITION = keccak256("axon.multiBridge.facet.storage");
