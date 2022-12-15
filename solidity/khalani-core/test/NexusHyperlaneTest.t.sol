@@ -2,8 +2,6 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
-import "@hyperlane-xyz/core/contracts/mock/MockOutbox.sol";
-import "@hyperlane-xyz/core/contracts/mock/MockInbox.sol";
 import "./Mock/MockERC20.sol";
 import "../src/Nexus/facets/CrossChainRouter.sol";
 import "../src/Nexus/facets/AxonCrossChainRouter.sol";
@@ -16,9 +14,10 @@ import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "../src/Nexus/libraries/LibAppStorage.sol";
 import "./Mock/MockCounter.sol";
 import "../src/Nexus/facets/bridges/MsgHandlerFacet.sol";
-import "hyperlane-monorepo/solidity/contracts/mock/MockOutbox.sol";
 import "./Mock/MockLp.sol";
 import "../src/Nexus/facets/bridges/AxonMultiBridgeFacet.sol";
+import "./Mock/MockMailbox.sol";
+
 
 
 contract NexusHyperlaneTest is Test {
@@ -62,15 +61,13 @@ contract NexusHyperlaneTest is Test {
     Nexus ethNexus;
     MockERC20 usdc;
     MockERC20 panOnEth;
-    MockOutbox hyperlaneOutboxEth;
-    MockInbox hyperlaneInboxEth;
+    MockMailbox mailboxEth;
 
     //Axon
     Nexus axonNexus;
     MockERC20 usdcEth;
     MockERC20 panOnAxon;
-    MockInbox hyperlaneInboxAxon;
-    MockOutbox hyperlaneOutboxAxon;
+    MockMailbox mailboxAxon;
 
     address MOCK_ADDR_1 = 0x0000000000000000000000000000000000000001;
     address MOCK_ADDR_2 = 0x0000000000000000000000000000000000000002;
@@ -108,19 +105,19 @@ contract NexusHyperlaneTest is Test {
         panOnEth  = new MockERC20("PanOnEth","PAN/ETH");
         panOnAxon = new MockERC20("PanonAxon","PAN/Axon");
 
-        hyperlaneInboxAxon = new MockInbox();
-        hyperlaneOutboxEth = new MockOutbox(1,address(hyperlaneInboxAxon));
-
-        hyperlaneInboxEth = new MockInbox();
-        hyperlaneOutboxAxon = new MockOutbox(2,address(hyperlaneInboxEth));
+        mailboxEth = new MockMailbox(1);
+        mailboxAxon = new MockMailbox(2);
+        mailboxEth.addRemoteMailbox(2,mailboxAxon);
+        mailboxAxon.addRemoteMailbox(1,mailboxEth);
 
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](3);
 
         CrossChainRouter ccr = new CrossChainRouter();
-        bytes4[] memory ccrFunctionSelectors = new bytes4[](3);
-        ccrFunctionSelectors[0] = ccr.depositTokenAndCall.selector;
-        ccrFunctionSelectors[1] = ccr.depositMultiTokenAndCall.selector;
-        ccrFunctionSelectors[2] = ccr.setPan.selector;
+        bytes4[] memory ccrFunctionSelectors = new bytes4[](4);
+        ccrFunctionSelectors[0] = ccr.initializeNexus.selector;
+        ccrFunctionSelectors[1] = ccr.depositTokenAndCall.selector;
+        ccrFunctionSelectors[2] = ccr.depositMultiTokenAndCall.selector;
+        ccrFunctionSelectors[3] = ccr.setPan.selector;
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(ccr),
         action: IDiamond.FacetCutAction.Add,
@@ -140,7 +137,6 @@ contract NexusHyperlaneTest is Test {
 
         MsgHandlerFacet msgHandlerFacet = new MsgHandlerFacet(MOCK_ADDR_5);
         bytes4[] memory msgHandlerFacetfunctionSelectors = new bytes4[](3);
-        msgHandlerFacetfunctionSelectors[0] = msgHandlerFacet.initializeMsgHandler.selector;
         msgHandlerFacetfunctionSelectors[1] = msgHandlerFacet.addChainTokenForMirrorToken.selector;
         msgHandlerFacetfunctionSelectors[2] = msgHandlerFacet.handle.selector;
         cut[2] = IDiamond.FacetCut({
@@ -155,10 +151,8 @@ contract NexusHyperlaneTest is Test {
             "" //initializer data
         );
 
-        CrossChainRouter(address (ethNexus)).setPan(address(panOnEth));
-        console.log("address ponoeth",address (panOnEth));
-        HyperlaneFacet(address(ethNexus)).initHyperlaneFacet(2, address(hyperlaneOutboxEth), address(axonNexus));
-        MsgHandlerFacet(address(ethNexus)).initializeMsgHandler(address(hyperlaneInboxEth), MOCK_ADDR_5, address(axonNexus));
+        CrossChainRouter(address (ethNexus)).initializeNexus(address(panOnEth),address(axonNexus),2);
+        HyperlaneFacet(address(ethNexus)).initHyperlaneFacet(address(mailboxEth));
         MsgHandlerFacet(address(ethNexus)).addChainTokenForMirrorToken(address(usdc),address(usdcEth));
         MsgHandlerFacet(address(ethNexus)).addChainTokenForMirrorToken(address(panOnEth),address(panOnAxon));
 
@@ -167,7 +161,6 @@ contract NexusHyperlaneTest is Test {
 
         AxonHandlerFacet axonhyperlanehandler = new AxonHandlerFacet(MOCK_ADDR_5);
         bytes4[] memory axonHyperlaneFunctionSelectors = new bytes4[](4);
-        axonHyperlaneFunctionSelectors[0] = axonhyperlanehandler.initializeAxonHandler.selector;
         axonHyperlaneFunctionSelectors[1] = axonhyperlanehandler.handle.selector;
         axonHyperlaneFunctionSelectors[2] = axonhyperlanehandler.addTokenMirror.selector;
         axonHyperlaneFunctionSelectors[3] = axonhyperlanehandler.addValidNexusForChain.selector;
@@ -205,12 +198,12 @@ contract NexusHyperlaneTest is Test {
             "" //initializer data
         );
 
-        AxonHandlerFacet(address(axonNexus)).initializeAxonHandler(address (hyperlaneInboxAxon), MOCK_ADDR_4);
+        AxonMultiBridgeFacet(address(axonNexus)).initMultiBridgeFacet(MOCK_ADDR_5, address(mailboxAxon), 3);
+        AxonMultiBridgeFacet(address(axonNexus)).addChainInbox(1,address(ethNexus));
         AxonHandlerFacet(address (axonNexus)).addTokenMirror(1,address(usdc),address(usdcEth));
         AxonHandlerFacet(address (axonNexus)).addTokenMirror(1,address(panOnEth),address(panOnAxon));
         AxonHandlerFacet(address (axonNexus)).addValidNexusForChain(1,TypeCasts.addressToBytes32(address(ethNexus)));
-        AxonMultiBridgeFacet(address(axonNexus)).initMultiBridgeFacet(MOCK_ADDR_5, address(hyperlaneOutboxAxon), 3);
-        AxonMultiBridgeFacet(address(axonNexus)).addChainInbox(1,address(ethNexus));
+
 
     }
 
@@ -228,7 +221,7 @@ contract NexusHyperlaneTest is Test {
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
         emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
-        hyperlaneInboxAxon.processNextPendingMessage();
+        mailboxAxon.processNextPendingMessage();
         assertEq(usdcEth.balanceOf(userKhalaAccount),amountToDeposit);
     }
 
@@ -268,7 +261,7 @@ contract NexusHyperlaneTest is Test {
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
         emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
-        hyperlaneInboxAxon.processNextPendingMessage();
+        mailboxAxon.processNextPendingMessage();
         assertEq(usdcEth.balanceOf(address(userKhalaAccount)),amount1);
         assertEq(usdtEth.balanceOf(address(userKhalaAccount)),amount2);
     }
@@ -278,7 +271,7 @@ contract NexusHyperlaneTest is Test {
     //AxonHyperlaneHandlerFacet access test
     function testAccessAxonReceiver(address caller) public {
         // caller - random address which is not hyperlane inbox
-        vm.assume(caller!=address(0x0) && caller!=address(hyperlaneInboxAxon));
+        vm.assume(caller!=address(0x0) && caller!=address(mailboxAxon));
         //constructing a valid msg
         bytes memory message = abi.encode(MOCK_ADDR_1,address(usdc),100e18,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,MOCK_ADDR_1));
         bytes memory messageWithAction = abi.encode(LibAppStorage.TokenBridgeAction.Deposit,message);
@@ -289,13 +282,13 @@ contract NexusHyperlaneTest is Test {
         AxonHandlerFacet(address(axonNexus)).handle(1,TypeCasts.addressToBytes32(address(ethNexus)),messageWithAction);
         vm.stopPrank();
 
-        // trying a call with hyperlaneInboxAxon
-        vm.startPrank(address(hyperlaneInboxAxon));
+        // trying a call with mailboxAxon
+        vm.startPrank(address(mailboxAxon));
         AxonHandlerFacet(address(axonNexus)).handle(1,TypeCasts.addressToBytes32(address(ethNexus)),messageWithAction);
         vm.stopPrank();
 
         //testing only nexus can pass message
-        vm.startPrank(address(hyperlaneInboxAxon));
+        vm.startPrank(address(mailboxAxon));
         vm.expectRevert("AxonHyperlaneHandler : invalid nexus");
         AxonHandlerFacet(address(axonNexus)).handle(1,TypeCasts.addressToBytes32(address(MOCK_ADDR_5)),messageWithAction);
         vm.stopPrank();
@@ -324,7 +317,7 @@ contract NexusHyperlaneTest is Test {
     function testICACreationAndCall(uint256 amountToDeposit,uint256 countToIncrease) public {
         address user = MOCK_ADDR_1;
 
-        address userKhalaAccount = 0xF677754ea1F519070e25338F61EaAa3B39e9c275;
+        address userKhalaAccount = 0x1aBF0b5acE29eCB084CA0386541a71D5bA085e38;
 
         // dummy contract for ica call - call to this contract is only possible through `userKhalaAccount` - this will test if the call is going correctly from ICA proxy
         MockCounter counter = new MockCounter(userKhalaAccount);
@@ -338,7 +331,7 @@ contract NexusHyperlaneTest is Test {
         vm.stopPrank();
         vm.expectEmit(true, true, false, true, address(axonNexus));
         emit InterchainAccountCreated(MOCK_ADDR_1, userKhalaAccount);
-        hyperlaneInboxAxon.processNextPendingMessage();
+        mailboxAxon.processNextPendingMessage();
         assertEq(usdcEth.balanceOf(userKhalaAccount),amountToDeposit);
         assertEq(counter.getCount(),countToIncrease);
     }
@@ -359,8 +352,8 @@ contract NexusHyperlaneTest is Test {
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
         emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
-        hyperlaneInboxAxon.processNextPendingMessage();
-        hyperlaneInboxEth.processNextPendingMessage();
+        mailboxAxon.processNextPendingMessage();
+        mailboxEth.processNextPendingMessage();
         assertEq(usdc.balanceOf(user),amountToDeposit);
     }
 
@@ -380,9 +373,9 @@ contract NexusHyperlaneTest is Test {
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
         emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
-        hyperlaneInboxAxon.processNextPendingMessage();
+        mailboxAxon.processNextPendingMessage();
         vm.expectRevert();
-        hyperlaneInboxEth.processNextPendingMessage();
+        mailboxEth.processNextPendingMessage();
         assertEq(panOnAxon.balanceOf(userKhalaAccount),amountToDeposit);
         assertEq(panOnEth.balanceOf(user),0);
 
@@ -397,8 +390,8 @@ contract NexusHyperlaneTest is Test {
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
         emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
-        hyperlaneInboxAxon.processNextPendingMessage();
-        hyperlaneInboxEth.processNextPendingMessage();
+        mailboxAxon.processNextPendingMessage();
+        mailboxEth.processNextPendingMessage();
         assertEq(panOnAxon.balanceOf(userKhalaAccount),amountToDeposit);
         assertEq(panOnEth.balanceOf(user),amountToDeposit);
     }
@@ -434,8 +427,8 @@ contract NexusHyperlaneTest is Test {
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
         emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
-        hyperlaneInboxAxon.processNextPendingMessage();
-        hyperlaneInboxEth.processNextPendingMessage();
+        mailboxAxon.processNextPendingMessage();
+        mailboxEth.processNextPendingMessage();
         assertEq(usdc.balanceOf(user),amount1);
         assertEq(usdt.balanceOf(user),amount2);
     }

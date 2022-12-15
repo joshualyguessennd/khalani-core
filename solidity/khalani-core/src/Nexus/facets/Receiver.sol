@@ -97,10 +97,7 @@ contract Receiver is Modifiers {
         address _token,
         uint256 _amount
     ) internal {
-        AppStorage storage ds = LibAppStorage.diamondStorage();
-        console.log("dspan is",ds.pan);
-        console.log("token is",_token);
-        if(ds.pan == _token){
+        if(s.pan == _token){
             IERC20Mintable(_token).mint(_user,_amount);
         } else {
             SafeERC20Upgradeable.safeTransfer(

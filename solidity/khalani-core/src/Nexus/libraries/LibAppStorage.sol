@@ -5,8 +5,9 @@ import {LibDiamond} from "../../diamondCommons/libraries/LibDiamond.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 struct AppStorage {
    mapping(address => address) mirrorToChainToken; //usdceth -> usdc
-   address hyperlaneInbox;
    address pan;
+   address axonReceiver;
+   uint axonChainId;
    uint godwokenChainId;
 }
 
@@ -31,11 +32,6 @@ contract Modifiers is ReentrancyGuard {
 
     modifier onlyDiamondOwner() {
         LibDiamond.enforceIsContractOwner();
-        _;
-    }
-
-    modifier onlyInbox() {
-        require(msg.sender==s.hyperlaneInbox,"only inbox can call");
         _;
     }
 

@@ -19,14 +19,13 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
 
     function initMultiBridgeFacet(
         address _celerMessageBus,
-        address hyperlaneOutbox,
+        address _hyperlaneMailbox,
         uint _godwokenChainId
-    ) external onlyDiamondOwner {
-        AppStorage storage appStorage = LibAppStorage.diamondStorage();
-        appStorage.godwokenChainId = _godwokenChainId;
+    ) external onlyDiamondOwner {   
+        s.godwokenChainId = _godwokenChainId;
         setCelerMessageBus(_celerMessageBus); // TODO : Do we need this ?
         LibAxonMultiBridgeFacet.MultiBridgeStorage storage ds = LibAxonMultiBridgeFacet.multiBridgeFacetStorage();
-        ds.hyperlaneOutbox = hyperlaneOutbox;
+        ds.hyperlaneMailbox = _hyperlaneMailbox;
     }
 
     function addChainInbox(uint chain, address chainInbox) public onlyDiamondOwner{
@@ -49,7 +48,7 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
     ) public payable override validRouter  {
         bytes memory message = abi.encode(account,token,amount,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);
-        IOutbox(_getHyperlaneOutBox()).dispatch(
+        IOutbox(_getHyperlaneMailBox()).dispatch(
             chainId,
             TypeCasts.addressToBytes32(_getInboxForChain(chainId)),
             messageWithAction
@@ -67,7 +66,7 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
     ) public payable override validRouter {
         bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);
-        IOutbox(_getHyperlaneOutBox()).dispatch(
+        IOutbox(_getHyperlaneMailBox()).dispatch(
             chainId,
             TypeCasts.addressToBytes32(_getInboxForChain(chainId)),
             messageWithAction
@@ -117,8 +116,8 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
         return ds.chainInboxMap[_chain];
     }
 
-    function _getHyperlaneOutBox() internal returns (address) {
+    function _getHyperlaneMailBox() internal returns (address) {
         LibAxonMultiBridgeFacet.MultiBridgeStorage storage ds = LibAxonMultiBridgeFacet.multiBridgeFacetStorage();
-        return ds.hyperlaneOutbox;
+        return ds.hyperlaneMailbox;
     }
 }

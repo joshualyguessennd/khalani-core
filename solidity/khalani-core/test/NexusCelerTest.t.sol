@@ -105,10 +105,11 @@ contract NexusCelerTest is Test {
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](3);
 
         CrossChainRouter ccr = new CrossChainRouter();
-        bytes4[] memory ccrFunctionSelectors = new bytes4[](3);
-        ccrFunctionSelectors[0] = ccr.depositTokenAndCall.selector;
-        ccrFunctionSelectors[1] = ccr.depositMultiTokenAndCall.selector;
-        ccrFunctionSelectors[2] = ccr.setPan.selector;
+        bytes4[] memory ccrFunctionSelectors = new bytes4[](4);
+        ccrFunctionSelectors[0] = ccr.initializeNexus.selector;
+        ccrFunctionSelectors[1] = ccr.depositTokenAndCall.selector;
+        ccrFunctionSelectors[2] = ccr.depositMultiTokenAndCall.selector;
+        ccrFunctionSelectors[3] = ccr.setPan.selector;
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(ccr),
         action: IDiamond.FacetCutAction.Add,
@@ -128,10 +129,9 @@ contract NexusCelerTest is Test {
         });
 
         MsgHandlerFacet msgHandlerFacet = new MsgHandlerFacet(address(chain1Bus));
-        bytes4[] memory msgHandlerFacetfunctionSelectors = new bytes4[](3);
-        msgHandlerFacetfunctionSelectors[0] = msgHandlerFacet.initializeMsgHandler.selector;
-        msgHandlerFacetfunctionSelectors[1] = msgHandlerFacet.addChainTokenForMirrorToken.selector;
-        msgHandlerFacetfunctionSelectors[2] = bytes4(keccak256(bytes("executeMessage(address,uint64,bytes,address)")));
+        bytes4[] memory msgHandlerFacetfunctionSelectors = new bytes4[](2);
+        msgHandlerFacetfunctionSelectors[0] = msgHandlerFacet.addChainTokenForMirrorToken.selector;
+        msgHandlerFacetfunctionSelectors[1] = bytes4(keccak256(bytes("executeMessage(address,uint64,bytes,address)")));
         cut[2] = IDiamond.FacetCut({
         facetAddress: address(msgHandlerFacet),
         action: IDiamond.FacetCutAction.Add,
@@ -144,9 +144,8 @@ contract NexusCelerTest is Test {
             "" //initializer data
         );
 
-        CrossChainRouter(address (gwNexus)).setPan(address(panOnGw));
-        CelerFacet(address(gwNexus)).initCelerFacet(2, address(axonNexus), address(chain1Bus));
-        MsgHandlerFacet(address(gwNexus)).initializeMsgHandler(address(MOCK_ADDR_5), address(chain1Bus), address(axonNexus));
+        CrossChainRouter(address (gwNexus)).initializeNexus(address(panOnGw),address(axonNexus),2);
+        CelerFacet(address(gwNexus)).initCelerFacet(address(chain1Bus));
         MsgHandlerFacet(address(gwNexus)).addChainTokenForMirrorToken(address(usdc),address(usdcgW));
 
 
@@ -158,12 +157,11 @@ contract NexusCelerTest is Test {
         cut = new IDiamondCut.FacetCut[](3);
 
         AxonHandlerFacet axonhyperlanehandler = new AxonHandlerFacet(address(chain2Bus));
-        bytes4[] memory axonHyperlaneFunctionSelectors = new bytes4[](5);
-        axonHyperlaneFunctionSelectors[0] = axonhyperlanehandler.initializeAxonHandler.selector;
-        axonHyperlaneFunctionSelectors[1] = axonhyperlanehandler.handle.selector;
-        axonHyperlaneFunctionSelectors[2] = axonhyperlanehandler.addTokenMirror.selector;
-        axonHyperlaneFunctionSelectors[3] = axonhyperlanehandler.addValidNexusForChain.selector;
-        axonHyperlaneFunctionSelectors[4] = bytes4(keccak256(bytes("executeMessage(address,uint64,bytes,address)")));
+        bytes4[] memory axonHyperlaneFunctionSelectors = new bytes4[](4);
+        axonHyperlaneFunctionSelectors[0] = axonhyperlanehandler.handle.selector;
+        axonHyperlaneFunctionSelectors[1] = axonhyperlanehandler.addTokenMirror.selector;
+        axonHyperlaneFunctionSelectors[2] = axonhyperlanehandler.addValidNexusForChain.selector;
+        axonHyperlaneFunctionSelectors[3] = bytes4(keccak256(bytes("executeMessage(address,uint64,bytes,address)")));
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(axonhyperlanehandler),
         action: IDiamond.FacetCutAction.Add,
@@ -199,11 +197,11 @@ contract NexusCelerTest is Test {
             "" //initializer data
         );
 
-        AxonHandlerFacet(address(axonNexus)).initializeAxonHandler(MOCK_ADDR_2, address(chain2Bus));
-        AxonHandlerFacet(address (axonNexus)).addTokenMirror(1,address(usdc),address(usdcgW));
-        AxonHandlerFacet(address (axonNexus)).addValidNexusForChain(1,TypeCasts.addressToBytes32(address(gwNexus)));
         AxonMultiBridgeFacet(address(axonNexus)).initMultiBridgeFacet(address(chain2Bus), MOCK_ADDR_5, 1);
         AxonMultiBridgeFacet(address(axonNexus)).addChainInbox(1,address(gwNexus));
+        AxonHandlerFacet(address (axonNexus)).addTokenMirror(1,address(usdc),address(usdcgW));
+        AxonHandlerFacet(address (axonNexus)).addValidNexusForChain(1,TypeCasts.addressToBytes32(address(gwNexus)));
+
     }
 
     // Tests for successful deposit and calling a contract on the other chain
@@ -318,7 +316,7 @@ contract NexusCelerTest is Test {
     function testICACreationAndCallCeler(uint256 amountToDeposit,uint256 countToIncrease) public {
         address user = MOCK_ADDR_1;
 
-        address userKhalaAccount = 0x961958718af75ea617Eae05b6E956c576B27535f;
+        address userKhalaAccount = 0xD5D44fBF82E03DbF09beBcA26A7F8AA49cb2F155;
 
         // dummy contract for ica call - call to this contract is only possible through `userKhalaAccount` - this will test if the call is going correctly from ICA proxy
         MockCounter counter = new MockCounter(userKhalaAccount);

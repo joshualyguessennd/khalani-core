@@ -56,12 +56,11 @@ contract AxonCrossChainRouter is Modifiers {
         uint256 amount,
         bytes32 toContract,
         bytes calldata data
-    ) public nonReentrant {
+    ) external {
         IERC20Mintable(token).burn(msg.sender,amount);
         address _eoa = IKhalaInterchainAccount(msg.sender).eoa();
 
-        AppStorage storage ds = LibAppStorage.diamondStorage();
-        if(ds.godwokenChainId == chainId) {
+        if(s.godwokenChainId == chainId) {
 
             IMultiBridgeFacet(address(this)).bridgeTokenAndCallbackViaCeler(
                 LibAppStorage.TokenBridgeAction.Withdraw,
@@ -111,7 +110,7 @@ contract AxonCrossChainRouter is Modifiers {
         uint256[] memory amounts,
         bytes32 toContract,
         bytes calldata data
-    ) public nonReentrant {
+    ) external {
         require(tokens.length == amounts.length , "array length do not match");
 
         address _eoa = IKhalaInterchainAccount(msg.sender).eoa();
@@ -123,8 +122,7 @@ contract AxonCrossChainRouter is Modifiers {
             }
         }
 
-        AppStorage storage ds = LibAppStorage.diamondStorage();
-        if(ds.godwokenChainId == chainId) {
+        if(s.godwokenChainId == chainId) {
 
             IMultiBridgeFacet(address(this)).bridgeMultiTokenAndCallbackViaCeler(
                 LibAppStorage.TokenBridgeAction.WithdrawMulti,

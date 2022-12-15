@@ -12,14 +12,10 @@ import "../../interfaces/IBridgeFacet.sol";
 contract HyperlaneFacet is IBridgeFacet, Modifiers {
 
     function initHyperlaneFacet(
-        uint32 _axonDomain,
-        address _hyperlaneOutbox,
-        address _axonInbox
+        address _hyperlaneMailbox
     ) external onlyDiamondOwner {
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
-        hs.axonDomain = _axonDomain;
-        hs.hyperlaneOutbox = _hyperlaneOutbox;
-        hs.axonInbox = _axonInbox;
+        hs.hyperlaneMailbox = _hyperlaneMailbox;
     }
 
     function bridgeTokenAndCall(
@@ -33,9 +29,9 @@ contract HyperlaneFacet is IBridgeFacet, Modifiers {
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         bytes memory message = abi.encode(account,token,amount,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);
-        IOutbox(hs.hyperlaneOutbox).dispatch(
-            hs.axonDomain,
-            TypeCasts.addressToBytes32(hs.axonInbox),
+        IOutbox(hs.hyperlaneMailbox).dispatch(
+            uint32(s.axonChainId),
+            TypeCasts.addressToBytes32(s.axonReceiver),
             messageWithAction
         );
     }
@@ -52,9 +48,9 @@ contract HyperlaneFacet is IBridgeFacet, Modifiers {
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
         bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
         bytes memory messageWithAction = abi.encode(action,message);
-        IOutbox(hs.hyperlaneOutbox).dispatch(
-            hs.axonDomain,
-            TypeCasts.addressToBytes32(hs.axonInbox),
+        IOutbox(hs.hyperlaneMailbox).dispatch(
+            uint32(s.axonChainId),
+            TypeCasts.addressToBytes32(s.axonReceiver),
             messageWithAction
         );
     }

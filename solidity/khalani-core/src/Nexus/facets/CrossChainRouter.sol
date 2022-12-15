@@ -35,6 +35,12 @@ contract CrossChainRouter is Modifiers {
         uint256 amount
     );
 
+    function initializeNexus(address _pan, address _axonReceiver, uint _axonChainId) public onlyDiamondOwner{
+        s.pan = _pan;
+        s.axonReceiver = _axonReceiver;
+        s.axonChainId = _axonChainId;
+    }
+
     function setPan(address _pan) external onlyDiamondOwner{
         AppStorage storage appStorage = LibAppStorage.diamondStorage();
         appStorage.pan = _pan;
@@ -124,8 +130,7 @@ contract CrossChainRouter is Modifiers {
         address _token,
         uint256 _amount
     ) internal {
-        AppStorage storage ds = LibAppStorage.diamondStorage();
-        if(ds.pan == _token) {
+        if(s.pan == _token) {
             IERC20Mintable(_token).burn(_user,_amount);
         } else {
             SafeERC20Upgradeable.safeTransferFrom(
