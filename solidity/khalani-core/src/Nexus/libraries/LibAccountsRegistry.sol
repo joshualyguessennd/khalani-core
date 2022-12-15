@@ -47,6 +47,9 @@ library LibAccountsRegistry {
         address interchainAccount = _getInterchainAccount(salt);
         if (!(interchainAccount.code.length>0)) {
             interchainAccount = Create2.deploy(0, salt, bytecode);
+
+            KhalaInterChainAccount(interchainAccount).initialize(_sender);
+
             emit InterchainAccountCreated(_sender, interchainAccount);
         }
         return interchainAccount;

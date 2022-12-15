@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 import {LibDiamond} from "../../diamondCommons/libraries/LibDiamond.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 struct AppStorage {
-   mapping(address => mapping(address => uint256)) balances; // user -> USDC -> balance
    mapping(address => address) mirrorToChainToken; //usdceth -> usdc
    address hyperlaneInbox;
-   //mapping(address => bool) panToken; // checks if token is pan
+   address pan;
+   uint godwokenChainId;
 }
 
 library LibAppStorage {
@@ -15,7 +15,8 @@ library LibAppStorage {
     enum TokenBridgeAction{
         Deposit,
         DepositMulti,
-        Withdraw
+        Withdraw,
+        WithdrawMulti
     }
 
     function diamondStorage() internal pure returns (AppStorage storage ds) {

@@ -8,29 +8,21 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "../libraries/LibAccountsRegistry.sol";
 import {TypeCasts} from "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "../interfaces/IKhalaInterchainAccount.sol";
+import "forge-std/console.sol";
 
-contract AxonReceiver is Modifiers {
+contract Receiver is Modifiers {
 
 
-    event LogDepositAndCall(
+    event LogWithdrawAndCall(
         address indexed token,
         address indexed user,
-        uint256 amount,
-        uint32 fromChainId
+        uint256 amount
     );
 
-    event LogDepositMultiTokenAndCall(
+    event LogWithdrawMultiTokenAndCall(
         address[]  indexed token,
         address indexed user,
-        uint256[]  amounts,
-        uint32 fromChainId
-    );
-
-    event LogWithdrawTokenAndCall(
-        address indexed token,
-        address indexed user,
-        uint256 amount,
-        uint32 fromChainId
+        uint256[]  amounts
     );
 
     event LogCrossChainMsg(
@@ -39,81 +31,89 @@ contract AxonReceiver is Modifiers {
         uint32 fromChainId
     );
 
+    event LogReleaseToken(
+        address indexed user,
+        address token,
+        uint256 amount
+    );
+
 
     /**
     * @notice mint mirror token and calls and execute call on `toContract` with `data`
+    * @param account - address of account
     * @param token - address of token to deposit
     * @param amount - amount of tokens to deposit
-    * @param chainId - chain's domain from where call was received on axon
     * @param toContract - contract address to execute crossChain call on
     * @param data - call data to be executed on `toContract`
     **/
-    function depositTokenAndCall(
+    function withdrawTokenAndCall(
         address account,
         address token,
         uint256 amount,
-        uint32 chainId,
         bytes32 toContract,
         bytes memory data
     ) internal nonReentrant {
-        address khalaInterChainAddress = LibAccountsRegistry.getDeployedInterchainAccount(account);
-        IERC20Mintable(token).mint(khalaInterChainAddress,amount);
-
-        IKhalaInterchainAccount(khalaInterChainAddress).sendProxyCall(
-                token,
-                amount,
-                chainId,
-                TypeCasts.bytes32ToAddress(toContract),
-                data
-        );
-
-        emit LogDepositAndCall(
+        _releaseOrMint(account,token,amount);
+        // call ?
+        emit LogWithdrawAndCall(
             token,
             account,
-            amount,
-            chainId
+            amount
         );
     }
 
     /**
     * @notice mint mirror tokens and execute call on `toContract` with `data`
-    * @notice account - address of account
+    * @param account - address of account
     * @param tokens - addresses of tokens to deposit
     * @param amounts - amounts of tokens to deposit
-    * @param chainId - chain's domain from where call was received on axon
     * @param toContract - contract address to execute crossChain call on
     * @param data - call data to be executed on `toContract`
     **/
-    function depositMultiTokenAndCall(
+    function withdrawMultiTokenAndCall(
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
-        uint32 chainId,
         bytes32 toContract,
         bytes memory data
     ) internal nonReentrant {
         require(tokens.length == amounts.length, "array length do not match");
-        address khalaInterChainAddress = LibAccountsRegistry.getDeployedInterchainAccount(account);
         for(uint i; i<tokens.length;) {
-            IERC20Mintable(tokens[i]).mint(khalaInterChainAddress,amounts[i]);
+            _releaseOrMint(account,tokens[i],amounts[i]);
             unchecked {
                 ++i;
             }
         }
-
-        IKhalaInterchainAccount(khalaInterChainAddress).sendProxyCallForMultiTokens(
-                tokens,
-                amounts,
-                chainId,
-                TypeCasts.bytes32ToAddress(toContract),
-                data
-        );
-
-        emit LogDepositMultiTokenAndCall(
+        //call ?
+        emit LogWithdrawMultiTokenAndCall(
             tokens,
             account,
-            amounts,
-            chainId
+            amounts
+        );
+    }
+
+    function _releaseOrMint(
+        address _user,
+        address _token,
+        uint256 _amount
+    ) internal {
+        AppStorage storage ds = LibAppStorage.diamondStorage();
+        console.log("dspan is",ds.pan);
+        console.log("token is",_token);
+        if(ds.pan == _token){
+            IERC20Mintable(_token).mint(_user,_amount);
+        } else {
+            SafeERC20Upgradeable.safeTransfer(
+                IERC20Upgradeable(_token),
+                _user,
+                _amount
+            );
+        }
+
+        emit LogReleaseToken(
+            _user,
+            _token,
+            _amount
         );
     }
 }

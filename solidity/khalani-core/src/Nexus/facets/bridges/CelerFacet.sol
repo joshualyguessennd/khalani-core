@@ -19,13 +19,13 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
         address _messageBus
     ) external onlyDiamondOwner {
         CelerFacetLibrary.CelerStorage storage cs = CelerFacetLibrary.celerStorage();
-        setMessageBusI(_messageBus);
+        setCelerMessageBus(_messageBus);
         cs.axonDomain = _axonDomain;
         cs.axonInbox = _axonInbox;
     }
 
-    function setMessageBusI(address _messageBus) internal {
-        messageBus = _messageBus;
+    function setCelerMessageBus(address _celerMessageBus) internal {
+        messageBus = _celerMessageBus;
     }
     function bridgeTokenAndCall(
         LibAppStorage.TokenBridgeAction action,
@@ -64,4 +64,5 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
             msg.value
         );
     }
+
 }
