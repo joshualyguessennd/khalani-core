@@ -14,7 +14,7 @@ import "./libraries/LibAxonMultiBridgeFacet.sol";
 
 //This is a facet of Nexus diamond on all non-axon chain ,
 //this contract is used to handle the cross-chain messages from axon
-contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
+contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
 
     event CrossChainMsgReceived(
         uint32 indexed msgOriginChain,
