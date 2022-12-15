@@ -10,6 +10,8 @@ import "@sgn-v2-contracts/message/framework/MessageApp.sol";
 import "@hyperlane-xyz/core/contracts/libs/Message.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 
+//This is a facet of Nexus diamond on all non-axon chain ,
+//this contract is used to handle the cross-chain messages from axon
 contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
 
     event CrossChainMsgReceived(
@@ -44,6 +46,12 @@ contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
         AxonMsgHandlerLibrary._setChainNexusMapping(chainId,nexus);
     }
 
+    /**
+    *@notice - hyperlane receiver's handle function
+    *@param _origin - chain id of origin chain
+    *@param _sender - sender's address
+    *@param _message - message body
+    */
     function handle(
         uint32 _origin,
         bytes32 _sender,
@@ -75,6 +83,12 @@ contract AxonHandlerFacet is IMessageRecipient, MessageApp, AxonReceiver {
         }
     }
 
+    /**
+    *@notice - celer receiver's executeMessage function
+    *@param _sender - sender's address
+    *@param _origin - chain id of origin chain
+    *@param _message - message body
+    */
     function executeMessage(
         address _sender,
         uint64 _origin,
