@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../../interfaces/IBridgeFacet.sol";
 import "@sgn-v2-contracts/message/framework/MessageApp.sol";
-
+import {Call} from "../../Call.sol";
 
 contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
 
@@ -26,10 +26,9 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
         address account,
         address token,
         uint256 amount,
-        bytes32  toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) public payable override validRouter  {
-        bytes memory message = abi.encode(account,token,amount,toContract,data);
+        bytes memory message = abi.encode(account,token,amount,calls);
         bytes memory messageWithAction = abi.encode(action,message);
         sendMessage(
             s.axonReceiver,
@@ -44,10 +43,9 @@ contract CelerFacet is IBridgeFacet, Modifiers, MessageApp {
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
-        bytes32 toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) public payable override validRouter {
-        bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
+        bytes memory message = abi.encode(account,tokens,amounts,calls);
         bytes memory messageWithAction = abi.encode(action,message);
         sendMessage(
             s.axonReceiver,

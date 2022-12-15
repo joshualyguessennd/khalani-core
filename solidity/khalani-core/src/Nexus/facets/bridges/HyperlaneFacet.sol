@@ -6,7 +6,7 @@ import "./libraries/HyperlaneFacetLibrary.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "@hyperlane-xyz/core/interfaces/IOutbox.sol";
 import "../../interfaces/IBridgeFacet.sol";
-
+import {Call} from "../../Call.sol";
 
 // Hyperlane Facet for non Axon chain //TODO : Should we make this all `internal` ?
 contract HyperlaneFacet is IBridgeFacet, Modifiers {
@@ -23,11 +23,10 @@ contract HyperlaneFacet is IBridgeFacet, Modifiers {
         address account,
         address token,
         uint256 amount,
-        bytes32  toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) public payable override validRouter  {
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
-        bytes memory message = abi.encode(account,token,amount,toContract,data);
+        bytes memory message = abi.encode(account,token,amount,calls);
         bytes memory messageWithAction = abi.encode(action,message);
         IOutbox(hs.hyperlaneMailbox).dispatch(
             uint32(s.axonChainId),
@@ -42,11 +41,10 @@ contract HyperlaneFacet is IBridgeFacet, Modifiers {
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
-        bytes32 toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) public payable override validRouter {
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
-        bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
+        bytes memory message = abi.encode(account,tokens,amounts,calls);
         bytes memory messageWithAction = abi.encode(action,message);
         IOutbox(hs.hyperlaneMailbox).dispatch(
             uint32(s.axonChainId),

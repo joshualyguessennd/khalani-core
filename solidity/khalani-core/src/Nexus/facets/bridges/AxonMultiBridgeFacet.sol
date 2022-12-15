@@ -8,6 +8,7 @@ import "@hyperlane-xyz/core/interfaces/IOutbox.sol";
 import "../../interfaces/IMultiBridgeFacet.sol";
 import "@sgn-v2-contracts/message/framework/MessageApp.sol";
 import "./libraries/LibAxonMultiBridgeFacet.sol";
+import {Call} from "../../Call.sol";
 
 
 // Hyperlane Facet for non Axon chain //TODO : Should we make this all `internal` ?
@@ -43,10 +44,9 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
         address account,
         address token,
         uint256 amount,
-        bytes32  toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) public payable override validRouter  {
-        bytes memory message = abi.encode(account,token,amount,toContract,data);
+        bytes memory message = abi.encode(account,token,amount,calls);
         bytes memory messageWithAction = abi.encode(action,message);
         IOutbox(_getHyperlaneMailBox()).dispatch(
             chainId,
@@ -61,10 +61,9 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
-        bytes32 toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) public payable override validRouter {
-        bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
+        bytes memory message = abi.encode(account,tokens,amounts,calls);
         bytes memory messageWithAction = abi.encode(action,message);
         IOutbox(_getHyperlaneMailBox()).dispatch(
             chainId,
@@ -79,10 +78,9 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
         address account,
         address token,
         uint256 amount,
-        bytes32  toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) public payable override validRouter  {
-        bytes memory message = abi.encode(account,token,amount,toContract,data);
+        bytes memory message = abi.encode(account,token,amount,calls);
         bytes memory messageWithAction = abi.encode(action,message);
         sendMessage(
             _getInboxForChain(chainId),
@@ -98,10 +96,9 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
-        bytes32 toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) public payable override validRouter {
-        bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
+        bytes memory message = abi.encode(account,tokens,amounts,calls);
         bytes memory messageWithAction = abi.encode(action,message);
         sendMessage(
             _getInboxForChain(chainId),

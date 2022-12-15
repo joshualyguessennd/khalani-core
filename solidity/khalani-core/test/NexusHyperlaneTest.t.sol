@@ -26,24 +26,21 @@ contract NexusHyperlaneTest is Test {
         address indexed token,
         address indexed user,
         uint256 amount,
-        bytes32 toContract,
-        bytes data
+        Call[] calls
     );
 
     event LogDepositMultiTokenAndCall(
         address[] indexed token,
         address indexed user,
         uint256[] amounts,
-        bytes32 toContract,
-        bytes data
+        Call[] calls
     );
 
     event LogWithdrawTokenAndCall(
         address indexed token,
         address indexed user,
         uint256 amount,
-        bytes32 toContract,
-        bytes data
+        Call[] calls
     );
 
     event CrossChainMsgReceived(
@@ -215,14 +212,17 @@ contract NexusHyperlaneTest is Test {
         usdc.mint(MOCK_ADDR_1,amountToDeposit);
         vm.startPrank(user);
         usdc.approve(address(ethNexus),amountToDeposit);
+        Call[] memory calls =  new Call[](2);
+        calls[0] = Call({to:address(usdcEth),data:abi.encodeWithSelector(usdcEth.approve.selector,mockLp,amountToDeposit)});
+        calls[1] = Call({to:address(mockLp),data:abi.encodeWithSelector(mockLp.addLiquidity.selector,address(usdcEth),amountToDeposit)});
         vm.expectEmit(true, true, true , true,address(ethNexus));
-        emit LogDepositAndCall(address(usdc), user, amountToDeposit, TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
-        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,user));
+        emit LogDepositAndCall(address(usdc), user, amountToDeposit,calls);
+        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit,calls);
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
         emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
         mailboxAxon.processNextPendingMessage();
-        assertEq(usdcEth.balanceOf(userKhalaAccount),amountToDeposit);
+        assertEq(usdcEth.balanceOf(address(mockLp)),amountToDeposit);
     }
 
     // Tests for successful deposit of multiple tokens and calling a contract on the other chain
@@ -235,6 +235,10 @@ contract NexusHyperlaneTest is Test {
         AxonHandlerFacet(address (axonNexus)).addTokenMirror(1,address(usdt),address(usdtEth));
         usdt.mint(user,amount2);
         usdc.mint(user,amount1);
+        Call[] memory calls = new Call[](3);
+        calls[0] = Call({to:address(usdcEth),data:abi.encodeWithSelector(usdcEth.approve.selector,mockLp,amount1)});
+        calls[1] = Call({to:address(usdtEth),data:abi.encodeWithSelector(usdtEth.approve.selector,mockLp,amount2)});
+        calls[2] = Call({to:address(mockLp),data:abi.encodeWithSelector(mockLp.addLiquidity2.selector,[address(usdcEth),address(usdtEth)],[amount1,amount2])});
         vm.startPrank(user);
         usdc.approve(address(ethNexus),amount1);
         usdt.approve(address(ethNexus),amount2);
@@ -248,22 +252,20 @@ contract NexusHyperlaneTest is Test {
         emit LogDepositMultiTokenAndCall(tokens,
             user,
             amounts,
-            TypeCasts.addressToBytes32(address(usdcEth)),
-            abi.encodeWithSelector(usdcEth.balanceOf.selector,user)
+            calls
         );
 
         CrossChainRouter(address(ethNexus)).depositMultiTokenAndCall(
             tokens,
             amounts,
-            TypeCasts.addressToBytes32(address(usdcEth)),
-            abi.encodeWithSelector(usdcEth.balanceOf.selector,user)
+            calls
         );
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
         emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
         mailboxAxon.processNextPendingMessage();
-        assertEq(usdcEth.balanceOf(address(userKhalaAccount)),amount1);
-        assertEq(usdtEth.balanceOf(address(userKhalaAccount)),amount2);
+        assertEq(usdcEth.balanceOf(address(mockLp)),amount1);
+        assertEq(usdtEth.balanceOf(address(mockLp)),amount2);
     }
 
     // Access control check tests
@@ -273,7 +275,9 @@ contract NexusHyperlaneTest is Test {
         // caller - random address which is not hyperlane inbox
         vm.assume(caller!=address(0x0) && caller!=address(mailboxAxon));
         //constructing a valid msg
-        bytes memory message = abi.encode(MOCK_ADDR_1,address(usdc),100e18,TypeCasts.addressToBytes32(address(usdcEth)),abi.encodeWithSelector(usdcEth.balanceOf.selector,MOCK_ADDR_1));
+        Call[] memory calls = new Call[](1);
+        calls[0] = Call({to:address(usdcEth),data:abi.encodeWithSelector(usdcEth.approve.selector,mockLp,100e18)});
+        bytes memory message = abi.encode(MOCK_ADDR_1,address(usdc),100e18,calls);
         bytes memory messageWithAction = abi.encode(LibAppStorage.TokenBridgeAction.Deposit,message);
 
 
@@ -300,6 +304,8 @@ contract NexusHyperlaneTest is Test {
         vm.assume(caller!=address(0x0) && caller!=address(ethNexus));
 
         //attempting to call hyperlane facet directly
+        Call[] memory calls = new Call[](1);
+        calls[0] = Call({to:address(usdcEth),data:abi.encodeWithSelector(usdcEth.approve.selector,mockLp,100e18)});
         vm.startPrank(caller);
         vm.expectRevert("BridgeFacet : Invalid Router");
         HyperlaneFacet(address(ethNexus)).bridgeTokenAndCall(
@@ -307,8 +313,7 @@ contract NexusHyperlaneTest is Test {
             caller,
             address(usdc),
             100e18,
-            TypeCasts.addressToBytes32(address(ethNexus)),
-            abi.encodeWithSelector(usdcEth.balanceOf.selector,caller)
+            calls
             );
         vm.stopPrank();
     }
@@ -317,17 +322,19 @@ contract NexusHyperlaneTest is Test {
     function testICACreationAndCall(uint256 amountToDeposit,uint256 countToIncrease) public {
         address user = MOCK_ADDR_1;
 
-        address userKhalaAccount = 0x1aBF0b5acE29eCB084CA0386541a71D5bA085e38;
-
-        // dummy contract for ica call - call to this contract is only possible through `userKhalaAccount` - this will test if the call is going correctly from ICA proxy
+        address userKhalaAccount = 0xAF04d1c7Ba92De8f76a55ED137f658882e679D8C;
         MockCounter counter = new MockCounter(userKhalaAccount);
+        Call[] memory calls = new Call[](1);
+        calls[0] = Call({to:address(counter),data:abi.encodeWithSelector(counter.increaseCount.selector,countToIncrease)});
+        // dummy contract for ica call - call to this contract is only possible through `userKhalaAccount` - this will test if the call is going correctly from ICA proxy
+
 
         usdc.mint(MOCK_ADDR_1,amountToDeposit);
         vm.startPrank(user);
         usdc.approve(address(ethNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(ethNexus));
-        emit LogDepositAndCall(address(usdc), user, amountToDeposit, TypeCasts.addressToBytes32(address(counter)),abi.encodeWithSelector(counter.increaseCount.selector,countToIncrease));
-        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit,TypeCasts.addressToBytes32(address(counter)),abi.encodeWithSelector(counter.increaseCount.selector,countToIncrease));
+        emit LogDepositAndCall(address(usdc), user, amountToDeposit, calls);
+        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit,calls);
         vm.stopPrank();
         vm.expectEmit(true, true, false, true, address(axonNexus));
         emit InterchainAccountCreated(MOCK_ADDR_1, userKhalaAccount);
@@ -344,11 +351,14 @@ contract NexusHyperlaneTest is Test {
         vm.prank(address(axonNexus));
         address userKhalaAccount = LibAccountsRegistry.getDeployedInterchainAccount(user);
         usdc.mint(user,amountToDeposit);
+        Call[] memory calls =  new Call[](2);
+        calls[0] = Call({to:address(usdcEth),data:abi.encodeWithSelector(usdcEth.approve.selector,mockLp,amountToDeposit)});
+        calls[1] = Call({to:address(mockLp),data:abi.encodeWithSelector(mockLp.addLiquidity.selector,address(usdcEth),amountToDeposit)});
         vm.startPrank(user);
         usdc.approve(address(ethNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(ethNexus));
-        emit LogDepositAndCall(address(usdc), user, amountToDeposit, TypeCasts.addressToBytes32(address(mockLp)),abi.encodeWithSelector(mockLp.addLiquidity.selector,amountToDeposit));
-        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit,TypeCasts.addressToBytes32(address(mockLp)),abi.encodeWithSelector(mockLp.addLiquidity.selector,amountToDeposit));
+        emit LogDepositAndCall(address(usdc), user, amountToDeposit, calls);
+        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit, calls);
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
         emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
@@ -365,18 +375,21 @@ contract NexusHyperlaneTest is Test {
         vm.prank(address(axonNexus));
         address userKhalaAccount = LibAccountsRegistry.getDeployedInterchainAccount(user);
         panOnEth.mint(user,amountToDeposit);
+        Call[] memory calls =  new Call[](2);
+        calls[0] = Call({to:address(panOnAxon),data:abi.encodeWithSelector(panOnAxon.approve.selector,mockLp,amountToDeposit)});
+        calls[1] = Call({to:address(mockLp),data:abi.encodeWithSelector(mockLp.addLiquidity.selector,address(panOnAxon),amountToDeposit)});
         vm.startPrank(user);
         panOnEth.approve(address(ethNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(ethNexus));
-        emit LogDepositAndCall(address(panOnEth), user, amountToDeposit, TypeCasts.addressToBytes32(address(mockLp)),abi.encodeWithSelector(mockLp.addLiquidity.selector,amountToDeposit));
-        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(panOnEth),amountToDeposit,TypeCasts.addressToBytes32(address(mockLp)),abi.encodeWithSelector(mockLp.addLiquidity.selector,amountToDeposit));
+        emit LogDepositAndCall(address(panOnEth), user, amountToDeposit, calls);
+        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(panOnEth),amountToDeposit,calls);
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
         emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
         mailboxAxon.processNextPendingMessage();
         vm.expectRevert();
         mailboxEth.processNextPendingMessage();
-        assertEq(panOnAxon.balanceOf(userKhalaAccount),amountToDeposit);
+        assertEq(panOnAxon.balanceOf(address(mockLp)),amountToDeposit);
         assertEq(panOnEth.balanceOf(user),0);
 
         //failing call
@@ -385,14 +398,14 @@ contract NexusHyperlaneTest is Test {
         vm.startPrank(user);
         panOnEth.approve(address(ethNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(ethNexus));
-        emit LogDepositAndCall(address(panOnEth), user, amountToDeposit, TypeCasts.addressToBytes32(address(mockLp)),abi.encodeWithSelector(mockLp.addLiquidity.selector,amountToDeposit));
-        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(panOnEth),amountToDeposit,TypeCasts.addressToBytes32(address(mockLp)),abi.encodeWithSelector(mockLp.addLiquidity.selector,amountToDeposit));
+        emit LogDepositAndCall(address(panOnEth), user, amountToDeposit, calls);
+        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(panOnEth),amountToDeposit,calls);
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
         emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
         mailboxAxon.processNextPendingMessage();
         mailboxEth.processNextPendingMessage();
-        assertEq(panOnAxon.balanceOf(userKhalaAccount),amountToDeposit);
+        assertEq(panOnAxon.balanceOf(address(mockLp)),amountToDeposit);
         assertEq(panOnEth.balanceOf(user),amountToDeposit);
     }
 
@@ -415,6 +428,10 @@ contract NexusHyperlaneTest is Test {
         vm.startPrank(user);
         usdc.approve(address(ethNexus),amount1);
         usdt.approve(address (ethNexus),amount2);
+        Call[] memory calls = new Call[](3);
+        calls[0] = Call({to:address(usdcEth),data:abi.encodeWithSelector(usdcEth.approve.selector,mockLp,amount1)});
+        calls[1] = Call({to:address(usdtEth),data:abi.encodeWithSelector(usdtEth.approve.selector,mockLp,amount2)});
+        calls[2] = Call({to:address(mockLp),data:abi.encodeWithSelector(mockLp.addLiquidity2.selector,[address(usdcEth),address(usdtEth)],[amount1,amount2])});
         address[] memory tokens = new address[](2);
         tokens[0] = address(usdc);
         tokens[1] = address(usdt);
@@ -422,8 +439,8 @@ contract NexusHyperlaneTest is Test {
         amounts[0] = amount1;
         amounts[1] = amount2;
         vm.expectEmit(true, true, true , true,address(ethNexus));
-        emit LogDepositMultiTokenAndCall(tokens,user,amounts,TypeCasts.addressToBytes32(address(mockLp)),abi.encodeWithSelector(mockLp.addLiqiuidity2.selector,[amount1,amount2]));
-        CrossChainRouter(address(ethNexus)).depositMultiTokenAndCall(tokens,amounts,TypeCasts.addressToBytes32(address(mockLp)),abi.encodeWithSelector(mockLp.addLiqiuidity2.selector,[amount1,amount2]));
+        emit LogDepositMultiTokenAndCall(tokens,user,amounts,calls);
+        CrossChainRouter(address(ethNexus)).depositMultiTokenAndCall(tokens,amounts,calls);
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
         emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));

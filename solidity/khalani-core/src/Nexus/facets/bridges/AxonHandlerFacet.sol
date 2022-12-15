@@ -10,6 +10,7 @@ import "@sgn-v2-contracts/message/framework/MessageApp.sol";
 import "@hyperlane-xyz/core/contracts/libs/Message.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "./libraries/LibAxonMultiBridgeFacet.sol";
+import {Call} from "../../Call.sol";
 
 contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
 
@@ -57,8 +58,8 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
         abi.decode(_message, (LibAppStorage.TokenBridgeAction,bytes));
 
         if(action == LibAppStorage.TokenBridgeAction.DepositMulti) {
-            (address account, address[] memory tokens, uint256[] memory amounts, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
-            (address, address[], uint256[], bytes32, bytes));
+            (address account, address[] memory tokens, uint256[] memory amounts, Call[] memory calls) = abi.decode(executionMsg,
+            (address, address[], uint256[], Call[]));
             for(uint i; i<tokens.length;){
                 tokens[i] = LibAccountsRegistry._getMirrorToken(_origin,tokens[i]);
 
@@ -66,13 +67,13 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
                     ++i;
                 }
             }
-            depositMultiTokenAndCall(account,tokens,amounts,_origin,toContract,data);
+            depositMultiTokenAndCall(account,tokens,amounts,_origin,calls);
         } else {
-            (address account, address token, uint256 amount, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
-            (address, address, uint256, bytes32, bytes));
+            (address account, address token, uint256 amount,Call[] memory calls) = abi.decode(executionMsg,
+            (address, address, uint256, Call[]));
             token = LibAccountsRegistry._getMirrorToken(_origin,token);
             if(action == LibAppStorage.TokenBridgeAction.Deposit) {
-                depositTokenAndCall(account,token,amount,_origin,toContract,data);
+                depositTokenAndCall(account,token,amount,_origin, calls);
             }
         }
     }
@@ -89,21 +90,21 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
         abi.decode(_message, (LibAppStorage.TokenBridgeAction,bytes));
 
         if(action == LibAppStorage.TokenBridgeAction.DepositMulti) {
-            (address account, address[] memory tokens, uint256[] memory amounts, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
-                (address, address[], uint256[], bytes32, bytes));
+            (address account, address[] memory tokens, uint256[] memory amounts, Call[] memory calls) = abi.decode(executionMsg,
+                (address, address[], uint256[], Call[]));
             for(uint i; i<tokens.length;){
                 tokens[i] = LibAccountsRegistry._getMirrorToken(uint32(_origin),tokens[i]);
                 unchecked{
                     ++i;
                 }
             }
-            depositMultiTokenAndCall(account,tokens,amounts,uint32(_origin),toContract,data);
+            depositMultiTokenAndCall(account,tokens,amounts,uint32(_origin), calls);
         } else {
-            (address account, address token, uint256 amount, bytes32 toContract, bytes memory data) = abi.decode(executionMsg,
-                (address, address, uint256, bytes32, bytes));
+            (address account, address token, uint256 amount, Call[] memory calls) = abi.decode(executionMsg,
+                (address, address, uint256, Call[]));
             token = LibAccountsRegistry._getMirrorToken(uint32(_origin),token);
             if(action == LibAppStorage.TokenBridgeAction.Deposit) {
-                depositTokenAndCall(account,token,amount,uint32(_origin),toContract,data);
+                depositTokenAndCall(account,token,amount,uint32(_origin),calls);
             }
         }
         return ExecutionStatus.Success;
