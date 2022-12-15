@@ -55,7 +55,7 @@ jobs:
             
       - name: Running coverage
         working-directory: solidity/khalani-core
-        run: 
+        run: |
           forge coverage --report lcov
           sudo apt-get install lcov
           lcov --remove ./lcov.info -o ./lcov.info.pruned 'exclusion/solidity/khalani-core/src/diammondCommons/*' 'exclusion/solidity/khalani-core/test/Mock/*' 'exclusion/solidity/khalani-core/test/utils/*'
