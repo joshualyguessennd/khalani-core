@@ -322,7 +322,7 @@ contract NexusHyperlaneTest is Test {
     function testICACreationAndCall(uint256 amountToDeposit,uint256 countToIncrease) public {
         address user = MOCK_ADDR_1;
 
-        address userKhalaAccount = 0xAF04d1c7Ba92De8f76a55ED137f658882e679D8C;
+        address userKhalaAccount = 0x5fB534AE570ab82417322AecA535c583FFd6BE7B;
         MockCounter counter = new MockCounter(userKhalaAccount);
         Call[] memory calls = new Call[](1);
         calls[0] = Call({to:address(counter),data:abi.encodeWithSelector(counter.increaseCount.selector,countToIncrease)});
