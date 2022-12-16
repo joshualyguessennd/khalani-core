@@ -217,8 +217,8 @@ contract NexusCelerTest is Test {
         emit LogDepositAndCall(address(usdc), user, amountToDeposit, calls);
         CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,calls);
         vm.stopPrank();
-//        vm.expectEmit(true, true, false, false, address(axonNexus));
-//        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(gwNexus)), abi.encode(""));
+        vm.expectEmit(true, true, false, false, address(axonNexus));
+        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(gwNexus)), abi.encode(""));
         chain2Bus.processNextPendingMsg();
         assertEq(usdcgW.balanceOf(address(mockLp)),amountToDeposit);
     }
@@ -259,9 +259,8 @@ contract NexusCelerTest is Test {
             calls
         );
         vm.stopPrank();
-//        vm.expectEmit(true, true, false, false, address(axonNexus));
-//        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(gwNexus)), abi.encode(""));
-//        hyperlaneInboxAxon.processNextPendingMessage();
+        vm.expectEmit(true, true, false, false, address(axonNexus));
+        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(gwNexus)), abi.encode(""));
         chain2Bus.processNextPendingMsg();
         assertEq(usdcgW.balanceOf(address(mockLp)),amount1);
         assertEq(usdtgW.balanceOf(address(mockLp)),amount2);
