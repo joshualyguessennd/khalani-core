@@ -20,6 +20,13 @@ contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
         eoa = _eoa;
     }
 
+    /**
+    *@notice - sends calls to the destination contract with calldata in `Call[]` with ICA as proxy
+    *@param token - address of the token bridged (mirror token)
+    *@param amount - amount of token
+    *@param chainId - source chain-Id
+    *@param calls - list of `Call` struct (to, data)
+    */
     function sendProxyCall(address token, uint256 amount, uint chainId, Call[] calldata calls) external onlyOwner {
 
         for(uint i ; i<calls.length;) {
@@ -47,6 +54,13 @@ contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
 
     }
 
+    /**
+    *@notice - sends calls to the destination contract with calldata in `Call[]` with ICA as proxy
+    *@param tokens - addresses of the token bridged (mirror tokens)
+    *@param amount - amounts of tokens
+    *@param chainId - source chain-Id
+    *@param calls - list of `Call` struct (to, data)
+    */
     function sendProxyCallForMultiTokens(address[] calldata tokens, uint256[] calldata amounts, uint chainId, Call[] calldata calls) external {
         for(uint i; i<calls.length; ) {
             (bool success, bytes memory returnData) = calls[i].to.call(
