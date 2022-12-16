@@ -29,7 +29,8 @@ contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
     */
     function sendProxyCall(address token, uint256 amount, uint chainId, Call[] calldata calls) external onlyOwner {
 
-        for(uint i ; i<calls.length;) {
+        uint length  = calls.length;
+        for(uint i ; i<length;) {
 
             (bool success, bytes memory returnData) = calls[i].to.call(
                 calls[i].data
@@ -62,7 +63,8 @@ contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
     *@param calls - list of `Call` struct (to, data)
     */
     function sendProxyCallForMultiTokens(address[] calldata tokens, uint256[] calldata amounts, uint chainId, Call[] calldata calls) external {
-        for(uint i; i<calls.length; ) {
+        uint length  = calls.length;
+        for(uint i; i<length; ) {
             (bool success, bytes memory returnData) = calls[i].to.call(
                 calls[i].data
             );

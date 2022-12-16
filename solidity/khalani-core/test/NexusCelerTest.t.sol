@@ -46,7 +46,7 @@ contract NexusCelerTest is Test {
     );
 
     event CrossChainMsgReceived(
-        uint32 indexed msgOriginChain,
+        uint indexed msgOriginChain,
         bytes32 indexed sender,
         bytes message
     );
@@ -324,7 +324,7 @@ contract NexusCelerTest is Test {
 
 
         // dummy contract for ica call - call to this contract is only possible through `userKhalaAccount` - this will test if the call is going correctly from ICA proxy
-        address userKhalaAccount = 0xc899Fd152F566cFf240390819A79E1B0fBb6af05;
+        address userKhalaAccount = 0xB9A0E37C72f249E2a492Cd0AFF960a39EE090A86;
         MockCounter counter = new MockCounter(userKhalaAccount);
 
         Call[] memory calls = new Call[](1);

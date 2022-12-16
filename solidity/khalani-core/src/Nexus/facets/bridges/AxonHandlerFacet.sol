@@ -18,7 +18,7 @@ import {Call} from "../../Call.sol";
 contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
 
     event CrossChainMsgReceived(
-        uint32 indexed msgOriginChain,
+        uint indexed msgOriginChain,
         bytes32 indexed sender,
         bytes message
     );
@@ -69,7 +69,8 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
         if(action == LibAppStorage.TokenBridgeAction.DepositMulti) {
             (address account, address[] memory tokens, uint256[] memory amounts, Call[] memory calls) = abi.decode(executionMsg,
             (address, address[], uint256[], Call[]));
-            for(uint i; i<tokens.length;){
+            uint length = tokens.length;
+            for(uint i; i<length;){
                 tokens[i] = LibAccountsRegistry._getMirrorToken(_origin,tokens[i]);
 
                 unchecked {
@@ -100,14 +101,15 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
         address // executor
     ) external payable override onlyMessageBus returns (ExecutionStatus) {
         _onlyNexus(uint32(_origin), TypeCasts.addressToBytes32(_sender)); //keeping as function to avoid deep stack
-        emit CrossChainMsgReceived(uint32(_origin), TypeCasts.addressToBytes32(_sender), _message);
+        emit CrossChainMsgReceived(_origin, TypeCasts.addressToBytes32(_sender), _message);
         (LibAppStorage.TokenBridgeAction action, bytes memory executionMsg) =
         abi.decode(_message, (LibAppStorage.TokenBridgeAction,bytes));
 
         if(action == LibAppStorage.TokenBridgeAction.DepositMulti) {
             (address account, address[] memory tokens, uint256[] memory amounts, Call[] memory calls) = abi.decode(executionMsg,
                 (address, address[], uint256[], Call[]));
-            for(uint i; i<tokens.length;){
+            uint length = tokens.length;
+            for(uint i; i<length;){
                 tokens[i] = LibAccountsRegistry._getMirrorToken(uint32(_origin),tokens[i]);
                 unchecked{
                     ++i;

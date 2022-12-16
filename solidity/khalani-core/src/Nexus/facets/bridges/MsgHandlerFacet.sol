@@ -15,7 +15,7 @@ import {Call} from "../../Call.sol";
 contract MsgHandlerFacet is IMessageRecipient, Receiver, MessageApp {
 
     event CrossChainMsgReceived(
-        uint32 indexed msgOriginChain,
+        uint indexed msgOriginChain,
         bytes32 indexed sender,
         bytes message
     );
@@ -52,7 +52,8 @@ contract MsgHandlerFacet is IMessageRecipient, Receiver, MessageApp {
         if(action == LibAppStorage.TokenBridgeAction.WithdrawMulti) {
             (address account, address[] memory tokens, uint256[] memory amounts, Call[] memory calls) = abi.decode(executionMsg,
                 (address, address[], uint256[], Call[]));
-            for(uint i; i<tokens.length;){
+            uint length = tokens.length;
+            for(uint i; i<length;){
                 tokens[i] = LibAppReceiver._getChainToken(tokens[i]);
 
                 unchecked {
@@ -77,14 +78,15 @@ contract MsgHandlerFacet is IMessageRecipient, Receiver, MessageApp {
         address // executor
     ) external payable override onlyMessageBus returns (ExecutionStatus) {
         _onlyNexus(_sender); //keeping as function to avoid deep stack
-        emit CrossChainMsgReceived(uint32(_origin), TypeCasts.addressToBytes32(_sender), _message);
+        emit CrossChainMsgReceived(_origin, TypeCasts.addressToBytes32(_sender), _message);
         (LibAppStorage.TokenBridgeAction action, bytes memory executionMsg) =
         abi.decode(_message, (LibAppStorage.TokenBridgeAction,bytes));
 
         if(action == LibAppStorage.TokenBridgeAction.WithdrawMulti) {
             (address account, address[] memory tokens, uint256[] memory amounts, Call[] memory calls) = abi.decode(executionMsg,
                 (address, address[], uint256[], Call[]));
-            for(uint i; i<tokens.length;){
+            uint length = tokens.length;
+            for(uint i; i<length;){
                 tokens[i] = LibAppReceiver._getChainToken(tokens[i]);
                 unchecked{
                     ++i;

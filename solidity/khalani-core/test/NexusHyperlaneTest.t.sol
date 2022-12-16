@@ -44,7 +44,7 @@ contract NexusHyperlaneTest is Test {
     );
 
     event CrossChainMsgReceived(
-        uint32 indexed msgOriginChain,
+        uint indexed msgOriginChain,
         bytes32 indexed sender,
         bytes message
     );
@@ -322,7 +322,7 @@ contract NexusHyperlaneTest is Test {
     function testICACreationAndCall(uint256 amountToDeposit,uint256 countToIncrease) public {
         address user = MOCK_ADDR_1;
 
-        address userKhalaAccount = 0x5fB534AE570ab82417322AecA535c583FFd6BE7B;
+        address userKhalaAccount = 0x554c7E9691cE9929938aE07a8f923Fd18863D2CD;
         MockCounter counter = new MockCounter(userKhalaAccount);
         Call[] memory calls = new Call[](1);
         calls[0] = Call({to:address(counter),data:abi.encodeWithSelector(counter.increaseCount.selector,countToIncrease)});
