@@ -13,16 +13,14 @@ contract AxonCrossChainRouter is Modifiers {
         address indexed token,
         address indexed user,
         uint256 amount,
-        bytes32 toContract,
-        bytes data
+        Call[] calls
     );
 
     event LogWithdrawMultiTokenAndCall(
         address[] indexed token,
         address indexed user,
         uint256[] amount,
-        bytes32 toContract,
-        bytes data
+        Call[] calls
     );
 
     event LogCrossChainMsg(
@@ -47,15 +45,13 @@ contract AxonCrossChainRouter is Modifiers {
     * pan will be minted and other chain token will be released
     * @param token - address of token to be withdrawn
     * @param amount - amount of tokens to be withdrawn
-    * @param toContract - contract address to execute crossChain call on
-    * @param data - call data to be executed on `toContract`
+    * @param calls - contract address and calldata to execute crossChain
     **/
     function withdrawTokenAndCall(
         uint chainId,
         address token,
         uint256 amount,
-        bytes32 toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) external {
         IERC20Mintable(token).burn(msg.sender,amount);
         address _eoa = IKhalaInterchainAccount(msg.sender).eoa();
@@ -68,8 +64,7 @@ contract AxonCrossChainRouter is Modifiers {
                 _eoa,
                 token,
                 amount,
-                toContract,
-                data
+                calls
             );
 
         } else {
@@ -80,8 +75,7 @@ contract AxonCrossChainRouter is Modifiers {
                 _eoa,
                 token,
                 amount,
-                toContract,
-                data
+                calls
             );
 
         }
@@ -91,8 +85,7 @@ contract AxonCrossChainRouter is Modifiers {
             token,
             msg.sender,
             amount,
-            toContract,
-            data
+            calls
         );
     }
 
@@ -101,15 +94,13 @@ contract AxonCrossChainRouter is Modifiers {
     * pan will be minted and other chain token will be released
     * @param tokens - addresses of tokens to deposit
     * @param amounts - amounts of tokens to deposit
-    * @param toContract - contract address to execute crossChain call on
-    * @param data - call data to be executed on `toContract`
+    * @param calls - contract address and calldata to execute crossChain
     **/
     function withdrawMultiTokenAndCall(
         uint chainId,
         address[] memory tokens,
         uint256[] memory amounts,
-        bytes32 toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) external {
         require(tokens.length == amounts.length , "array length do not match");
 
@@ -130,8 +121,7 @@ contract AxonCrossChainRouter is Modifiers {
                 _eoa,
                 tokens,
                 amounts,
-                toContract,
-                data
+                calls
             );
 
         } else {
@@ -142,8 +132,7 @@ contract AxonCrossChainRouter is Modifiers {
                 _eoa,
                 tokens,
                 amounts,
-                toContract,
-                data
+                calls
             );
 
         }
@@ -152,8 +141,7 @@ contract AxonCrossChainRouter is Modifiers {
             tokens,
             msg.sender,
             amounts,
-            toContract,
-            data
+            calls
         );
     }
 }

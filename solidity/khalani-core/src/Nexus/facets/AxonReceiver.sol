@@ -8,7 +8,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "../libraries/LibAccountsRegistry.sol";
 import {TypeCasts} from "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "../interfaces/IKhalaInterchainAccount.sol";
-
+import {Call} from "../Call.sol";
 contract AxonReceiver is Modifiers {
 
 
@@ -45,16 +45,14 @@ contract AxonReceiver is Modifiers {
     * @param token - address of token to deposit
     * @param amount - amount of tokens to deposit
     * @param chainId - chain's domain from where call was received on axon
-    * @param toContract - contract address to execute crossChain call on
-    * @param data - call data to be executed on `toContract`
+    * @param calls - contract address and calldata to execute crossChain
     **/
     function depositTokenAndCall(
         address account,
         address token,
         uint256 amount,
         uint32 chainId,
-        bytes32 toContract,
-        bytes memory data
+        Call[] memory calls
     ) internal nonReentrant {
         address khalaInterChainAddress = LibAccountsRegistry.getDeployedInterchainAccount(account);
         IERC20Mintable(token).mint(khalaInterChainAddress,amount);
@@ -63,8 +61,7 @@ contract AxonReceiver is Modifiers {
                 token,
                 amount,
                 chainId,
-                TypeCasts.bytes32ToAddress(toContract),
-                data
+                calls
         );
 
         emit LogDepositAndCall(
@@ -81,16 +78,14 @@ contract AxonReceiver is Modifiers {
     * @param tokens - addresses of tokens to deposit
     * @param amounts - amounts of tokens to deposit
     * @param chainId - chain's domain from where call was received on axon
-    * @param toContract - contract address to execute crossChain call on
-    * @param data - call data to be executed on `toContract`
+    * @param calls - contract address and calldata to execute crossChain
     **/
     function depositMultiTokenAndCall(
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
         uint32 chainId,
-        bytes32 toContract,
-        bytes memory data
+        Call[] memory calls
     ) internal nonReentrant {
         require(tokens.length == amounts.length, "array length do not match");
         address khalaInterChainAddress = LibAccountsRegistry.getDeployedInterchainAccount(account);
@@ -105,8 +100,7 @@ contract AxonReceiver is Modifiers {
                 tokens,
                 amounts,
                 chainId,
-                TypeCasts.bytes32ToAddress(toContract),
-                data
+                calls
         );
 
         emit LogDepositMultiTokenAndCall(

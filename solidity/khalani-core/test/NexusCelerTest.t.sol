@@ -20,6 +20,7 @@ import "./Mock/MockCounter.sol";
 import "./Mock/MockLp.sol";
 import "../src/Nexus/facets/bridges/AxonMultiBridgeFacet.sol";
 import "../src/Nexus/facets/AxonCrossChainRouter.sol";
+import {Call} from "../src/Nexus/Call.sol";
 
 contract NexusCelerTest is Test {
     //events
@@ -27,28 +28,25 @@ contract NexusCelerTest is Test {
         address indexed token,
         address indexed user,
         uint256 amount,
-        bytes32 toContract,
-        bytes data
+        Call[] calls
     );
 
     event LogDepositMultiTokenAndCall(
         address[] indexed token,
         address indexed user,
         uint256[] amounts,
-        bytes32 toContract,
-        bytes data
+        Call[] calls
     );
 
     event LogWithdrawTokenAndCall(
         address indexed token,
         address indexed user,
         uint256 amount,
-        bytes32 toContract,
-        bytes data
+        Call[] calls
     );
 
     event CrossChainMsgReceived(
-        uint32 indexed msgOriginChain,
+        uint indexed msgOriginChain,
         bytes32 indexed sender,
         bytes message
     );
@@ -210,16 +208,19 @@ contract NexusCelerTest is Test {
         vm.prank(address(axonNexus));
         address userKhalaAccount = LibAccountsRegistry.getDeployedInterchainAccount(user);
         usdc.mint(MOCK_ADDR_1,amountToDeposit);
+        Call[] memory calls =  new Call[](2);
+        calls[0] = Call({to:address(usdcgW),data:abi.encodeWithSelector(usdcgW.approve.selector,mockLp,amountToDeposit)});
+        calls[1] = Call({to:address(mockLp),data:abi.encodeWithSelector(mockLp.addLiquidity.selector,address(usdcgW),amountToDeposit)});
         vm.startPrank(user);
         usdc.approve(address(gwNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(gwNexus));
-        emit LogDepositAndCall(address(usdc), user, amountToDeposit, TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
-        CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,user));
+        emit LogDepositAndCall(address(usdc), user, amountToDeposit, calls);
+        CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,calls);
         vm.stopPrank();
-//        vm.expectEmit(true, true, false, false, address(axonNexus));
-//        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(gwNexus)), abi.encode(""));
+        vm.expectEmit(true, true, false, false, address(axonNexus));
+        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(gwNexus)), abi.encode(""));
         chain2Bus.processNextPendingMsg();
-        assertEq(usdcgW.balanceOf(address(userKhalaAccount)),amountToDeposit);
+        assertEq(usdcgW.balanceOf(address(mockLp)),amountToDeposit);
     }
 
     // Tests for successful deposit of multiple tokens and calling a contract on the other chain
@@ -232,6 +233,10 @@ contract NexusCelerTest is Test {
         AxonHandlerFacet(address (axonNexus)).addTokenMirror(1,address(usdt),address(usdtgW));
         usdt.mint(user,amount2);
         usdc.mint(user,amount1);
+        Call[] memory calls = new Call[](3);
+        calls[0] = Call({to:address(usdcgW),data:abi.encodeWithSelector(usdcgW.approve.selector,mockLp,amount1)});
+        calls[1] = Call({to:address(usdtgW),data:abi.encodeWithSelector(usdtgW.approve.selector,mockLp,amount2)});
+        calls[2] = Call({to:address(mockLp),data:abi.encodeWithSelector(mockLp.addLiquidity2.selector,[address(usdcgW),address(usdtgW)],[amount1,amount2])});
         vm.startPrank(user);
         usdc.approve(address(gwNexus),amount1);
         usdt.approve(address(gwNexus),amount2);
@@ -245,23 +250,20 @@ contract NexusCelerTest is Test {
         emit LogDepositMultiTokenAndCall(tokens,
             user,
             amounts,
-            TypeCasts.addressToBytes32(address(usdcgW)),
-            abi.encodeWithSelector(usdcgW.balanceOf.selector,user)
+            calls
         );
 
         CrossChainRouter(address(gwNexus)).depositMultiTokenAndCall(
             tokens,
             amounts,
-            TypeCasts.addressToBytes32(address(usdcgW)),
-            abi.encodeWithSelector(usdcgW.balanceOf.selector,user)
+            calls
         );
         vm.stopPrank();
-//        vm.expectEmit(true, true, false, false, address(axonNexus));
-//        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(gwNexus)), abi.encode(""));
-//        hyperlaneInboxAxon.processNextPendingMessage();
+        vm.expectEmit(true, true, false, false, address(axonNexus));
+        emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(gwNexus)), abi.encode(""));
         chain2Bus.processNextPendingMsg();
-        assertEq(usdcgW.balanceOf(address(userKhalaAccount)),amount1);
-        assertEq(usdtgW.balanceOf(address(userKhalaAccount)),amount2);
+        assertEq(usdcgW.balanceOf(address(mockLp)),amount1);
+        assertEq(usdtgW.balanceOf(address(mockLp)),amount2);
     }
 
 
@@ -271,7 +273,9 @@ contract NexusCelerTest is Test {
         // caller - random address which is not hyperlane inbox
         vm.assume(caller!=address(0x0) && caller!=address(chain2Bus));
         //constructing a valid msg
-        bytes memory message = abi.encode(MOCK_ADDR_1,address(usdc),100e18,TypeCasts.addressToBytes32(address(usdcgW)),abi.encodeWithSelector(usdcgW.balanceOf.selector,MOCK_ADDR_1));
+        Call[] memory calls = new Call[](1);
+        calls[0] = Call({to:address(usdcgW),data:abi.encodeWithSelector(usdcgW.approve.selector,mockLp,100e18)});
+        bytes memory message = abi.encode(MOCK_ADDR_1,address(usdc),100e18,calls);
         bytes memory messageWithAction = abi.encode(LibAppStorage.TokenBridgeAction.Deposit,message);
         address dummyExecuter = 0x0000000000000000000000000000000000000010;
 
@@ -298,6 +302,8 @@ contract NexusCelerTest is Test {
         vm.assume(caller!=address(0x0) && caller!=address(gwNexus));
 
         //attempting to call hyperlane facet directly
+        Call[] memory calls = new Call[](1);
+        calls[0] = Call({to:address(usdcgW),data:abi.encodeWithSelector(usdcgW.approve.selector,mockLp,100e18)});
         vm.startPrank(caller);
         vm.expectRevert("BridgeFacet : Invalid Router");
         IBridgeFacet(address(gwNexus)).bridgeTokenAndCall(
@@ -305,28 +311,30 @@ contract NexusCelerTest is Test {
             caller,
             address(usdc),
             100e18,
-            TypeCasts.addressToBytes32(address(gwNexus)),
-            abi.encodeWithSelector(usdcgW.balanceOf.selector,caller)
+            calls
         );
         vm.stopPrank();
     }
 
     //testing
-    //inter-chain account call test
+    //inter-chain account call test , tokens should be minted to ICA
     function testICACreationAndCallCeler(uint256 amountToDeposit,uint256 countToIncrease) public {
         address user = MOCK_ADDR_1;
 
-        address userKhalaAccount = 0xD5D44fBF82E03DbF09beBcA26A7F8AA49cb2F155;
 
         // dummy contract for ica call - call to this contract is only possible through `userKhalaAccount` - this will test if the call is going correctly from ICA proxy
+        address userKhalaAccount = 0xB9A0E37C72f249E2a492Cd0AFF960a39EE090A86;
         MockCounter counter = new MockCounter(userKhalaAccount);
+
+        Call[] memory calls = new Call[](1);
+        calls[0] = Call({to:address(counter),data:abi.encodeWithSelector(counter.increaseCount.selector,countToIncrease)});
 
         usdc.mint(MOCK_ADDR_1,amountToDeposit);
         vm.startPrank(user);
         usdc.approve(address(gwNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(gwNexus));
-        emit LogDepositAndCall(address(usdc), user, amountToDeposit, TypeCasts.addressToBytes32(address(counter)),abi.encodeWithSelector(counter.increaseCount.selector,countToIncrease));
-        CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,TypeCasts.addressToBytes32(address(counter)),abi.encodeWithSelector(counter.increaseCount.selector,countToIncrease));
+        emit LogDepositAndCall(address(usdc), user, amountToDeposit, calls);
+        CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,calls);
         vm.stopPrank();
         chain2Bus.processNextPendingMsg();
         assertEq(usdcgW.balanceOf(userKhalaAccount),amountToDeposit);
@@ -341,11 +349,14 @@ contract NexusCelerTest is Test {
         vm.prank(address(axonNexus));
         address userKhalaAccount = LibAccountsRegistry.getDeployedInterchainAccount(user);
         usdc.mint(user,amountToDeposit);
+        Call[] memory calls =  new Call[](2);
+        calls[0] = Call({to:address(usdcgW),data:abi.encodeWithSelector(usdcgW.approve.selector,mockLp,amountToDeposit)});
+        calls[1] = Call({to:address(mockLp),data:abi.encodeWithSelector(mockLp.addLiquidity.selector,address(usdcgW),amountToDeposit)});
         vm.startPrank(user);
         usdc.approve(address(gwNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(gwNexus));
-        emit LogDepositAndCall(address(usdc), user, amountToDeposit, TypeCasts.addressToBytes32(address(mockLp)),abi.encodeWithSelector(mockLp.addLiquidity.selector,amountToDeposit));
-        CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,TypeCasts.addressToBytes32(address(mockLp)),abi.encodeWithSelector(mockLp.addLiquidity.selector,amountToDeposit));
+        emit LogDepositAndCall(address(usdc), user, amountToDeposit, calls);
+        CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,calls);
         vm.stopPrank();
         chain2Bus.processNextPendingMsg();
         chain1Bus.processNextPendingMsg();
@@ -368,6 +379,10 @@ contract NexusCelerTest is Test {
         MsgHandlerFacet(address(gwNexus)).addChainTokenForMirrorToken(address(usdt),address(usdtGw));
         usdc.mint(user,amount1);
         usdt.mint(user,amount2);
+        Call[] memory calls = new Call[](3);
+        calls[0] = Call({to:address(usdcgW),data:abi.encodeWithSelector(usdcgW.approve.selector,mockLp,amount1)});
+        calls[1] = Call({to:address(usdtGw),data:abi.encodeWithSelector(usdtGw.approve.selector,mockLp,amount2)});
+        calls[2] = Call({to:address(mockLp),data:abi.encodeWithSelector(mockLp.addLiquidity2.selector,[address(usdcgW),address(usdtGw)],[amount1,amount2])});
         vm.startPrank(user);
         usdc.approve(address(gwNexus),amount1);
         usdt.approve(address (gwNexus),amount2);
@@ -378,8 +393,8 @@ contract NexusCelerTest is Test {
         amounts[0] = amount1;
         amounts[1] = amount2;
         vm.expectEmit(true, true, true , true,address(gwNexus));
-        emit LogDepositMultiTokenAndCall(tokens,user,amounts,TypeCasts.addressToBytes32(address(mockLp)),abi.encodeWithSelector(mockLp.addLiqiuidity2.selector,[amount1,amount2]));
-        CrossChainRouter(address(gwNexus)).depositMultiTokenAndCall(tokens,amounts,TypeCasts.addressToBytes32(address(mockLp)),abi.encodeWithSelector(mockLp.addLiqiuidity2.selector,[amount1,amount2]));
+        emit LogDepositMultiTokenAndCall(tokens,user,amounts,calls);
+        CrossChainRouter(address(gwNexus)).depositMultiTokenAndCall(tokens,amounts,calls);
         vm.stopPrank();
         chain2Bus.processNextPendingMsg();
         chain1Bus.processNextPendingMsg();

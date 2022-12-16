@@ -8,9 +8,11 @@ import "@hyperlane-xyz/core/interfaces/IOutbox.sol";
 import "../../interfaces/IMultiBridgeFacet.sol";
 import "@sgn-v2-contracts/message/framework/MessageApp.sol";
 import "./libraries/LibAxonMultiBridgeFacet.sol";
+import {Call} from "../../Call.sol";
 
 
-// Hyperlane Facet for non Axon chain //TODO : Should we make this all `internal` ?
+// Hyperlane + Celer Facet on Axon chain
+//routes messages from axon to other chain via Hyperlane or Celer
 contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
 
     constructor(address _messageBus) MessageApp(_messageBus){
@@ -37,16 +39,24 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
         messageBus = _celerMessageBus;
     }
 
+    /**
+    *@notice - bridges token and amp using hyperlane
+    *@param action - Nexus's Token bridge action
+    *@param chainId - chainId to send msg to
+    *@param account - address to bridge token
+    *@param token  - mirror token's address
+    *@param amount - amount of token to bridge
+    *@param calls - Multicall crosschain execution
+    */
     function bridgeTokenAndCallbackViaHyperlane(
         LibAppStorage.TokenBridgeAction action,
         uint32 chainId,
         address account,
         address token,
         uint256 amount,
-        bytes32  toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) public payable override validRouter  {
-        bytes memory message = abi.encode(account,token,amount,toContract,data);
+        bytes memory message = abi.encode(account,token,amount,calls);
         bytes memory messageWithAction = abi.encode(action,message);
         IOutbox(_getHyperlaneMailBox()).dispatch(
             chainId,
@@ -55,16 +65,24 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
         );
     }
 
+    /**
+    *@notice - bridges token and amp using hyperlane
+    *@param action - Nexus's Token bridge action
+    *@param chainId - chainId to send msg to
+    *@param account - address to bridge token
+    *@param tokens - list of mirror token's addresses on axon
+    *@param amounts - amounts of tokens to bridge
+    *@param calls - Multicall crosschain execution
+    */
     function bridgeMultiTokenAndCallbackViaHyperlane(
         LibAppStorage.TokenBridgeAction action,
         uint32 chainId,
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
-        bytes32 toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) public payable override validRouter {
-        bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
+        bytes memory message = abi.encode(account,tokens,amounts,calls);
         bytes memory messageWithAction = abi.encode(action,message);
         IOutbox(_getHyperlaneMailBox()).dispatch(
             chainId,
@@ -73,16 +91,25 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
         );
     }
 
+
+    /**
+    *@notice - bridges token and amp using hyperlane
+    *@param action - Nexus's Token bridge action
+    *@param chainId - chainId to send msg to
+    *@param account - address to bridge token
+    *@param token  - mirror token's address
+    *@param amount - amount of token to bridge
+    *@param calls - Multicall crosschain execution
+    */
     function bridgeTokenAndCallbackViaCeler(
         LibAppStorage.TokenBridgeAction action,
         uint64 chainId,
         address account,
         address token,
         uint256 amount,
-        bytes32  toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) public payable override validRouter  {
-        bytes memory message = abi.encode(account,token,amount,toContract,data);
+        bytes memory message = abi.encode(account,token,amount,calls);
         bytes memory messageWithAction = abi.encode(action,message);
         sendMessage(
             _getInboxForChain(chainId),
@@ -92,16 +119,24 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
         );
     }
 
+    /**
+    *@notice - bridges token and amp using hyperlane
+    *@param action - Nexus's Token bridge action
+    *@param chainId - chainId to send msg to
+    *@param account - address to bridge token
+    *@param tokens - list of mirror token's addresses on axon
+    *@param amounts - amounts of tokens to bridge
+    *@param calls - Multicall crosschain execution
+    */
     function bridgeMultiTokenAndCallbackViaCeler(
         LibAppStorage.TokenBridgeAction action,
         uint64 chainId,
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
-        bytes32 toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) public payable override validRouter {
-        bytes memory message = abi.encode(account,tokens,amounts,toContract,data);
+        bytes memory message = abi.encode(account,tokens,amounts,calls);
         bytes memory messageWithAction = abi.encode(action,message);
         sendMessage(
             _getInboxForChain(chainId),

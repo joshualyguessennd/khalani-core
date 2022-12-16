@@ -5,6 +5,7 @@ import "../libraries/LibAppStorage.sol";
 import {IERC20Mintable} from "../../interfaces/IERC20Mintable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "./bridges/HyperlaneFacet.sol";
+import {Call} from "../Call.sol";
 
 contract CrossChainRouter is Modifiers {
 
@@ -12,16 +13,14 @@ contract CrossChainRouter is Modifiers {
         address indexed token,
         address indexed user,
         uint256 amount,
-        bytes32 toContract,
-        bytes data
+        Call[] calls
     );
 
     event LogDepositMultiTokenAndCall(
         address[] indexed token,
         address indexed user,
         uint256[] amounts,
-        bytes32 toContract,
-        bytes data
+        Call[] calls
     );
 
     event LogCrossChainMsg(
@@ -51,14 +50,12 @@ contract CrossChainRouter is Modifiers {
     * mirror token will be minted on axon chain
     * @param token - address of token to deposit
     * @param amount - amount of tokens to deposit
-    * @param toContract - contract address to execute crossChain call on
-    * @param data - call data to be executed on `toContract`
+    * @param calls - address and data for cross-chain call
     **/
     function depositTokenAndCall(
         address token,
         uint256 amount,
-        bytes32 toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) public nonReentrant {
 
         _lockOrBurn(msg.sender, token, amount);
@@ -68,16 +65,14 @@ contract CrossChainRouter is Modifiers {
             msg.sender,
             token,
             amount,
-            toContract,
-            data
+            calls
         );
 
         emit LogDepositAndCall(
             token,
             msg.sender,
             amount,
-            toContract,
-            data
+            calls
         );
 
     }
@@ -87,14 +82,12 @@ contract CrossChainRouter is Modifiers {
     * mirror token will be minted on axon chain
     * @param tokens - addresses of tokens to deposit
     * @param amounts - amounts of tokens to deposit
-    * @param toContract - contract address to execute crossChain call on
-    * @param data - call data to be executed on `toContract`
+    * @param calls - address and data for cross-chain call
     **/
     function depositMultiTokenAndCall(
         address[] memory tokens,
         uint256[] memory amounts,
-        bytes32 toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) public nonReentrant {
         require(tokens.length == amounts.length, "array length do not match");
 
@@ -110,16 +103,14 @@ contract CrossChainRouter is Modifiers {
             msg.sender,
             tokens,
             amounts,
-            toContract,
-            data
+            calls
         );
 
         emit LogDepositMultiTokenAndCall (
             tokens,
             msg.sender,
             amounts,
-            toContract,
-            data
+            calls
         );
     }
 

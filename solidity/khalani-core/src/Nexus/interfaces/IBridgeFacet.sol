@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/LibAppStorage.sol";
+import {Call} from "../Call.sol";
 
 interface IBridgeFacet {
     function bridgeTokenAndCall(
@@ -9,8 +10,7 @@ interface IBridgeFacet {
         address account,
         address token,
         uint256 amount,
-        bytes32  toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) external payable ;
 
     function bridgeMultiTokenAndCall(
@@ -18,7 +18,6 @@ interface IBridgeFacet {
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
-        bytes32 toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) external payable ;
 }

@@ -1,22 +1,28 @@
 pragma solidity ^0.8.0;
 
+import "./MockERC20.sol";
+
 contract MockLp{
     address gap;
-    mapping(address => uint) balance;
+    mapping(address=>mapping(address => uint)) balance;
     bool fail; //when set true reverts call of add liquidity
-    function addLiqiuidity2(uint256[2] calldata amounts) external returns(uint){
+    function addLiquidity2(address[2] calldata token, uint256[2] calldata amounts) external returns(uint[2] memory){
         if(fail){
             revert();
         }
-        balance[msg.sender] = amounts[0]+amounts[1];
-        return balance[msg.sender];
+        MockERC20(token[0]).transferFrom(msg.sender,address(this),amounts[0]);
+        MockERC20(token[1]).transferFrom(msg.sender,address(this),amounts[1]);
+        balance[token[0]][msg.sender] = amounts[0];
+        balance[token[1]][msg.sender] = amounts[1];
+        return (amounts);
     }
 
-    function addLiquidity(uint256 amount) external returns(uint){
+    function addLiquidity(address token, uint256 amount) external returns(uint){
         if(fail){
             revert();
         }
-        balance[msg.sender] = amount;
+        MockERC20(token).transferFrom(msg.sender,address(this),amount);
+        balance[token][msg.sender] = amount;
         return amount;
     }
 
@@ -24,7 +30,7 @@ contract MockLp{
         fail = flag;
     }
 
-    function balanceOf(address account) external returns (uint){
-        return balance[account];
+    function balanceOf(address token, address account) external returns (uint){
+        return balance[token][account];
     }
 }

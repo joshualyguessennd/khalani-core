@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/LibAppStorage.sol";
+import {Call} from "../Call.sol";
 
 interface IMultiBridgeFacet {
 
@@ -11,8 +12,7 @@ interface IMultiBridgeFacet {
         address account,
         address token,
         uint256 amount,
-        bytes32  toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) external payable ;
 
     function bridgeMultiTokenAndCallbackViaHyperlane(
@@ -21,8 +21,7 @@ interface IMultiBridgeFacet {
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
-        bytes32 toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) external payable ;
 
     function bridgeTokenAndCallbackViaCeler(
@@ -31,8 +30,7 @@ interface IMultiBridgeFacet {
         address account,
         address token,
         uint256 amount,
-        bytes32  toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) external payable ;
 
     function bridgeMultiTokenAndCallbackViaCeler(
@@ -41,8 +39,7 @@ interface IMultiBridgeFacet {
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
-        bytes32 toContract,
-        bytes calldata data
+        Call[] calldata calls
     ) external payable ;
 
 }

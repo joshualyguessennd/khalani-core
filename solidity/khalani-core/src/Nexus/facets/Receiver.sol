@@ -9,6 +9,7 @@ import "../libraries/LibAccountsRegistry.sol";
 import {TypeCasts} from "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "../interfaces/IKhalaInterchainAccount.sol";
 import "forge-std/console.sol";
+import {Call} from "../Call.sol";
 
 contract Receiver is Modifiers {
 
@@ -43,15 +44,13 @@ contract Receiver is Modifiers {
     * @param account - address of account
     * @param token - address of token to deposit
     * @param amount - amount of tokens to deposit
-    * @param toContract - contract address to execute crossChain call on
-    * @param data - call data to be executed on `toContract`
+    * @param calls - contract address and calldata to execute crossChain
     **/
     function withdrawTokenAndCall(
         address account,
         address token,
         uint256 amount,
-        bytes32 toContract,
-        bytes memory data
+        Call[] memory calls
     ) internal nonReentrant {
         _releaseOrMint(account,token,amount);
         // call ?
@@ -67,15 +66,13 @@ contract Receiver is Modifiers {
     * @param account - address of account
     * @param tokens - addresses of tokens to deposit
     * @param amounts - amounts of tokens to deposit
-    * @param toContract - contract address to execute crossChain call on
-    * @param data - call data to be executed on `toContract`
+    * @param calls - contract address and calldata to execute crossChain
     **/
     function withdrawMultiTokenAndCall(
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
-        bytes32 toContract,
-        bytes memory data
+        Call[] memory calls
     ) internal nonReentrant {
         require(tokens.length == amounts.length, "array length do not match");
         for(uint i; i<tokens.length;) {

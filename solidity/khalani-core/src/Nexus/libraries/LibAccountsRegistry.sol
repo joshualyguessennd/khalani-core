@@ -15,7 +15,7 @@ library LibAccountsRegistry {
     bytes32 constant bytecodeHash = bytes32(keccak256(bytecode));
 
     struct AccountsRegistryStorage {
-        mapping(uint32 => mapping(address => address)) chainMirrorToken;
+        mapping(uint => mapping(address => address)) chainMirrorToken;
 
     }
 
