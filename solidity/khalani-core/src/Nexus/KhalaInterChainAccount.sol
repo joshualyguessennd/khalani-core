@@ -57,7 +57,7 @@ contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
     /**
     *@notice - sends calls to the destination contract with calldata in `Call[]` with ICA as proxy
     *@param tokens - addresses of the token bridged (mirror tokens)
-    *@param amount - amounts of tokens
+    *@param amounts - amounts of tokens
     *@param chainId - source chain-Id
     *@param calls - list of `Call` struct (to, data)
     */
