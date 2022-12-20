@@ -16,7 +16,6 @@ library LibAccountsRegistry {
 
     struct AccountsRegistryStorage {
         mapping(uint => mapping(address => address)) chainMirrorToken;
-
     }
 
     function accountsRegistryStorage() internal pure returns (AccountsRegistryStorage storage ds) {
@@ -24,11 +23,6 @@ library LibAccountsRegistry {
         assembly {
             ds.slot := position
         }
-    }
-
-    function _addChainMirrorTokenMapping(uint32 _domain, address token, address mirrorToken) internal {
-        AccountsRegistryStorage storage ds = accountsRegistryStorage();
-        ds.chainMirrorToken[_domain][token] = mirrorToken;
     }
 
     function _getMirrorToken(uint32 _domain, address _token) internal returns (address) {
