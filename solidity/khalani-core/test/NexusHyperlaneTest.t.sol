@@ -106,9 +106,6 @@ contract NexusHyperlaneTest is Test {
         ethNexus = deployDiamond();
         axonNexus = deployDiamond();
         //Eth Setup
-        usdc = new MockERC20("USDC", "USDC");
-        panOnEth = new MockERC20("PanOnEth","Pan/Eth");
-
         mailboxEth = new MockMailbox(1);
         mailboxAxon = new MockMailbox(2);
         mailboxEth.addRemoteMailbox(2,mailboxAxon);
@@ -207,6 +204,9 @@ contract NexusHyperlaneTest is Test {
     }
 
     function deployTokenFactory() internal {
+        usdc = new MockERC20("USDC", "USDC");
+        panOnEth = new MockERC20("PanOnEth","Pan/Eth");
+        usdt = new MockERC20("USDT", "USDT");
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
         StableTokenFactory tokenFactory = new StableTokenFactory();
         bytes4[] memory tokenFactoryfunctionSelectors = new bytes4[](1);
@@ -227,7 +227,6 @@ contract NexusHyperlaneTest is Test {
         MsgHandlerFacet(address(ethNexus)).addChainTokenForMirrorToken(address(usdc),address(usdcEth));
         panOnAxon = StableTokenFactory(address(axonNexus)).deployMirrorToken("PanonAxon","PAN/Axon",1,address(panOnEth));
         MsgHandlerFacet(address(ethNexus)).addChainTokenForMirrorToken(address(panOnEth),address(panOnAxon));
-        usdt = new MockERC20("USDT", "USDT");
         usdtEth =  StableTokenFactory(address(axonNexus)).deployMirrorToken("USDTEth","USDTEth",1,address(usdt));
         MsgHandlerFacet(address(ethNexus)).addChainTokenForMirrorToken(address(usdt), usdtEth);
     }

@@ -106,9 +106,6 @@ contract NexusCelerTest is Test {
         gwNexus = deployDiamond();
         axonNexus = deployDiamond();
         //gW Setup
-        usdc = new MockERC20("USDC", "USDC");
-        panOnGw  = new MockERC20("PanOnGw","PAN/GW");
-
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](3);
 
         CrossChainRouter ccr = new CrossChainRouter();
@@ -204,6 +201,9 @@ contract NexusCelerTest is Test {
     }
 
     function deployTokenFactory() internal {
+        usdc = new MockERC20("USDC", "USDC");
+        panOnGw  = new MockERC20("PanOnGw","PAN/GW");
+        usdt = new MockERC20("USDT", "USDT");
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
         StableTokenFactory tokenFactory = new StableTokenFactory();
         bytes4[] memory tokenFactoryfunctionSelectors = new bytes4[](1);
@@ -225,7 +225,6 @@ contract NexusCelerTest is Test {
         console.logBytes32(bytes32(abi.encodePacked(chainId,address(usdc))));
         MsgHandlerFacet(address(gwNexus)).addChainTokenForMirrorToken(address(usdc),usdcgW);
 
-        usdt = new MockERC20("USDT", "USDT");
         console.log("usdt salt");
         console.logBytes32(bytes32(abi.encodePacked(chainId,address(usdt))));
         usdtgW =  StableTokenFactory(address(axonNexus)).deployMirrorToken("USDTgW","USDTGw",1,address(usdt));
