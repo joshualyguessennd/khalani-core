@@ -206,8 +206,10 @@ contract NexusCelerTest is Test {
         usdt = new MockERC20("USDT", "USDT");
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
         StableTokenFactory tokenFactory = new StableTokenFactory();
-        bytes4[] memory tokenFactoryfunctionSelectors = new bytes4[](1);
+        bytes4[] memory tokenFactoryfunctionSelectors = new bytes4[](3);
         tokenFactoryfunctionSelectors[0] = tokenFactory.deployMirrorToken.selector;
+        tokenFactoryfunctionSelectors[1] = tokenFactory.initTokenFactory.selector;
+        tokenFactoryfunctionSelectors[2] = tokenFactory.registerPan.selector;
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(tokenFactory),
         action: IDiamond.FacetCutAction.Add,

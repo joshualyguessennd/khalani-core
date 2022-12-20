@@ -14,22 +14,6 @@ library LibAccountsRegistry {
     bytes constant bytecode = type(KhalaInterChainAccount).creationCode;
     bytes32 constant bytecodeHash = bytes32(keccak256(bytecode));
 
-    struct AccountsRegistryStorage {
-        mapping(uint => mapping(address => address)) chainMirrorToken;
-    }
-
-    function accountsRegistryStorage() internal pure returns (AccountsRegistryStorage storage ds) {
-        bytes32 position = DIAMOND_STORAGE_POSITION;
-        assembly {
-            ds.slot := position
-        }
-    }
-
-    function _getMirrorToken(uint32 _domain, address _token) internal returns (address) {
-        AccountsRegistryStorage storage ds = accountsRegistryStorage();
-        return ds.chainMirrorToken[_domain][_token];
-    }
-
     function getInterchainAccount(address _sender) internal view returns (address)
     {
         return _getInterchainAccount(_salt(_sender));

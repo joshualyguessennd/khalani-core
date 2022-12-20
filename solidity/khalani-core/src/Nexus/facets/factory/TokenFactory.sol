@@ -18,6 +18,16 @@ contract StableTokenFactory is Modifiers{
         address token
     );
 
+    function initTokenFactory(address pan) external onlyDiamondOwner {
+        LibTokenFactory.TokenFactoryStorage storage s = LibTokenFactory.tokenFactoryStorage();
+        s.panAddressAxon = pan;
+    }
+
+    function registerPan(uint chainId, address token) external onlyDiamondOwner {
+        LibTokenFactory.TokenFactoryStorage storage s = LibTokenFactory.tokenFactoryStorage();
+        s.panTokenMap[chainId] = token;
+    }
+
     function deployMirrorToken(string calldata name, string calldata symbol, uint _chainId, address _sourceChainTokenAddr)  public onlyDiamondOwner returns (address)
     {
         bytes32 salt = LibTokenFactory._salt(_chainId,_sourceChainTokenAddr);

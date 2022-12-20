@@ -4,6 +4,19 @@ import "../../USDMirror.sol";
 
 library LibTokenFactory {
 
+
+    struct TokenFactoryStorage {
+        mapping(uint => address) panTokenMap;
+        address panAddressAxon;
+    }
+
+    function tokenFactoryStorage() internal pure returns (TokenFactoryStorage storage ds) {
+        bytes32 position = DIAMOND_STORAGE_POSITION;
+        assembly {
+            ds.slot := position
+        }
+    }
+
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("axon.token.factory.storage");
     bytes constant bytecode = type(USDMirror).creationCode;
     bytes32 constant bytecodeHash = bytes32(keccak256(bytecode));
@@ -24,6 +37,10 @@ library LibTokenFactory {
     }
 
     function getMirrorToken(uint _chain, address _token) internal view returns (address) {
+        TokenFactoryStorage storage s = tokenFactoryStorage();
+        if(s.panTokenMap[_chain] == _token){
+            return s.panAddressAxon;
+        }
         bytes32 salt = _salt(_chain, _token);
         return _checkMirrorToken(salt);
     }
