@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 import "@hyperlane-xyz/core/interfaces/IMessageRecipient.sol";
 import "../AxonReceiver.sol";
 import "../../libraries/LibAppStorage.sol";
+import "../../libraries/LibTokenFactory.sol";
 import "./libraries/AxonMsgHandlerLibrary.sol";
 import "@sgn-v2-contracts/message/framework/MessageApp.sol";
 import "@hyperlane-xyz/core/contracts/libs/Message.sol";
@@ -42,10 +43,6 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
         require(ds.chainNexusMap[_origin]==_sender, "AxonHyperlaneHandler : invalid nexus");
     }
 
-    function addTokenMirror(uint32 chainDomain, address token, address mirrorToken) public onlyDiamondOwner {
-        LibAccountsRegistry._addChainMirrorTokenMapping(chainDomain,token,mirrorToken);
-    }
-
     function addValidNexusForChain(uint32 chainId, bytes32 nexus) public onlyDiamondOwner{
         AxonMsgHandlerLibrary._setChainNexusMapping(chainId,nexus);
     }
@@ -71,7 +68,7 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
             (address, address[], uint256[], Call[]));
             uint length = tokens.length;
             for(uint i; i<length;){
-                tokens[i] = LibAccountsRegistry._getMirrorToken(_origin,tokens[i]);
+                tokens[i] = LibTokenFactory.getMirrorToken(_origin,tokens[i]);
 
                 unchecked {
                     ++i;
@@ -81,7 +78,7 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
         } else {
             (address account, address token, uint256 amount,Call[] memory calls) = abi.decode(executionMsg,
             (address, address, uint256, Call[]));
-            token = LibAccountsRegistry._getMirrorToken(_origin,token);
+            token = LibTokenFactory.getMirrorToken(_origin,token);
             if(action == LibAppStorage.TokenBridgeAction.Deposit) {
                 depositTokenAndCall(account,token,amount,_origin, calls);
             }
@@ -110,7 +107,7 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
                 (address, address[], uint256[], Call[]));
             uint length = tokens.length;
             for(uint i; i<length;){
-                tokens[i] = LibAccountsRegistry._getMirrorToken(uint32(_origin),tokens[i]);
+                tokens[i] = LibTokenFactory.getMirrorToken(_origin,tokens[i]);
                 unchecked{
                     ++i;
                 }
@@ -119,7 +116,7 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
         } else {
             (address account, address token, uint256 amount, Call[] memory calls) = abi.decode(executionMsg,
                 (address, address, uint256, Call[]));
-            token = LibAccountsRegistry._getMirrorToken(uint32(_origin),token);
+            token = LibTokenFactory.getMirrorToken(_origin,token);
             if(action == LibAppStorage.TokenBridgeAction.Deposit) {
                 depositTokenAndCall(account,token,amount,uint32(_origin),calls);
             }
