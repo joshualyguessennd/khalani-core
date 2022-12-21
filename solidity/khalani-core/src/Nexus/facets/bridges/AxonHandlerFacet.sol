@@ -12,7 +12,7 @@ import "@hyperlane-xyz/core/contracts/libs/Message.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "./libraries/LibAxonMultiBridgeFacet.sol";
 import {Call} from "../../Call.sol";
-
+import "../../Errors.sol";
 
 //This is a facet of Nexus diamond on all non-axon chain ,
 //this contract is used to handle the cross-chain messages from axon
@@ -30,7 +30,9 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
 
     modifier onlyInbox() {
         LibAxonMultiBridgeFacet.MultiBridgeStorage storage ds = LibAxonMultiBridgeFacet.multiBridgeFacetStorage();    
-        require(msg.sender==ds.hyperlaneMailbox,"only inbox can call");
+        if(msg.sender!=ds.hyperlaneMailbox){
+            revert InvalidInbox();
+        }
         _;
     }
 
@@ -40,7 +42,9 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
 
     function _onlyNexus(uint32 _origin, bytes32 _sender) internal {
         AxonMsgHandlerStorage storage ds = AxonMsgHandlerLibrary.axonMsgHandlerStorage();
-        require(ds.chainNexusMap[_origin]==_sender, "AxonHyperlaneHandler : invalid nexus");
+        if(ds.chainNexusMap[_origin]!=_sender){
+            revert InvalidNexus();
+        }
     }
 
     function addValidNexusForChain(uint32 chainId, bytes32 nexus) public onlyDiamondOwner{

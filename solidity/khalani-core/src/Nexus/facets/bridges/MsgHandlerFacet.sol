@@ -11,6 +11,7 @@ import "../Receiver.sol";
 import {HyperlaneStorage} from "./libraries/HyperlaneFacetLibrary.sol";
 import "./libraries/HyperlaneFacetLibrary.sol";
 import {Call} from "../../Call.sol";
+import "../../Errors.sol";
 
 contract MsgHandlerFacet is IMessageRecipient, Receiver, MessageApp {
 
@@ -26,7 +27,9 @@ contract MsgHandlerFacet is IMessageRecipient, Receiver, MessageApp {
 
     modifier onlyInbox() {
         HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
-        require(msg.sender==hs.hyperlaneMailbox,"only inbox can call");
+        if(msg.sender!=hs.hyperlaneMailbox){
+            revert InvalidInbox();
+        }
         _;
     }
 
@@ -36,7 +39,9 @@ contract MsgHandlerFacet is IMessageRecipient, Receiver, MessageApp {
     }
 
     function _onlyNexus(address _sender) internal {
-        require(_sender == s.axonReceiver,"invalid nexus");
+        if(_sender != s.axonReceiver){
+            revert InvalidNexus();
+        }
     }
 
     function handle(

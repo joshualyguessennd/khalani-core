@@ -320,7 +320,7 @@ contract NexusCelerTest is Test {
 
         //testing only nexus can pass message
         vm.startPrank(address(chain2Bus));
-        vm.expectRevert("AxonHyperlaneHandler : invalid nexus");
+        vm.expectRevert(InvalidNexus.selector);
         AxonHandlerFacet(address(axonNexus)).executeMessage(MOCK_ADDR_5,1,messageWithAction,dummyExecuter);
         vm.stopPrank();
 
@@ -334,7 +334,7 @@ contract NexusCelerTest is Test {
         Call[] memory calls = new Call[](1);
         calls[0] = Call({to:address(usdcgW),data:abi.encodeWithSelector(approveSelector,mockLp,100e18)});
         vm.startPrank(caller);
-        vm.expectRevert("BridgeFacet : Invalid Router");
+        vm.expectRevert(InvalidRouter.selector);
         IBridgeFacet(address(gwNexus)).bridgeTokenAndCall(
             LibAppStorage.TokenBridgeAction.Deposit,
             caller,
@@ -352,7 +352,7 @@ contract NexusCelerTest is Test {
 
 
         // dummy contract for ica call - call to this contract is only possible through `userKhalaAccount` - this will test if the call is going correctly from ICA proxy
-        address userKhalaAccount = 0xB9A0E37C72f249E2a492Cd0AFF960a39EE090A86;
+        address userKhalaAccount = 0xe5c852452A9c70B939f2EA797DC384E0B0C845F7;
         MockCounter counter = new MockCounter(userKhalaAccount);
 
         Call[] memory calls = new Call[](1);
