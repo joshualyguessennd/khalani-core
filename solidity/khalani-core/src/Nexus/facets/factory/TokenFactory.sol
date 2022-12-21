@@ -18,16 +18,32 @@ contract StableTokenFactory is Modifiers{
         address token
     );
 
+    /**
+    * @notice initialize token factory with pan address on axon
+    * @param pan - pan address on axon
+    */
     function initTokenFactory(address pan) external onlyDiamondOwner {
         LibTokenFactory.TokenFactoryStorage storage s = LibTokenFactory.tokenFactoryStorage();
         s.panAddressAxon = pan;
     }
 
+    /**
+    * @notice register pan address of the supporting chain
+    * @param chainId - chain id of the chain for which pan is being registered
+    * @param token - address of the pan token for the  `chainId`
+    */
     function registerPan(uint chainId, address token) external onlyDiamondOwner {
         LibTokenFactory.TokenFactoryStorage storage s = LibTokenFactory.tokenFactoryStorage();
         s.panTokenMap[chainId] = token;
     }
 
+    /**
+    * @notice deploys ERC-20 mirror token against an ERC-20 token (which exists on the given `chainId`)
+    * @param name - name of the token to be deployed
+    * @param symbol - symbol of the token to be deployed
+    * @param chainId - chain id of the chain for which pan is being registered
+    * @param token - address of the pan token for the  `chainId`
+    */
     function deployMirrorToken(string calldata name, string calldata symbol, uint _chainId, address _sourceChainTokenAddr)  public onlyDiamondOwner returns (address)
     {
         bytes32 salt = LibTokenFactory._salt(_chainId,_sourceChainTokenAddr);

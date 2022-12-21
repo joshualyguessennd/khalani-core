@@ -19,7 +19,7 @@ import "../src/Nexus/facets/bridges/AxonMultiBridgeFacet.sol";
 import "./Mock/MockMailbox.sol";
 import "../src/Nexus/facets/factory/TokenFactory.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
+import "../Nexus/Errors.sol";
 
 contract NexusHyperlaneTest is Test {
     //events
@@ -321,7 +321,7 @@ contract NexusHyperlaneTest is Test {
 
         //testing only nexus can pass message
         vm.startPrank(address(mailboxAxon));
-        vm.expectRevert("AxonHyperlaneHandler : invalid nexus");
+        vm.expectRevert(InvalidNexus.selector);
         AxonHandlerFacet(address(axonNexus)).handle(1,TypeCasts.addressToBytes32(address(MOCK_ADDR_5)),messageWithAction);
         vm.stopPrank();
 

@@ -6,7 +6,9 @@ library LibTokenFactory {
 
 
     struct TokenFactoryStorage {
+        // mapping of pan on source chain (1 => PanOnEth)
         mapping(uint => address) panTokenMap;
+        // address of pan token deployed on AXON chain
         address panAddressAxon;
     }
 
@@ -36,6 +38,10 @@ library LibTokenFactory {
         return mirrorTokenAddress;
     }
 
+    /**
+    * @notice resolves the address of mirror / pan token for a given
+    * chain id and token address on the chain id
+    */
     function getMirrorToken(uint _chain, address _token) internal view returns (address) {
         TokenFactoryStorage storage s = tokenFactoryStorage();
         if(s.panTokenMap[_chain] == _token){

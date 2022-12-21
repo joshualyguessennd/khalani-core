@@ -320,7 +320,7 @@ contract NexusCelerTest is Test {
 
         //testing only nexus can pass message
         vm.startPrank(address(chain2Bus));
-        vm.expectRevert("AxonHyperlaneHandler : invalid nexus");
+        vm.expectRevert(InvalidNexus.selector);
         AxonHandlerFacet(address(axonNexus)).executeMessage(MOCK_ADDR_5,1,messageWithAction,dummyExecuter);
         vm.stopPrank();
 
@@ -334,7 +334,7 @@ contract NexusCelerTest is Test {
         Call[] memory calls = new Call[](1);
         calls[0] = Call({to:address(usdcgW),data:abi.encodeWithSelector(approveSelector,mockLp,100e18)});
         vm.startPrank(caller);
-        vm.expectRevert("BridgeFacet : Invalid Router");
+        vm.expectRevert(InvalidRouter.selector);
         IBridgeFacet(address(gwNexus)).bridgeTokenAndCall(
             LibAppStorage.TokenBridgeAction.Deposit,
             caller,

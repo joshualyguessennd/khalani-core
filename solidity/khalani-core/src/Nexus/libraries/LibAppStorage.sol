@@ -36,7 +36,9 @@ contract Modifiers is ReentrancyGuard {
     }
 
     modifier validRouter() {
-        require(msg.sender == address(this), "BridgeFacet : Invalid Router");
+        if(msg.sender != address(this)){
+            revert InvalidRouter();
+        }
         _;
     }
 }
