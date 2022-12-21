@@ -352,7 +352,7 @@ contract NexusCelerTest is Test {
 
 
         // dummy contract for ica call - call to this contract is only possible through `userKhalaAccount` - this will test if the call is going correctly from ICA proxy
-        address userKhalaAccount = 0xB9A0E37C72f249E2a492Cd0AFF960a39EE090A86;
+        address userKhalaAccount = 0xe5c852452A9c70B939f2EA797DC384E0B0C845F7;
         MockCounter counter = new MockCounter(userKhalaAccount);
 
         Call[] memory calls = new Call[](1);

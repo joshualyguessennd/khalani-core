@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {LibDiamond} from "../../diamondCommons/libraries/LibDiamond.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "../Errors.sol";
 struct AppStorage {
    mapping(address => address) mirrorToChainToken; //usdceth -> usdc
    address pan;

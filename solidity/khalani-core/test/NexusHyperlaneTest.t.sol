@@ -19,7 +19,7 @@ import "../src/Nexus/facets/bridges/AxonMultiBridgeFacet.sol";
 import "./Mock/MockMailbox.sol";
 import "../src/Nexus/facets/factory/TokenFactory.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../Nexus/Errors.sol";
+import "../src/Nexus/Errors.sol";
 
 contract NexusHyperlaneTest is Test {
     //events
@@ -310,7 +310,7 @@ contract NexusHyperlaneTest is Test {
 
 
         vm.startPrank(caller);
-        vm.expectRevert("only inbox can call");
+        vm.expectRevert(InvalidInbox.selector);
         AxonHandlerFacet(address(axonNexus)).handle(1,TypeCasts.addressToBytes32(address(ethNexus)),messageWithAction);
         vm.stopPrank();
 
@@ -335,7 +335,7 @@ contract NexusHyperlaneTest is Test {
         Call[] memory calls = new Call[](1);
         calls[0] = Call({to:address(usdcEth),data:abi.encodeWithSelector(approveSelector,mockLp,100e18)});
         vm.startPrank(caller);
-        vm.expectRevert("BridgeFacet : Invalid Router");
+        vm.expectRevert(InvalidRouter.selector);
         HyperlaneFacet(address(ethNexus)).bridgeTokenAndCall(
             LibAppStorage.TokenBridgeAction.Deposit,
             caller,
@@ -350,7 +350,7 @@ contract NexusHyperlaneTest is Test {
     function testICACreationAndCall(uint256 amountToDeposit,uint256 countToIncrease) public {
         address user = MOCK_ADDR_1;
 
-        address userKhalaAccount = 0x554c7E9691cE9929938aE07a8f923Fd18863D2CD;
+        address userKhalaAccount = 0xFe8BFD320811526e96fa708Ba6eB346C09f54c9E;
         MockCounter counter = new MockCounter(userKhalaAccount);
         Call[] memory calls = new Call[](1);
         calls[0] = Call({to:address(counter),data:abi.encodeWithSelector(counter.increaseCount.selector,countToIncrease)});

@@ -41,8 +41,8 @@ contract StableTokenFactory is Modifiers{
     * @notice deploys ERC-20 mirror token against an ERC-20 token (which exists on the given `chainId`)
     * @param name - name of the token to be deployed
     * @param symbol - symbol of the token to be deployed
-    * @param chainId - chain id of the chain for which pan is being registered
-    * @param token - address of the pan token for the  `chainId`
+    * @param _chainId - chain id of the chain for which pan is being registered
+    * @param _sourceChainTokenAddr - address of the pan token for the  `chainId`
     */
     function deployMirrorToken(string calldata name, string calldata symbol, uint _chainId, address _sourceChainTokenAddr)  public onlyDiamondOwner returns (address)
     {
