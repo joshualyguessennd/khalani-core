@@ -51,7 +51,7 @@ contract StableTokenFactory is Modifiers{
         if (!(mirrorToken.code.length>0)) {
             mirrorToken = LibTokenFactory._deployMirrorToken(salt);
             USDMirror(mirrorToken).initialize(name, symbol);
-            emit MirrorTokenDeployed(_chainId, mirrorToken);
+            emit MirrorTokenDeployed(_chainId, _sourceChainTokenAddr);
         } else {
             revert TokenAlreadyExist(
                 _chainId,
