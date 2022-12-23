@@ -58,7 +58,7 @@ jobs:
         run: |
           forge coverage --report lcov
           sudo apt-get install lcov
-          lcov --remove ./lcov.info -o ./lcov.info.pruned 'exclusion/solidity/khalani-core/src/diammondCommons/*' 'exclusion/solidity/khalani-core/test/Mock/*' 'exclusion/solidity/khalani-core/test/utils/*'
+          lcov --remove ./lcov.info -o ./lcov.info.pruned 'src/diammondCommons/*' 'test/Mock/*' 'test/utils/*'
 
       - name: Report coverage
         uses: romeovs/lcov-reporter-action@v0.2.21
