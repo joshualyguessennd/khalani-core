@@ -40,7 +40,7 @@ jobs:
 
       - name: Run Slither core
         uses: crytic/slither-action@main
-        continue-on-error: true
+        continue-on-error: false
         id: slither
         with:
           target: "solidity/khalani-core/src"
