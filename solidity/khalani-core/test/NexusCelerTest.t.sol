@@ -58,6 +58,12 @@ contract NexusCelerTest is Test {
         address token
     );
 
+    error TokenAlreadyExist(
+        uint chain,
+        address tokenOnChain,
+        address tokenOnAxon
+    );
+
     //gW
     Nexus gwNexus;
     MockERC20 usdc;
@@ -424,5 +430,16 @@ contract NexusCelerTest is Test {
         chain1Bus.processNextPendingMsg();
         assertEq(usdc.balanceOf(user),amount1);
         assertEq(usdt.balanceOf(user),amount2);
+    }
+
+    function testTokenFactoryCeler() public{
+        MockERC20 newToken = new MockERC20("NewToken","NEW"); //deployed on source chain;
+        vm.expectEmit(true,false,false,true);
+        emit MirrorTokenDeployed(1,address (newToken));
+        address newTokenMirror = StableTokenFactory(address(axonNexus)).deployMirrorToken("NewTokeneth","NEW/ETH",1,address(newToken));
+
+        //trying to redeploy mirror token for same newToken
+        vm.expectRevert(abi.encodeWithSelector(TokenAlreadyExist.selector,1,address(newToken),newTokenMirror));
+        StableTokenFactory(address(axonNexus)).deployMirrorToken("NewTokeneth","NEW/ETH",1,address(newToken));
     }
 }
