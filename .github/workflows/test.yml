@@ -47,6 +47,8 @@ jobs:
         continue-on-error: true
         id: slither
         with:
+        # see: https://github.com/crytic/slither-action/issues/42#issuecomment-1320062318
+          ignore-compile: true
           target: "solidity/khalani-core"
           slither-config: "solidity/khalani-core/slither.config.json"
           sarif: results.sarif
