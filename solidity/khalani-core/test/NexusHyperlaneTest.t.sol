@@ -234,6 +234,7 @@ contract NexusHyperlaneTest is Test {
         );
         StableTokenRegistry(address(axonNexus)).initTokenFactory(panOnAxon);
         StableTokenRegistry(address(axonNexus)).registerPan(1,address(panOnEth));
+        MsgHandlerFacet(address(ethNexus)).addChainTokenForMirrorToken(address(panOnEth),address(panOnAxon));
         //deploying USDMirror for USDC on Godwoken
         usdcEth = address(new USDMirror());
         USDMirror(usdcEth).initialize("USDCeth","USDCETH"); //init
