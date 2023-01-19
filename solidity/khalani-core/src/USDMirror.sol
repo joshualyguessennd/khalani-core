@@ -18,6 +18,7 @@ contract USDMirror is ERC20PresetMinterPauserUpgradeable {
     }
 
     function transferMinterBurnerRole(address account) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE,msg.sender),"Unauthorised");
         _setupRole(MINTER_ROLE, account);
         _setupRole(BURNER_ROLE,account);
     }
