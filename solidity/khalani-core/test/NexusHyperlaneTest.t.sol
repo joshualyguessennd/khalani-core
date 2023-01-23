@@ -17,7 +17,7 @@ import "../src/Nexus/facets/bridges/MsgHandlerFacet.sol";
 import "./Mock/MockLp.sol";
 import "../src/Nexus/facets/bridges/AxonMultiBridgeFacet.sol";
 import "./Mock/MockMailbox.sol";
-import "../src/Nexus/facets/factory/TokenFactory.sol";
+import "../src/Nexus/facets/factory/TokenRegistry.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../src/Nexus/Errors.sol";
 
@@ -205,24 +205,26 @@ contract NexusHyperlaneTest is Test {
         AxonMultiBridgeFacet(address(axonNexus)).initMultiBridgeFacet(MOCK_ADDR_5, address(mailboxAxon), 3);
         AxonMultiBridgeFacet(address(axonNexus)).addChainInbox(1,address(ethNexus));
         AxonHandlerFacet(address (axonNexus)).addValidNexusForChain(1,TypeCasts.addressToBytes32(address(ethNexus)));
-        deployTokenFactory();
-
+        deployTokens();
     }
 
-    function deployTokenFactory() internal {
+    function deployTokens() internal {
+
         usdc = new MockERC20("USDC", "USDC");
         panOnEth = new MockERC20("PanOnEth","Pan/Eth");
         usdt = new MockERC20("USDT", "USDT");
+        panOnAxon = address(new MockERC20("PanOnAxon","Pan/Axon"));
+
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
-        StableTokenFactory tokenFactory = new StableTokenFactory();
-        bytes4[] memory tokenFactoryfunctionSelectors = new bytes4[](3);
-        tokenFactoryfunctionSelectors[0] = tokenFactory.deployMirrorToken.selector;
-        tokenFactoryfunctionSelectors[1] = tokenFactory.initTokenFactory.selector;
-        tokenFactoryfunctionSelectors[2] = tokenFactory.registerPan.selector;
+        StableTokenRegistry tokenRegistry = new StableTokenRegistry();
+        bytes4[] memory tokenRegistryfunctionSelectors = new bytes4[](3);
+        tokenRegistryfunctionSelectors[0] = tokenRegistry.initTokenFactory.selector;
+        tokenRegistryfunctionSelectors[1] = tokenRegistry.registerMirrorToken.selector;
+        tokenRegistryfunctionSelectors[2] = tokenRegistry.registerPan.selector;
         cut[0] = IDiamond.FacetCut({
-        facetAddress: address(tokenFactory),
+        facetAddress: address(tokenRegistry),
         action: IDiamond.FacetCutAction.Add,
-        functionSelectors: tokenFactoryfunctionSelectors
+        functionSelectors: tokenRegistryfunctionSelectors
         });
 
         DiamondCutFacet(address(axonNexus)).diamondCut(
@@ -230,15 +232,26 @@ contract NexusHyperlaneTest is Test {
             address(0), //initializer address
             "" //initializer data
         );
-
-        panOnAxon = address(new MockERC20("PanOnAxon","PAN"));
-        StableTokenFactory(address(axonNexus)).initTokenFactory(panOnAxon);
-        StableTokenFactory(address(axonNexus)).registerPan(1,address(panOnEth));
+        StableTokenRegistry(address(axonNexus)).initTokenFactory(panOnAxon);
+        StableTokenRegistry(address(axonNexus)).registerPan(1,address(panOnEth));
         MsgHandlerFacet(address(ethNexus)).addChainTokenForMirrorToken(address(panOnEth),address(panOnAxon));
-        usdcEth = StableTokenFactory(address(axonNexus)).deployMirrorToken("USDCeth","USDCETH",1,address(usdc));
-        MsgHandlerFacet(address(ethNexus)).addChainTokenForMirrorToken(address(usdc),address(usdcEth));
-        usdtEth =  StableTokenFactory(address(axonNexus)).deployMirrorToken("USDTEth","USDTEth",1,address(usdt));
-        MsgHandlerFacet(address(ethNexus)).addChainTokenForMirrorToken(address(usdt), usdtEth);
+        //deploying USDMirror for USDC on Godwoken
+        usdcEth = address(new USDMirror());
+        USDMirror(usdcEth).initialize("USDCeth","USDCETH"); //init
+        USDMirror(usdcEth).transferMinterBurnerRole(address(axonNexus)); //transferOwnership
+        //Adding mapping to nexus on GW
+        MsgHandlerFacet(address(ethNexus)).addChainTokenForMirrorToken(address(usdc),usdcEth);
+        //Registering tokens - nexus axon
+        StableTokenRegistry(address(axonNexus)).registerMirrorToken(1, address(usdc), usdcEth);
+
+        //deploying USDMirror for USDT on Eth
+        usdtEth = address(new USDMirror());
+        USDMirror(usdtEth).initialize("USDTEth","USDTEth"); //init
+        USDMirror(usdtEth).transferMinterBurnerRole(address(axonNexus)); //transferOwnership
+        //Adding mapping to nexus on GW
+        MsgHandlerFacet(address(ethNexus)).addChainTokenForMirrorToken(address(usdt),usdtEth);
+        //Registering tokens - nexus axon
+        StableTokenRegistry(address(axonNexus)).registerMirrorToken(1, address(usdt), usdtEth);
     }
 
     // Tests for successful deposit and calling a contract on the other chain
@@ -479,14 +492,14 @@ contract NexusHyperlaneTest is Test {
         assertEq(usdt.balanceOf(user),amount2);
     }
 
-    function testTokenFactory() public{
-        MockERC20 newToken = new MockERC20("NewToken","NEW"); //deployed on source chain;
-        vm.expectEmit(true,false,false,true);
-        emit MirrorTokenDeployed(1,address (newToken));
-        address newTokenMirror = StableTokenFactory(address(axonNexus)).deployMirrorToken("NewTokeneth","NEW/ETH",1,address(newToken));
-
-        //trying to redeploy mirror token for same newToken
-        vm.expectRevert(abi.encodeWithSelector(TokenAlreadyExist.selector,1,address(newToken),newTokenMirror));
-        StableTokenFactory(address(axonNexus)).deployMirrorToken("NewTokeneth","NEW/ETH",1,address(newToken));
-    }
+//    function testTokenFactory() public{
+//        MockERC20 newToken = new MockERC20("NewToken","NEW"); //deployed on source chain;
+//        vm.expectEmit(true,false,false,true);
+//        emit MirrorTokenDeployed(1,address (newToken));
+//        address newTokenMirror = StableTokenFactory(address(axonNexus)).deployMirrorToken("NewTokeneth","NEW/ETH",1,address(newToken));
+//
+//        //trying to redeploy mirror token for same newToken
+//        vm.expectRevert(abi.encodeWithSelector(TokenAlreadyExist.selector,1,address(newToken),newTokenMirror));
+//        StableTokenFactory(address(axonNexus)).deployMirrorToken("NewTokeneth","NEW/ETH",1,address(newToken));
+//    }
 }
