@@ -144,25 +144,53 @@ contract PanPSMTest is Test {
             pan.balanceOf(user),
             mintAmount - redeemAmount
         );
-//
-//        assertApproxEqAbs(
-//            balanceAmount + (redeemAmount*5)/1000 - mintAmount,
-//            usdc.balanceOf(user),
-//
-//        );
-//
-//        assertApproxEqAbs(
-//            (redeemAmount*5)/1000,
-//            usdc.balanceOf(address(psm)),
-//            2
-//        );
+
+        assertEq(
+            balanceAmount + (redeemAmount*995)/1000 - mintAmount,
+            usdc.balanceOf(user)
+        );
     }
 
-    function testRedeemInvalidAsset() public{
-
+    function testRedeemInvalidAsset(uint redeemAmount) public{
+        MockERC20 newAsset = new MockERC20("DUMMY","DUMMY");
+        newAsset.mint(user,redeemAmount);
+        //trying with a non-whitelisted asset
+        vm.startPrank(user);
+        newAsset.approve(address(psm),redeemAmount);
+        vm.expectRevert(AssetNotWhiteListed.selector);
+        psm.redeemPan(redeemAmount,address(newAsset));
+        vm.stopPrank();
     }
 
-    function testRedeemPanLowBalance() public{
+    function testRedeemPanLowBalance(uint balanceAmount, uint mintAmount, uint redeemAmount) public{
 
+        vm.assume(balanceAmount<10e18 && balanceAmount>0 && mintAmount>0 && redeemAmount>0 && balanceAmount>=mintAmount && mintAmount>=redeemAmount);
+        usdc.mint(user,balanceAmount);
+
+        vm.startPrank(user);
+        usdc.approve(address(psm),mintAmount);
+        psm.mintPan(address(usdc),mintAmount);
+        vm.stopPrank();
+
+        assertEq(
+            usdc.balanceOf(user),
+            balanceAmount - mintAmount
+        );
+
+        assertEq(
+            pan.balanceOf(user),
+            mintAmount
+        );
+
+        assertEq(
+            usdc.balanceOf(address(psm)),
+            mintAmount
+        );
+
+        //trying to withdraw with asset of low balance
+        vm.startPrank(user);
+        vm.expectRevert(RedeemFailedNotEnoughBalance.selector);
+        psm.redeemPan(redeemAmount,address(usdt));
+        vm.stopPrank();
     }
 }
