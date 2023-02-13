@@ -7,6 +7,17 @@ on:
 
 env:
   FOUNDRY_PROFILE: ci
+  USDC_ETH_MIRROR : "0x65F45E64C7BDE86b61B3CEC594fb5FFcE15e8c11"
+  USDC_AVAX_MIRROR : "0x7Ba52FC409B5683565fAF196825D5339a391D7a1"
+  AXON_TEST_PAN : "0x00Af77a63F05acE63bebbA1Ca0286089585625C8"
+
+  AXON_USDCETH_PAN_BPT : "0x4215A70E9B7557D3DeC5d5232Cf1DC26Da373af7"
+  AXON_USDCAVAX_PAN_BPT : "0xC0Bf43e40D370D9cBB4fe0f0966226089C0f5c30"
+
+  TOKEN_ADMIN : "0xdDF7F0d7bcCa30022Fe1D1a49f19f53A8d72eC41"
+  GOERLI_INFURA_URL: ${{ secrets.GOERLI_INFURA_URL }}
+  AXON_RPC_URL : ${{ secrets.AXON_RPC_URL }}
+  FUJI_INFURA_URL : ${{ secrets.FUJI_INFURA_URL }}
 
 jobs:
   check:
@@ -28,7 +39,7 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
-
+        
       - name: Run Forge build
         working-directory: solidity/khalani-core
         run: |

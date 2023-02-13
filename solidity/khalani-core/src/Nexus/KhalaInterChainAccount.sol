@@ -43,6 +43,7 @@ contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
                     chainId,
                     token,
                     amount,
+                    eoa,
                     callBacks
                 );
             }
@@ -62,7 +63,7 @@ contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
     *@param chainId - source chain-Id
     *@param calls - list of `Call` struct (to, data)
     */
-    function sendProxyCallForMultiTokens(address[] calldata tokens, uint256[] calldata amounts, uint chainId, Call[] calldata calls) external {
+    function sendProxyCallForMultiTokens(address[] calldata tokens, uint256[] calldata amounts, uint chainId, Call[] calldata calls) external onlyOwner {
         uint length  = calls.length;
         for(uint i; i<length; ) {
             (bool success, bytes memory returnData) = calls[i].to.call(
@@ -75,6 +76,7 @@ contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
                     chainId,
                     tokens,
                     amounts,
+                    eoa,
                     callBacks
                 );
             }
@@ -82,5 +84,9 @@ contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
                 ++i;
             }
         }
+    }
+
+    function _checkOwner() internal view override {
+        require(eoa == _msgSender() || owner() == _msgSender(), "Ownable: caller is not the owner");
     }
 }

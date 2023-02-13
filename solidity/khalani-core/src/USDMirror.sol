@@ -6,10 +6,12 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/presets/ERC20PresetMinte
 contract USDMirror is ERC20PresetMinterPauserUpgradeable {
 
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
+    uint public chainId;
 
-    function initialize(string memory name, string memory symbol) public override initializer {
+    function initialize(string memory name, string memory symbol, uint _chainId) public initializer {
         __ERC20PresetMinterPauser_init(name, symbol);
         _setupRole(BURNER_ROLE, msg.sender);
+        chainId = _chainId;
     }
 
     function burn(address account, uint256 value) external {

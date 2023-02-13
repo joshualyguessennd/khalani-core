@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+import "@hyperlane-xyz/core/interfaces/IInterchainSecurityModule.sol";
 
 struct HyperlaneStorage {
     address hyperlaneMailbox;
+    IInterchainSecurityModule interchainSecurityModule;
 }
 
 library HyperlaneFacetLibrary {

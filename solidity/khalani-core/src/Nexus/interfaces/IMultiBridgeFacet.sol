@@ -9,6 +9,7 @@ interface IMultiBridgeFacet {
     function bridgeTokenAndCallbackViaHyperlane(
         LibAppStorage.TokenBridgeAction action,
         uint32 chainDomain,
+        address sender,
         address account,
         address token,
         uint256 amount,
@@ -18,6 +19,7 @@ interface IMultiBridgeFacet {
     function bridgeMultiTokenAndCallbackViaHyperlane(
         LibAppStorage.TokenBridgeAction action,
         uint32 chainDomain,
+        address sender,
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
@@ -27,6 +29,7 @@ interface IMultiBridgeFacet {
     function bridgeTokenAndCallbackViaCeler(
         LibAppStorage.TokenBridgeAction action,
         uint64 chainId,
+        address sender,
         address account,
         address token,
         uint256 amount,
@@ -36,6 +39,7 @@ interface IMultiBridgeFacet {
     function bridgeMultiTokenAndCallbackViaCeler(
         LibAppStorage.TokenBridgeAction action,
         uint64 chainId,
+        address sender,
         address account,
         address[] memory tokens,
         uint256[] memory amounts,

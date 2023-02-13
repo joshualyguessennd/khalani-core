@@ -25,4 +25,8 @@ contract MockERC20 is ERC20PresetMinterPauser {
         //require(hasRole(BURNER_ROLE, msg.sender), "Unauthorised");
         super._burn(msg.sender, value);
     }
+
+    function decimals() public pure override returns(uint8) {
+        return 6;
+    }
 }

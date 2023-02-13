@@ -8,7 +8,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "../libraries/LibAccountsRegistry.sol";
 import {TypeCasts} from "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "../interfaces/IKhalaInterchainAccount.sol";
-import "forge-std/console.sol";
+import "../interfaces/IMessageReceiver.sol";
 import {Call} from "../Call.sol";
 
 contract Receiver is Modifiers {
@@ -47,13 +47,18 @@ contract Receiver is Modifiers {
     * @param calls - contract address and calldata to execute crossChain
     **/
     function withdrawTokenAndCall(
+        address sender,
         address account,
         address token,
         uint256 amount,
         Call[] memory calls
     ) internal nonReentrant {
         _releaseOrMint(account,token,amount);
-        // call ?
+
+        if(calls.length!=0){
+            IMessageReceiver(account).collect(sender,calls);
+        }
+
         emit LogWithdrawAndCall(
             token,
             account,
@@ -69,6 +74,7 @@ contract Receiver is Modifiers {
     * @param calls - contract address and calldata to execute crossChain
     **/
     function withdrawMultiTokenAndCall(
+        address sender,
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
@@ -81,8 +87,12 @@ contract Receiver is Modifiers {
                 ++i;
             }
         }
-        //call ?
-        emit LogWithdrawMultiTokenAndCall(
+
+        if(calls.length!=0){
+            IMessageReceiver(account).collect(sender,calls);
+        }
+
+    emit LogWithdrawMultiTokenAndCall(
             tokens,
             account,
             amounts

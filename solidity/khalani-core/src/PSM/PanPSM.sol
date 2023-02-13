@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/IERC20Mintable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "forge-std/console.sol";
+
 
 contract PanPSM is Ownable{
 
@@ -49,7 +49,7 @@ contract PanPSM is Ownable{
         }
         IERC20Mintable(pan).burn(msg.sender, amount);
         uint redeemedAmount = (amount*995)/1000;
-        console.log(redeemedAmount);
+
         if(IERC20(tokenOut).balanceOf(address(this)) <= redeemedAmount){
             revert RedeemFailedNotEnoughBalance();
         }

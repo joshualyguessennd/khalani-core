@@ -20,6 +20,7 @@ import "./Mock/MockMailbox.sol";
 import "../src/Nexus/facets/factory/TokenRegistry.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../src/Nexus/Errors.sol";
+import "./lib/Create2Lib.sol";
 
 contract NexusHyperlaneTest is Test {
     //events
@@ -85,6 +86,7 @@ contract NexusHyperlaneTest is Test {
     address MOCK_ADDR_3 = 0x0000000000000000000000000000000000000003;
     address MOCK_ADDR_4 = 0x0000000000000000000000000000000000000004;
     address MOCK_ADDR_5 = 0x0000000000000000000000000000000000000005;
+    address MOCK_ISM    = 0x0000000000000000000000000000000000000006;
     bytes4 approveSelector = usdc.approve.selector;
 
     MockLp mockLp = new MockLp();
@@ -159,7 +161,7 @@ contract NexusHyperlaneTest is Test {
         );
 
         CrossChainRouter(address (ethNexus)).initializeNexus(address(panOnEth),address(axonNexus),2);
-        HyperlaneFacet(address(ethNexus)).initHyperlaneFacet(address(mailboxEth));
+        HyperlaneFacet(address(ethNexus)).initHyperlaneFacet(address(mailboxEth), MOCK_ISM);
 
         //Axon side setup
         cut = new IDiamondCut.FacetCut[](3);
@@ -369,7 +371,7 @@ contract NexusHyperlaneTest is Test {
     function testICACreationAndCall(uint256 amountToDeposit,uint256 countToIncrease) public {
         address user = MOCK_ADDR_1;
 
-        address userKhalaAccount = 0xFe8BFD320811526e96fa708Ba6eB346C09f54c9E;
+        address userKhalaAccount = Create2Lib.computeAddress(user,address(axonNexus));
         MockCounter counter = new MockCounter(userKhalaAccount);
         Call[] memory calls = new Call[](1);
         calls[0] = Call({to:address(counter),data:abi.encodeWithSelector(counter.increaseCount.selector,countToIncrease)});

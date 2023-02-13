@@ -2,8 +2,7 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
-import "@hyperlane-xyz/core/contracts/mock/MockOutbox.sol";
-import "@hyperlane-xyz/core/contracts/mock/MockInbox.sol";
+import "@hyperlane-xyz/core/contracts/mock/MockMailbox.sol";
 import "./Mock/MockERC20.sol";
 import "../src/Nexus/facets/CrossChainRouter.sol";
 import "../src/Nexus/facets/bridges/AxonHandlerFacet.sol";
@@ -23,6 +22,7 @@ import "../src/Nexus/facets/AxonCrossChainRouter.sol";
 import {Call} from "../src/Nexus/Call.sol";
 import "../src/Nexus/facets/factory/TokenRegistry.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./lib/Create2Lib.sol";
 
 contract NexusCelerTest is Test {
     //events
@@ -372,7 +372,7 @@ contract NexusCelerTest is Test {
 
 
         // dummy contract for ica call - call to this contract is only possible through `userKhalaAccount` - this will test if the call is going correctly from ICA proxy
-        address userKhalaAccount = 0xe5c852452A9c70B939f2EA797DC384E0B0C845F7;
+        address userKhalaAccount = Create2Lib.computeAddress(user,address(axonNexus));
         MockCounter counter = new MockCounter(userKhalaAccount);
 
         Call[] memory calls = new Call[](1);

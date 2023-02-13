@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../../libraries/LibAppStorage.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
-import "@hyperlane-xyz/core/interfaces/IOutbox.sol";
+import "@hyperlane-xyz/core/interfaces/IMailbox.sol";
 import "../../interfaces/IMultiBridgeFacet.sol";
 import "@sgn-v2-contracts/message/framework/MessageApp.sol";
 import "./libraries/LibAxonMultiBridgeFacet.sol";
@@ -51,14 +51,15 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
     function bridgeTokenAndCallbackViaHyperlane(
         LibAppStorage.TokenBridgeAction action,
         uint32 chainId,
+        address sender,
         address account,
         address token,
         uint256 amount,
         Call[] calldata calls
     ) public payable override validRouter  {
-        bytes memory message = abi.encode(account,token,amount,calls);
+        bytes memory message = abi.encode(sender,account,token,amount,calls);
         bytes memory messageWithAction = abi.encode(action,message);
-        IOutbox(_getHyperlaneMailBox()).dispatch(
+        IMailbox(_getHyperlaneMailBox()).dispatch(
             chainId,
             TypeCasts.addressToBytes32(_getInboxForChain(chainId)),
             messageWithAction
@@ -77,14 +78,15 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
     function bridgeMultiTokenAndCallbackViaHyperlane(
         LibAppStorage.TokenBridgeAction action,
         uint32 chainId,
+        address sender,
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
         Call[] calldata calls
     ) public payable override validRouter {
-        bytes memory message = abi.encode(account,tokens,amounts,calls);
+        bytes memory message = abi.encode(sender,account,tokens,amounts,calls);
         bytes memory messageWithAction = abi.encode(action,message);
-        IOutbox(_getHyperlaneMailBox()).dispatch(
+        IMailbox(_getHyperlaneMailBox()).dispatch(
             chainId,
             TypeCasts.addressToBytes32(_getInboxForChain(chainId)),
             messageWithAction
@@ -104,12 +106,13 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
     function bridgeTokenAndCallbackViaCeler(
         LibAppStorage.TokenBridgeAction action,
         uint64 chainId,
+        address sender,
         address account,
         address token,
         uint256 amount,
         Call[] calldata calls
     ) public payable override validRouter  {
-        bytes memory message = abi.encode(account,token,amount,calls);
+        bytes memory message = abi.encode(sender,account,token,amount,calls);
         bytes memory messageWithAction = abi.encode(action,message);
         sendMessage(
             _getInboxForChain(chainId),
@@ -131,12 +134,13 @@ contract AxonMultiBridgeFacet is IMultiBridgeFacet, Modifiers, MessageApp{
     function bridgeMultiTokenAndCallbackViaCeler(
         LibAppStorage.TokenBridgeAction action,
         uint64 chainId,
+        address sender,
         address account,
         address[] memory tokens,
         uint256[] memory amounts,
         Call[] calldata calls
     ) public payable override validRouter {
-        bytes memory message = abi.encode(account,tokens,amounts,calls);
+        bytes memory message = abi.encode(sender,account,tokens,amounts,calls);
         bytes memory messageWithAction = abi.encode(action,message);
         sendMessage(
             _getInboxForChain(chainId),
