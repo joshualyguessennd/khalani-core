@@ -12,6 +12,7 @@ import "@hyperlane-xyz/core/contracts/libs/Message.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import "./libraries/LibAxonMultiBridgeFacet.sol";
 import {Call} from "../../Call.sol";
+import "../../libraries/LibNexusABI.sol";
 import "../../Errors.sol";
 
 //This is a facet of Nexus diamond on all non-axon chain ,
@@ -60,16 +61,14 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
     function handle(
         uint32 _origin,
         bytes32 _sender,
-        bytes memory _message
+        bytes calldata _message
     ) external override onlyInbox {
         _onlyNexus(_origin, _sender); //keeping as function to avoid deep stack
         emit CrossChainMsgReceived(_origin, _sender, _message);
-        (LibAppStorage.TokenBridgeAction action, bytes memory executionMsg) =
-        abi.decode(_message, (LibAppStorage.TokenBridgeAction,bytes));
-
+        LibAppStorage.TokenBridgeAction action;
+        action = LibAppStorage.TokenBridgeAction(uint8(_message[0]));
         if(action == LibAppStorage.TokenBridgeAction.DepositMulti) {
-            (address account, address[] memory tokens, uint256[] memory amounts, Call[] memory calls) = abi.decode(executionMsg,
-            (address, address[], uint256[], Call[]));
+            (address account, address[] memory tokens, uint256[] memory amounts, Call[] memory calls) = LibNexusABI.decodeData2(_message);
             uint length = tokens.length;
             for(uint i; i<length;){
                 tokens[i] = LibTokenRegistry.getMirrorToken(_origin,tokens[i]);
@@ -80,8 +79,7 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
             }
             depositMultiTokenAndCall(account,tokens,amounts,_origin,calls);
         } else {
-            (address account, address token, uint256 amount,Call[] memory calls) = abi.decode(executionMsg,
-            (address, address, uint256, Call[]));
+            (address account, address token, uint256 amount,Call[] memory calls) = LibNexusABI.decodeData1(_message);
             token = LibTokenRegistry.getMirrorToken(_origin,token);
             if(action == LibAppStorage.TokenBridgeAction.Deposit) {
                 depositTokenAndCall(account,token,amount,_origin, calls);
@@ -103,12 +101,10 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
     ) external payable override onlyMessageBus returns (ExecutionStatus) {
         _onlyNexus(uint32(_origin), TypeCasts.addressToBytes32(_sender)); //keeping as function to avoid deep stack
         emit CrossChainMsgReceived(_origin, TypeCasts.addressToBytes32(_sender), _message);
-        (LibAppStorage.TokenBridgeAction action, bytes memory executionMsg) =
-        abi.decode(_message, (LibAppStorage.TokenBridgeAction,bytes));
-
+        LibAppStorage.TokenBridgeAction action;
+        action = LibAppStorage.TokenBridgeAction(uint8(_message[0]));
         if(action == LibAppStorage.TokenBridgeAction.DepositMulti) {
-            (address account, address[] memory tokens, uint256[] memory amounts, Call[] memory calls) = abi.decode(executionMsg,
-                (address, address[], uint256[], Call[]));
+            (address account, address[] memory tokens, uint256[] memory amounts, Call[] memory calls) = LibNexusABI.decodeData2(_message);
             uint length = tokens.length;
             for(uint i; i<length;){
                 tokens[i] = LibTokenRegistry.getMirrorToken(_origin,tokens[i]);
@@ -118,8 +114,7 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
             }
             depositMultiTokenAndCall(account,tokens,amounts,uint32(_origin), calls);
         } else {
-            (address account, address token, uint256 amount, Call[] memory calls) = abi.decode(executionMsg,
-                (address, address, uint256, Call[]));
+            (address account, address token, uint256 amount,Call[] memory calls) = LibNexusABI.decodeData1(_message);
             token = LibTokenRegistry.getMirrorToken(_origin,token);
             if(action == LibAppStorage.TokenBridgeAction.Deposit) {
                 depositTokenAndCall(account,token,amount,uint32(_origin),calls);

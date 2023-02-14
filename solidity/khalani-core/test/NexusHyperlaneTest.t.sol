@@ -21,7 +21,7 @@ import "../src/Nexus/facets/factory/TokenRegistry.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../src/Nexus/Errors.sol";
 import "./lib/Create2Lib.sol";
-
+import "../src/Nexus/libraries/LibNexusABI.sol";
 contract NexusHyperlaneTest is Test {
     //events
     event LogDepositAndCall(
@@ -326,9 +326,8 @@ contract NexusHyperlaneTest is Test {
         //constructing a valid msg
         Call[] memory calls = new Call[](1);
         calls[0] = Call({to:address(usdcEth),data:abi.encodeWithSelector(approveSelector,mockLp,100e18)});
-        bytes memory message = abi.encode(MOCK_ADDR_1,address(usdc),100e18,calls);
-        bytes memory messageWithAction = abi.encode(LibAppStorage.TokenBridgeAction.Deposit,message);
 
+        bytes memory messageWithAction = LibNexusABI.encodeData1(LibAppStorage.TokenBridgeAction.Deposit,MOCK_ADDR_1,address(usdc),100e18,calls);
 
         vm.startPrank(caller);
         vm.expectRevert(InvalidInbox.selector);
@@ -494,14 +493,4 @@ contract NexusHyperlaneTest is Test {
         assertEq(usdt.balanceOf(user),amount2);
     }
 
-//    function testTokenFactory() public{
-//        MockERC20 newToken = new MockERC20("NewToken","NEW"); //deployed on source chain;
-//        vm.expectEmit(true,false,false,true);
-//        emit MirrorTokenDeployed(1,address (newToken));
-//        address newTokenMirror = StableTokenFactory(address(axonNexus)).deployMirrorToken("NewTokeneth","NEW/ETH",1,address(newToken));
-//
-//        //trying to redeploy mirror token for same newToken
-//        vm.expectRevert(abi.encodeWithSelector(TokenAlreadyExist.selector,1,address(newToken),newTokenMirror));
-//        StableTokenFactory(address(axonNexus)).deployMirrorToken("NewTokeneth","NEW/ETH",1,address(newToken));
-//    }
 }

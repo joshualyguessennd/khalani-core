@@ -10,6 +10,7 @@ import "../../libraries/LibAppReceiver.sol";
 import "../Receiver.sol";
 import {HyperlaneStorage} from "./libraries/HyperlaneFacetLibrary.sol";
 import "./libraries/HyperlaneFacetLibrary.sol";
+import "../../libraries/LibNexusABI.sol";
 import {Call} from "../../Call.sol";
 import "../../Errors.sol";
 
