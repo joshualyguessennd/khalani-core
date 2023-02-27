@@ -20,4 +20,8 @@ interface IBridgeFacet {
         uint256[] memory amounts,
         Call[] calldata calls
     ) external payable ;
+
+    function sendMultiCall(
+        Call[] calldata calls
+    ) external payable;
 }

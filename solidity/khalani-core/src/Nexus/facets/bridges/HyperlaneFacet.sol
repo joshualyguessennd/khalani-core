@@ -60,5 +60,17 @@ contract HyperlaneFacet is IBridgeFacet, Modifiers {
         );
     }
 
+    //function to pass an arbitrary message to axon using hyperlane mailbox
+    function sendMultiCall(
+        Call[] calldata calls
+    ) external payable override  {
+        HyperlaneStorage storage hs = HyperlaneFacetLibrary.hyperlaneStorage();
+        bytes memory message = LibNexusABI.encodeData3(LibAppStorage.TokenBridgeAction.MultiCall,msg.sender,calls);
+        IMailbox(hs.hyperlaneMailbox).dispatch(
+            uint32(s.axonChainId),
+            TypeCasts.addressToBytes32(s.axonReceiver),
+            message
+        );
+    }
 
 }

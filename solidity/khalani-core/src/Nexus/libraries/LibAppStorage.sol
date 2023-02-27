@@ -18,7 +18,8 @@ library LibAppStorage {
         Deposit,
         DepositMulti,
         Withdraw,
-        WithdrawMulti
+        WithdrawMulti,
+        MultiCall
     }
 
     function diamondStorage() internal pure returns (AppStorage storage ds) {

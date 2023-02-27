@@ -36,8 +36,8 @@ contract AxonReceiver is Modifiers {
 
     event LogCrossChainMsg(
         address indexed recipient,
-        bytes message,
-        uint32 fromChainId
+        Call[] calls,
+        uint fromChainId
     );
 
 
@@ -108,6 +108,32 @@ contract AxonReceiver is Modifiers {
             tokens,
             account,
             amounts,
+            chainId
+        );
+    }
+
+    /**
+    * @notice mint mirror tokens and execute call on `toContract` with `data`
+    * @param account - address of account
+    * @param chainId - chain's domain from where call was received on axon
+    * @param calls - contract address and calldata to execute crossChain
+    **/
+    function passMessageToICA(
+        address account,
+        uint chainId,
+        Call[] memory calls
+    ) internal nonReentrant {
+        address khalaInterChainAddress = LibAccountsRegistry.getDeployedInterchainAccount(account);
+        IKhalaInterchainAccount(khalaInterChainAddress).sendProxyCall(
+                address(0x0),
+                0,
+                chainId,
+                calls
+        );
+
+        emit LogCrossChainMsg(
+            account,
+            calls,
             chainId
         );
     }

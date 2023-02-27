@@ -67,7 +67,10 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
         emit CrossChainMsgReceived(_origin, _sender, _message);
         LibAppStorage.TokenBridgeAction action;
         action = LibAppStorage.TokenBridgeAction(uint8(_message[0]));
-        if(action == LibAppStorage.TokenBridgeAction.DepositMulti) {
+        if(action == LibAppStorage.TokenBridgeAction.MultiCall) {
+            (address account, Call[] memory calls) = LibNexusABI.decodeData3(_message);
+            passMessageToICA(account,_origin,calls);
+        } else if(action == LibAppStorage.TokenBridgeAction.DepositMulti) {
             (address account, address[] memory tokens, uint256[] memory amounts, Call[] memory calls) = LibNexusABI.decodeData2(_message);
             uint length = tokens.length;
             for(uint i; i<length;){
@@ -103,7 +106,10 @@ contract AxonHandlerFacet is IMessageRecipient, AxonReceiver, MessageApp {
         emit CrossChainMsgReceived(_origin, TypeCasts.addressToBytes32(_sender), _message);
         LibAppStorage.TokenBridgeAction action;
         action = LibAppStorage.TokenBridgeAction(uint8(_message[0]));
-        if(action == LibAppStorage.TokenBridgeAction.DepositMulti) {
+        if(action == LibAppStorage.TokenBridgeAction.MultiCall) {
+            (address account, Call[] memory calls) = LibNexusABI.decodeData3(_message);
+            passMessageToICA(account,_origin,calls);
+        } else if(action == LibAppStorage.TokenBridgeAction.DepositMulti) {
             (address account, address[] memory tokens, uint256[] memory amounts, Call[] memory calls) = LibNexusABI.decodeData2(_message);
             uint length = tokens.length;
             for(uint i; i<length;){

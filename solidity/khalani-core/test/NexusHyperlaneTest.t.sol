@@ -67,6 +67,11 @@ contract NexusHyperlaneTest is Test {
         address tokenOnAxon
     );
 
+    event LogCrossChainMsg(
+        address indexed recipient,
+        Call[] calls,
+        uint fromChainId
+    );
     //Eth
     Nexus ethNexus;
     MockERC20 usdc;
@@ -134,10 +139,11 @@ contract NexusHyperlaneTest is Test {
         });
 
         HyperlaneFacet hyperlaneFacet = new HyperlaneFacet();
-        bytes4[] memory hyperlaneFacetfunctionSelectors = new bytes4[](3);
+        bytes4[] memory hyperlaneFacetfunctionSelectors = new bytes4[](4);
         hyperlaneFacetfunctionSelectors[0] = hyperlaneFacet.bridgeTokenAndCall.selector;
         hyperlaneFacetfunctionSelectors[1] = hyperlaneFacet.bridgeMultiTokenAndCall.selector;
         hyperlaneFacetfunctionSelectors[2] = hyperlaneFacet.initHyperlaneFacet.selector;
+        hyperlaneFacetfunctionSelectors[3] = hyperlaneFacet.sendMultiCall.selector;
         cut[1] = IDiamond.FacetCut({
         facetAddress: address(hyperlaneFacet),
         action: IDiamond.FacetCutAction.Add,
@@ -493,4 +499,16 @@ contract NexusHyperlaneTest is Test {
         assertEq(usdt.balanceOf(user),amount2);
     }
 
+    function testPassMessage(uint countToIncrease) public{
+        address user = MOCK_ADDR_1;
+        MockCounter counter = new MockCounter(Create2Lib.computeAddress(user,address(axonNexus)));
+        Call[] memory calls = new Call[](1);
+        calls[0] = Call({to:address(counter),data:abi.encodeWithSelector(counter.increaseCount.selector,countToIncrease)});
+        vm.prank(user);
+        HyperlaneFacet(address(ethNexus)).sendMultiCall(calls);
+        vm.expectEmit(true, false, false, true, address(axonNexus));
+        emit LogCrossChainMsg(user,calls,1);
+        mailboxAxon.processNextPendingMessage();
+        assertEq(counter.getCount(),countToIncrease);
+    }
 }

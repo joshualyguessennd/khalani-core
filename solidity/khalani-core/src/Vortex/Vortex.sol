@@ -146,15 +146,14 @@ contract Vortex{
         uint size = limits.length;
         for(uint i; i<size;){
             if(limits[i]>0){
-                SafeERC20Upgradeable.safeIncreaseAllowance(
-                    IERC20Upgradeable(address (assets[i])),
+                IERC20Upgradeable(address (assets[i])).approve(
                     balancerVault,
                     uint256(limits[i])
                 );
             }
-        unchecked{
-            ++i;
-        }
+            unchecked{
+                ++i;
+            }
         }
     }
 

@@ -29,4 +29,16 @@ library LibNexusABI{
         account = address(bytes20(data[1:21]));
         (tokens, amounts, calls) = abi.decode(data[21:], (address[], uint256[], Call[]));
     }
+
+    //function to encode action and calls for bridgeCall
+    function encodeData3(LibAppStorage.TokenBridgeAction action, address account, Call[] memory calls) internal pure returns (bytes memory) {
+        bytes memory packed1 = abi.encodePacked(action, account);
+        return abi.encodePacked(packed1, abi.encode(calls));
+    }
+
+    //function to decode data encoded by encode3 function
+    function decodeData3(bytes calldata data) internal pure returns (address account, Call[] memory calls) {
+        account = address(bytes20(data[1:21]));
+        calls = abi.decode(data[21:], (Call[]));
+    }
 }
