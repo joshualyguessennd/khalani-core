@@ -151,9 +151,9 @@ contract NexusHyperlaneTest is Test {
         });
 
         MsgHandlerFacet msgHandlerFacet = new MsgHandlerFacet(MOCK_ADDR_5);
-        bytes4[] memory msgHandlerFacetfunctionSelectors = new bytes4[](3);
-        msgHandlerFacetfunctionSelectors[1] = msgHandlerFacet.addChainTokenForMirrorToken.selector;
-        msgHandlerFacetfunctionSelectors[2] = msgHandlerFacet.handle.selector;
+        bytes4[] memory msgHandlerFacetfunctionSelectors = new bytes4[](2);
+        msgHandlerFacetfunctionSelectors[0] = msgHandlerFacet.addChainTokenForMirrorToken.selector;
+        msgHandlerFacetfunctionSelectors[1] = msgHandlerFacet.handle.selector;
         cut[2] = IDiamond.FacetCut({
         facetAddress: address(msgHandlerFacet),
         action: IDiamond.FacetCutAction.Add,

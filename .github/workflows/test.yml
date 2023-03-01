@@ -75,7 +75,7 @@ jobs:
         run: |
           forge coverage --report lcov
           sudo apt-get install lcov
-          lcov --remove ./lcov.info -o ./lcov.info.pruned 'src/diamondCommons/*'  'test/Mock/*' 'test/utils/*'
+          lcov --remove ./lcov.info -o ./lcov.info.pruned 'src/diamondCommons/*'  'test/Mock/*' 'test/utils/*' 'test/lib/*' 'script/*' 'scripts/*' 'script/lib/*' 'src/USDMirror.sol' 'src/PanToken.sol'
 
       - name: Report coverage
         uses: romeovs/lcov-reporter-action@v0.2.21

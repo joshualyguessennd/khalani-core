@@ -2,10 +2,9 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/IERC20Mintable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-
-contract PanPSM is Ownable{
+contract PanPSM is OwnableUpgradeable{
 
     error AssetNotWhiteListed();
     error RedeemFailedNotEnoughBalance();
@@ -24,8 +23,9 @@ contract PanPSM is Ownable{
     address pan;
     uint256 internal constant ONE = 1e18;
 
-    function initialize(address _pan) external onlyOwner {
+    function initialize(address _pan) external initializer {
         pan = _pan;
+        __Ownable_init();
     }
 
     function addWhiteListedAsset(address asset) external onlyOwner {

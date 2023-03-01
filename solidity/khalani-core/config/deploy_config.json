@@ -1,0 +1,23 @@
+{
+  "axon" : {
+    "chainId" : 10012,
+    "rpcUrl" : "<rpc_url>",
+    "hyperlaneMailbox" : "0x8e0b7e6062272B5eF4524250bFFF8e5Bd3497757",
+    "hyperlaneISM" : "0x8e0b7e6062272B5eF4524250bFFF8e5Bd3497757",
+    "tokens" : []
+  },
+  "goerli" : {
+    "chainId" : 5,
+    "rpcUrl" : "<rpc_url>",
+    "hyperlaneMailbox" : "0x8e0b7e6062272B5eF4524250bFFF8e5Bd3497757",
+    "hyperlaneISM" : "0x8e0b7e6062272B5eF4524250bFFF8e5Bd3497757",
+    "tokens" : []
+  },
+  "fuji" : {
+    "chainId" : 43113,
+    "rpcUrl" : "<rpc_url>",
+    "hyperlaneMailbox" : "0x8e0b7e6062272B5eF4524250bFFF8e5Bd3497757",
+    "hyperlaneISM" : "0x8e0b7e6062272B5eF4524250bFFF8e5Bd3497757",
+    "tokens" : []
+  }
+}
