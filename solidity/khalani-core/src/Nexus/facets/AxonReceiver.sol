@@ -14,23 +14,16 @@ contract AxonReceiver is Modifiers {
 
 
     event LogDepositAndCall(
-        address indexed token,
         address indexed user,
+        address indexed token,
         uint256 amount,
         uint32 fromChainId
     );
 
     event LogDepositMultiTokenAndCall(
-        address[]  indexed token,
         address indexed user,
+        address[]  tokens,
         uint256[]  amounts,
-        uint32 fromChainId
-    );
-
-    event LogWithdrawTokenAndCall(
-        address indexed token,
-        address indexed user,
-        uint256 amount,
         uint32 fromChainId
     );
 
@@ -66,8 +59,8 @@ contract AxonReceiver is Modifiers {
         );
 
         emit LogDepositAndCall(
-            token,
             account,
+            token,
             amount,
             chainId
         );
@@ -105,8 +98,8 @@ contract AxonReceiver is Modifiers {
         );
 
         emit LogDepositMultiTokenAndCall(
-            tokens,
             account,
+            tokens,
             amounts,
             chainId
         );

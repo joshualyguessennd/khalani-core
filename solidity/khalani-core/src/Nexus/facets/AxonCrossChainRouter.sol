@@ -10,15 +10,15 @@ import "../interfaces/IKhalaInterchainAccount.sol";
 contract AxonCrossChainRouter is Modifiers {
 
     event LogWithdrawAndCall(
-        address indexed token,
         address indexed user,
+        address indexed token,
         uint256 amount,
         Call[] calls
     );
 
     event LogWithdrawMultiTokenAndCall(
-        address[] indexed token,
         address indexed user,
+        address[] tokens,
         uint256[] amount,
         Call[] calls
     );
@@ -132,8 +132,8 @@ contract AxonCrossChainRouter is Modifiers {
 
 
         emit LogWithdrawAndCall(
-            token,
             msg.sender,
+            token,
             amount,
             calls
         );
@@ -182,8 +182,8 @@ contract AxonCrossChainRouter is Modifiers {
         }
 
         emit LogWithdrawMultiTokenAndCall (
-            tokens,
             msg.sender,
+            tokens,
             amounts,
             calls
         );

@@ -10,15 +10,15 @@ import {Call} from "../Call.sol";
 contract CrossChainRouter is Modifiers {
 
     event LogDepositAndCall(
-        address indexed token,
         address indexed user,
+        address indexed token,
         uint256 amount,
         Call[] calls
     );
 
     event LogDepositMultiTokenAndCall(
-        address[] indexed token,
         address indexed user,
+        address[]  tokens,
         uint256[] amounts,
         Call[] calls
     );
@@ -69,8 +69,8 @@ contract CrossChainRouter is Modifiers {
         );
 
         emit LogDepositAndCall(
-            token,
             msg.sender,
+            token,
             amount,
             calls
         );
@@ -107,8 +107,8 @@ contract CrossChainRouter is Modifiers {
         );
 
         emit LogDepositMultiTokenAndCall (
-            tokens,
             msg.sender,
+            tokens,
             amounts,
             calls
         );

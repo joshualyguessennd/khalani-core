@@ -15,14 +15,14 @@ contract Receiver is Modifiers {
 
 
     event LogWithdrawAndCall(
-        address indexed token,
         address indexed user,
+        address indexed token,
         uint256 amount
     );
 
     event LogWithdrawMultiTokenAndCall(
-        address[]  indexed token,
         address indexed user,
+        address[]  token,
         uint256[]  amounts
     );
 
@@ -60,8 +60,8 @@ contract Receiver is Modifiers {
         }
 
         emit LogWithdrawAndCall(
-            token,
             account,
+            token,
             amount
         );
     }
@@ -93,12 +93,18 @@ contract Receiver is Modifiers {
         }
 
     emit LogWithdrawMultiTokenAndCall(
-            tokens,
             account,
+            tokens,
             amounts
         );
     }
 
+    /**
+    * @notice mints if token is kai and unlocks and transfers in case of other tokens
+    * @param _user - address of user
+    * @param _token - address of token
+    * @param _amount - amount of tokens
+    **/
     function _releaseOrMint(
         address _user,
         address _token,

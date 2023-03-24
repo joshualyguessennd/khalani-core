@@ -28,22 +28,22 @@ import "../src/Nexus/libraries/LibNexusABI.sol";
 contract NexusCelerTest is Test {
     //events
     event LogDepositAndCall(
-        address indexed token,
         address indexed user,
+        address indexed token,
         uint256 amount,
         Call[] calls
     );
 
     event LogDepositMultiTokenAndCall(
-        address[] indexed token,
         address indexed user,
+        address[] tokens,
         uint256[] amounts,
         Call[] calls
     );
 
     event LogWithdrawTokenAndCall(
-        address indexed token,
         address indexed user,
+        address indexed token,
         uint256 amount,
         Call[] calls
     );
@@ -266,7 +266,7 @@ contract NexusCelerTest is Test {
         vm.startPrank(user);
         usdc.approve(address(gwNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(gwNexus));
-        emit LogDepositAndCall(address(usdc), user, amountToDeposit, calls);
+        emit LogDepositAndCall(user,address(usdc), amountToDeposit, calls);
         CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,calls);
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
@@ -297,8 +297,9 @@ contract NexusCelerTest is Test {
         amounts[0] = amount1;
         amounts[1] = amount2;
         vm.expectEmit(true, true, true, true, address(gwNexus));
-        emit LogDepositMultiTokenAndCall(tokens,
+        emit LogDepositMultiTokenAndCall(
             user,
+            tokens,
             amounts,
             calls
         );
@@ -382,7 +383,7 @@ contract NexusCelerTest is Test {
         vm.startPrank(user);
         usdc.approve(address(gwNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(gwNexus));
-        emit LogDepositAndCall(address(usdc), user, amountToDeposit, calls);
+        emit LogDepositAndCall(user,address(usdc),amountToDeposit,calls);
         CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,calls);
         vm.stopPrank();
         chain2Bus.processNextPendingMsg();
@@ -404,7 +405,7 @@ contract NexusCelerTest is Test {
         vm.startPrank(user);
         usdc.approve(address(gwNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(gwNexus));
-        emit LogDepositAndCall(address(usdc), user, amountToDeposit, calls);
+        emit LogDepositAndCall(user,address(usdc), amountToDeposit, calls);
         CrossChainRouter(address(gwNexus)).depositTokenAndCall(address(usdc),amountToDeposit,calls);
         vm.stopPrank();
         chain2Bus.processNextPendingMsg();
@@ -437,7 +438,7 @@ contract NexusCelerTest is Test {
         amounts[0] = amount1;
         amounts[1] = amount2;
         vm.expectEmit(true, true, true , true,address(gwNexus));
-        emit LogDepositMultiTokenAndCall(tokens,user,amounts,calls);
+        emit LogDepositMultiTokenAndCall(user,tokens,amounts,calls);
         CrossChainRouter(address(gwNexus)).depositMultiTokenAndCall(tokens,amounts,calls);
         vm.stopPrank();
         chain2Bus.processNextPendingMsg();

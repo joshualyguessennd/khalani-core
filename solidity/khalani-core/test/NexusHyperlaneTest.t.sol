@@ -32,8 +32,8 @@ contract NexusHyperlaneTest is Test {
     );
 
     event LogDepositMultiTokenAndCall(
-        address[] indexed token,
         address indexed user,
+        address[] tokens,
         uint256[] amounts,
         Call[] calls
     );
@@ -274,7 +274,7 @@ contract NexusHyperlaneTest is Test {
         calls[0] = Call({to:address(usdcEth),data:abi.encodeWithSelector(approveSelector,mockLp,amountToDeposit)});
         calls[1] = Call({to:address(mockLp),data:abi.encodeWithSelector(mockLp.addLiquidity.selector,address(usdcEth),amountToDeposit)});
         vm.expectEmit(true, true, true , true,address(ethNexus));
-        emit LogDepositAndCall(address(usdc), user, amountToDeposit,calls);
+        emit LogDepositAndCall(user,address(usdc),amountToDeposit,calls);
         CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit,calls);
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
@@ -304,8 +304,9 @@ contract NexusHyperlaneTest is Test {
         amounts[0] = amount1;
         amounts[1] = amount2;
         vm.expectEmit(true, true, true, true, address(ethNexus));
-        emit LogDepositMultiTokenAndCall(tokens,
+        emit LogDepositMultiTokenAndCall(
             user,
+            tokens,
             amounts,
             calls
         );
@@ -387,7 +388,7 @@ contract NexusHyperlaneTest is Test {
         vm.startPrank(user);
         usdc.approve(address(ethNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(ethNexus));
-        emit LogDepositAndCall(address(usdc), user, amountToDeposit, calls);
+        emit LogDepositAndCall(user, address(usdc), amountToDeposit, calls);
         CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit,calls);
         vm.stopPrank();
         vm.expectEmit(true, true, false, true, address(axonNexus));
@@ -411,7 +412,7 @@ contract NexusHyperlaneTest is Test {
         vm.startPrank(user);
         usdc.approve(address(ethNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(ethNexus));
-        emit LogDepositAndCall(address(usdc), user, amountToDeposit, calls);
+        emit LogDepositAndCall(user,address(usdc),amountToDeposit,calls);
         CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(usdc),amountToDeposit, calls);
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
@@ -435,7 +436,7 @@ contract NexusHyperlaneTest is Test {
         vm.startPrank(user);
         panOnEth.approve(address(ethNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(ethNexus));
-        emit LogDepositAndCall(address(panOnEth), user, amountToDeposit, calls);
+        emit LogDepositAndCall(user,address(panOnEth), amountToDeposit, calls);
         CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(panOnEth),amountToDeposit,calls);
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
@@ -452,7 +453,7 @@ contract NexusHyperlaneTest is Test {
         vm.startPrank(user);
         panOnEth.approve(address(ethNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(ethNexus));
-        emit LogDepositAndCall(address(panOnEth), user, amountToDeposit, calls);
+        emit LogDepositAndCall(user,address(panOnEth), amountToDeposit, calls);
         CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(panOnEth),amountToDeposit,calls);
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
@@ -488,7 +489,7 @@ contract NexusHyperlaneTest is Test {
         amounts[0] = amount1;
         amounts[1] = amount2;
         vm.expectEmit(true, true, true , true,address(ethNexus));
-        emit LogDepositMultiTokenAndCall(tokens,user,amounts,calls);
+        emit LogDepositMultiTokenAndCall(user,tokens,amounts,calls);
         CrossChainRouter(address(ethNexus)).depositMultiTokenAndCall(tokens,amounts,calls);
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
