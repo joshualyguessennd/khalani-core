@@ -39,15 +39,17 @@ library DeployLib {
         (axonMultiBridgeFacet, axonMultiBridgeFacetfunctionSelectors) = deployMultiBridgeFacet();
         out.axonMultiBridgeFacet = axonMultiBridgeFacet;
 
-        //--------Vortex-------------//
-        address vortex = deployVortex(address(nexus));
-        out.vortex = vortex;
         //--------Token Registry-------------//
         (address tokenRegistry, bytes4[] memory tokenRegistryFunctionSelectors) = deployTokenRegistry();
         out.stableTokenRegistry = tokenRegistry;
         //--------PanToken-------------//
         address panOnAxon = deployPan(out.nexusDiamond);
         out.pan = panOnAxon;
+
+        //--------Vortex-------------//
+        address vortex = deployVortex(address(nexus), panOnAxon);
+        out.vortex = vortex;
+
         //--------Making Facet cuts to diamond-------------//
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](4);
         cut[0] = IDiamond.FacetCut({
@@ -210,8 +212,8 @@ library DeployLib {
     }
 
     //--Vortex--//
-    function deployVortex(address _axonNexus) private returns (address){
-        Vortex vortex = new Vortex(_axonNexus);
+    function deployVortex(address _axonNexus, address _kai) private returns (address){
+        Vortex vortex = new Vortex(_axonNexus,_kai);
         console.log("Vortex deployed at - ", address(vortex));
         return address(vortex);
     }

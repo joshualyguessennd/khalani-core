@@ -24,6 +24,8 @@ import "forge-std/console.sol";
 import "@hyperlane-xyz/core/contracts/Mailbox.sol";
 import "../src/Vortex/Vortex.sol";
 import {IBalancerPool} from "../src/Vortex/BalancerTypes.sol";
+import {Pan} from "../src/PanToken.sol";
+import "./Mock/MockERC20Decimal.sol";
 // mocking mailbox contracts in tests as relayer is involved
 // making use of foundry's persistent contracts
 contract NexusVortexTests is Test{
@@ -51,6 +53,7 @@ contract NexusVortexTests is Test{
     bytes4 approveSelector = IERC20.approve.selector;
     //Original token deployer
     address tokenAdmin = vm.envAddress("TOKEN_ADMIN");
+    Vortex vortex;
 
     //Forks
     uint eth;
@@ -143,17 +146,24 @@ contract NexusVortexTests is Test{
         AxonMultiBridgeFacet(axonNexus).addChainInbox(43113,avaxNexus);
         AxonHandlerFacet(axonNexus).addValidNexusForChain(5,TypeCasts.addressToBytes32(address(ethNexus)));
         AxonHandlerFacet(axonNexus).addValidNexusForChain(43113,TypeCasts.addressToBytes32(address(axonNexus)));
-        registerTokens();
+        //deploy Vortex
+        _vortexSetup();
+        //token registry setup
+        _registerTokens();
     }
 
-    function registerTokens() internal {
+    function _registerTokens() internal {
         vm.selectFork(eth);
-        usdcE = address(new MockERC20("USDC","USDC"));
-        panOnEth = address(new MockERC20("Pan/Eth","PanOnEth"));
+        usdcE = address(new MockERC20Decimal("USDC","USDC"));
+        MockERC20Decimal(usdcE).setDecimal(6);
+        panOnEth = address(new MockERC20Decimal("Pan/Eth","PanOnEth"));
+        MockERC20Decimal(panOnEth).setDecimal(18);
 
         vm.selectFork(avax);
-        usdcA = address(new MockERC20("USDCA","USDCA"));
-        panOnAvax = address(new MockERC20("Pan/Avax","Pan/Avax"));
+        usdcA = address(new MockERC20Decimal("USDCA","USDCA"));
+        MockERC20Decimal(usdcA).setDecimal(6);
+        panOnAvax = address(new MockERC20Decimal("Pan/Avax","Pan/Avax"));
+        MockERC20Decimal(panOnAvax).setDecimal(18);
 
         vm.selectFork(axon);
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
@@ -203,24 +213,27 @@ contract NexusVortexTests is Test{
         IERC20Mintable(panOnAvax).mint(avaxNexus,15e20);
     }
 
+    function _vortexSetup() internal {
+        vortex = new Vortex(axonNexus,panOnAxon);
+        vortex.addWhiteListedAsset(usdcEth,usdcEthPanBptAddr);
+        vortex.addWhiteListedAsset(usdcAvax,usdcAvaxPanBptAddr);
+        vm.startPrank(tokenAdmin);
+        Pan(panOnAxon).transferMinterBurnerRole(address(vortex));
+        vm.stopPrank();
+    }
+
     //--------- fork test start here -----------//
     function testAddLiquidityVortex(uint amount) public { //balanced
         //pool size : 150000000000 usdc.eth,pan | usdc.avax,pan ie 150000e6
-        amount = bound(amount,1e6, 1e20);
+        amount = bound(amount,1e6, 1e16);
         vm.selectFork(eth);
         address userICA = Create2Lib.computeAddress(user1, axonNexus);
         IERC20Mintable(usdcE).mint(user1,amount);
-        IERC20Mintable(panOnEth).mint(user1,amount);
-        uint256[] memory amounts = new uint256[](2);
-        amounts[0] = amount;
-        amounts[1] = amount;
 
-        Call[] memory calls = new Call[](3);
-        calls[0] = Call({to : usdcEth, data : abi.encodeWithSelector(IERC20.approve.selector,usdcEthPanBalancerVault,amount)});
-        calls[1] = Call({to : panOnAxon, data : abi.encodeWithSelector(IERC20.approve.selector,usdcEthPanBalancerVault,amount)});
+        Call[] memory calls = new Call[](2);
+        calls[0] = Call({to : usdcEth, data : abi.encodeWithSelector(IERC20.approve.selector,address(vortex),amount)});
 
-
-        //preparation for calls[2] i.e batchSwap call to balancer vault
+        //preparation for calls[1] i.e batchSwap call to balancer vault
 
         //queryBatchSwap
         vm.selectFork(axon);
@@ -230,7 +243,7 @@ contract NexusVortexTests is Test{
         {
         poolId : usdcEthPanPoolId,
         assetInIndex : 0,
-        assetOutIndex : 2,
+        assetOutIndex : 1,
         amount : amount,
         userData : abi.encode("")
         }
@@ -239,17 +252,17 @@ contract NexusVortexTests is Test{
         swaps[1] = BatchSwapStep(
         {
         poolId : usdcEthPanPoolId,
-        assetInIndex : 1,
-        assetOutIndex : 2,
-        amount : amount,
+        assetInIndex : 2,
+        assetOutIndex : 1,
+        amount : amount* 1e18 / 1e6,
         userData : abi.encode("")
         }
         );
 
         IAsset[] memory assets = new IAsset[](3);
         assets[0] = IAsset(usdcEth);
-        assets[1] = IAsset(panOnAxon);
-        assets[2] = IAsset(usdcEthPanBptAddr);
+        assets[1] = IAsset(usdcEthPanBptAddr);
+        assets[2] = IAsset(panOnAxon);
 
         FundManagement memory funds;
         funds.sender = userICA;
@@ -263,39 +276,30 @@ contract NexusVortexTests is Test{
             assets,
             funds
         );
-
         emit log_named_int("BPT out from queryBatchSwap - ", assetDeltas[2]);
 
-        uint expectedBpt = uint(assetDeltas[2] * -1);
+        uint expectedBpt = uint(assetDeltas[1] * -1);
         //limits with 1% slippage tolerange
-        assetDeltas[2] = (assetDeltas[2]*99)/100;
+        assetDeltas[1] = (assetDeltas[1]*99)/100;
 
-        emit log_named_int("limits[2] - ", assetDeltas[2]);
+        emit log_named_int("limits[2] - ", assetDeltas[1]);
 
         vm.selectFork(eth);
 
-        calls[2] = Call({
-            to : usdcEthPanBalancerVault,
+        calls[1] = Call({
+            to : address(vortex),
             data : abi.encodeWithSelector(
-                IVault.batchSwap.selector,
-                IVault.SwapKind.GIVEN_IN,
-                swaps,
-                assets,
-                funds,
-                assetDeltas,
-                block.timestamp + 1 hours
+                    IVortex.addLiquidityVortex.selector,
+                    usdcEth,
+                    amount,
+                    assetDeltas[1]
                 )
             }
         );
 
-        address[] memory tokens = new address[](2);
-        tokens[0] = usdcE;
-        tokens[1] = panOnEth;
-
         vm.startPrank(user1);
         IERC20(usdcE).approve(ethNexus,amount);
-        IERC20(panOnEth).approve(ethNexus,amount);
-        CrossChainRouter(ethNexus).depositMultiTokenAndCall(tokens, amounts, calls);
+        CrossChainRouter(ethNexus).depositTokenAndCall(usdcE, amount, calls);
         vm.stopPrank();
 
         vm.selectFork(axon);
@@ -305,7 +309,7 @@ contract NexusVortexTests is Test{
         mailboxAxon.processNextPendingMessage();
 
         assertEq(
-            expectedBpt, IERC20(usdcEthPanBptAddr).balanceOf(userICA),
+            expectedBpt/2, IERC20(usdcEthPanBptAddr).balanceOf(userICA),
             "BPT balance is not around the expected value"
         );
 
@@ -313,22 +317,16 @@ contract NexusVortexTests is Test{
     }
 
     function testWithdrawLiquidityVortex(uint amount) public {
-        //pool size : 1500000000000000000000,1500000000000000000000 -> usdc,pan i.e 1.5e21
-        amount = bound(amount,1e6, 5e6);
+        //pool size : 150000000000, 150000000000000000000000 usdc.eth,pan | usdc.avax,pan
+        amount = bound(amount,1e6, 1e16);
         vm.selectFork(eth);
         address userICA = Create2Lib.computeAddress(user1, axonNexus);
         IERC20Mintable(usdcE).mint(user1,amount);
-        IERC20Mintable(panOnEth).mint(user1,amount);
-        uint256[] memory amounts = new uint256[](2);
-        amounts[0] = amount;
-        amounts[1] = amount;
 
-        Call[] memory calls = new Call[](3);
-        calls[0] = Call({to : usdcEth, data : abi.encodeWithSelector(IERC20.approve.selector,usdcEthPanBalancerVault,amount)});
-        calls[1] = Call({to : panOnAxon, data : abi.encodeWithSelector(IERC20.approve.selector,usdcEthPanBalancerVault,amount)});
+        Call[] memory calls = new Call[](2);
+        calls[0] = Call({to : usdcEth, data : abi.encodeWithSelector(IERC20.approve.selector,address(vortex),amount)});
 
-
-        //preparation for calls[2] i.e batchSwap call to balancer vault
+        //preparation for calls[1] i.e batchSwap call to balancer vault
 
         //queryBatchSwap
         vm.selectFork(axon);
@@ -338,7 +336,7 @@ contract NexusVortexTests is Test{
         {
         poolId : usdcEthPanPoolId,
         assetInIndex : 0,
-        assetOutIndex : 2,
+        assetOutIndex : 1,
         amount : amount,
         userData : abi.encode("")
         }
@@ -347,17 +345,17 @@ contract NexusVortexTests is Test{
         swaps[1] = BatchSwapStep(
         {
         poolId : usdcEthPanPoolId,
-        assetInIndex : 1,
-        assetOutIndex : 2,
-        amount : amount,
+        assetInIndex : 2,
+        assetOutIndex : 1,
+        amount : amount* 1e18 / 1e6,
         userData : abi.encode("")
         }
         );
 
         IAsset[] memory assets = new IAsset[](3);
         assets[0] = IAsset(usdcEth);
-        assets[1] = IAsset(panOnAxon);
-        assets[2] = IAsset(usdcEthPanBptAddr);
+        assets[1] = IAsset(usdcEthPanBptAddr);
+        assets[2] = IAsset(panOnAxon);
 
         FundManagement memory funds;
         funds.sender = userICA;
@@ -371,49 +369,51 @@ contract NexusVortexTests is Test{
             assets,
             funds
         );
-
         emit log_named_int("BPT out from queryBatchSwap - ", assetDeltas[2]);
-        //limits with 1% slippage tolerange
-        assetDeltas[2] = (assetDeltas[2]*99)/100;
 
-        emit log_named_int("limits[2] - ", assetDeltas[2]);
+        uint expectedBpt = uint(assetDeltas[1] * -1);
+        //limits with 1% slippage tolerange
+        assetDeltas[1] = (assetDeltas[1]*99)/100;
+
+        emit log_named_int("limits[2] - ", assetDeltas[1]);
 
         vm.selectFork(eth);
 
-        calls[2] = Call({
-        to : usdcEthPanBalancerVault,
+        calls[1] = Call({
+        to : address(vortex),
         data : abi.encodeWithSelector(
-                IVault.batchSwap.selector,
-                IVault.SwapKind.GIVEN_IN,
-                swaps,
-                assets,
-                funds,
-                assetDeltas,
-                block.timestamp + 1 hours
+                IVortex.addLiquidityVortex.selector,
+                usdcEth,
+                amount,
+                assetDeltas[1]
             )
         }
         );
 
-        address[] memory tokens = new address[](2);
-        tokens[0] = usdcE;
-        tokens[1] = panOnEth;
-
         vm.startPrank(user1);
         IERC20(usdcE).approve(ethNexus,amount);
-        IERC20(panOnEth).approve(ethNexus,amount);
-        CrossChainRouter(ethNexus).depositMultiTokenAndCall(tokens, amounts, calls);
+        CrossChainRouter(ethNexus).depositTokenAndCall(usdcE, amount, calls);
         vm.stopPrank();
 
         vm.selectFork(axon);
 
+        vm.expectEmit(true, true, false, false, address(axonNexus));
+        emit CrossChainMsgReceived(5, TypeCasts.addressToBytes32(ethNexus), abi.encode(""));
         mailboxAxon.processNextPendingMessage();
 
+        assertEq(
+            expectedBpt/2, IERC20(usdcEthPanBptAddr).balanceOf(userICA),
+            "BPT balance is not around the expected value"
+        );
+
+        emit log_named_int("BPT balance userICA - ",int(IERC20(usdcEthPanBptAddr).balanceOf(userICA)));
+
         //attempt to withdraw completely
-        uint bptAmountIn =  IERC20(usdcEthPanBptAddr).balanceOf(userICA)/2;
+        uint bptAmountIn =  IERC20(usdcEthPanBptAddr).balanceOf(userICA);
 
         swaps[0] = BatchSwapStep({
             poolId : usdcEthPanPoolId,
-            assetInIndex : 2,
+            assetInIndex : 1,
             assetOutIndex : 0,
             amount : bptAmountIn,
             userData : abi.encode("")
@@ -421,8 +421,8 @@ contract NexusVortexTests is Test{
 
         swaps[1] = BatchSwapStep({
             poolId : usdcEthPanPoolId,
-            assetInIndex : 2,
-            assetOutIndex : 1,
+            assetInIndex : 1,
+            assetOutIndex : 2,
             amount : bptAmountIn,
             userData : abi.encode("")
         });
@@ -435,52 +435,40 @@ contract NexusVortexTests is Test{
         );
 
         emit log_named_int("Token 1 out from queryBatchSwap - ", assetDeltas[0]);
-        emit log_named_int("Token 2 out from queryBatchSwap - ", assetDeltas[1]);
+        emit log_named_int("Token 2 out from queryBatchSwap - ", assetDeltas[2]);
 
-        uint[] memory withdrawalAmounts = new uint[](2);
-        withdrawalAmounts[0] = uint(assetDeltas[0]*-1);
-        withdrawalAmounts[1] = uint(assetDeltas[1]*-1);
-
-        // 1% slippage added
-        assetDeltas[0] = (assetDeltas[0]*99)/100;
-        assetDeltas[1] = (assetDeltas[1]*99)/100;
-
+        calls = new Call[](3);
         calls[0] = Call(
             {
                 to : usdcEthPanBptAddr,
-                data : abi.encodeWithSelector(IERC20.approve.selector, usdcEthPanBalancerVault, IERC20(usdcEthPanBptAddr).balanceOf(userICA))
+                data : abi.encodeWithSelector(IERC20.approve.selector, address(vortex), IERC20(usdcEthPanBptAddr).balanceOf(userICA))
             // approval for complete withdrawal
             }
         );
 
+        uint expectedUsdcEth = uint(assetDeltas[0] * -1);
         calls[1] = Call(
             {
-                to : usdcEthPanBalancerVault,
+                to : address(vortex),
                 data : abi.encodeWithSelector(
-                    IVault.batchSwap.selector,
-                    IVault.SwapKind.GIVEN_IN,
-                    swaps,
-                    assets,
-                    funds,
-                    assetDeltas,
-                    block.timestamp + 1 hours
+                    IVortex.withdrawLiquidityVortex.selector,
+                    usdcEth,
+                    bptAmountIn,
+                    expectedUsdcEth*99/100 //1% slippage
                 )
             }
         );
-
-        tokens[0] = usdcEth;
-        tokens[1] = panOnAxon;
 
         Call[] memory emptyCall;
 
         calls[2] = Call({
             to : axonNexus,
             data : abi.encodeWithSelector(
-                AxonCrossChainRouter.withdrawMultiTokenAndCall.selector,
+                AxonCrossChainRouter.withdrawTokenAndCall.selector,
                 5,
-                tokens,
-                withdrawalAmounts,
-                user1,
+                usdcEth,
+                expectedUsdcEth,
+                KhalaInterChainAccount(userICA).eoa(),
                 emptyCall
             )
         });
@@ -493,28 +481,21 @@ contract NexusVortexTests is Test{
 
         assertEq(
             IERC20(usdcE).balanceOf(user1),
-            withdrawalAmounts[0],
+            expectedUsdcEth,
             "Token1 balance is not around the expected value of withdrawal"
-        );
-
-
-        assertEq(
-            IERC20(panOnEth).balanceOf(user1),
-            withdrawalAmounts[1],
-            "Token2 balance is not around the expected value of withdrawal"
         );
     }
 
     function testRefundOnAddLiquidityFail(uint amount) public { //balanced
-        //pool size : 1500000000000000000000,1500000000000000000000 -> usdc,pan i.e 1.5e21
-        amount = bound(amount,1e6, 1e20);
+        //pool size : 150000000000,150000000000000000000000 -> usdc,pan
+        amount = bound(amount,1e6, 1e16);
         vm.selectFork(eth);
         address userICA = Create2Lib.computeAddress(user1, axonNexus);
         IERC20Mintable(usdcE).mint(user1,amount);
-        IERC20Mintable(panOnEth).mint(user1,amount);
+        IERC20Mintable(panOnEth).mint(user1,amount*1e18/1e6);
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = amount;
-        amounts[1] = amount;
+        amounts[1] = amount*1e18/1e6;
 
         Call[] memory calls = new Call[](3);
         //approving with 0 amount so call fails
@@ -533,7 +514,7 @@ contract NexusVortexTests is Test{
         poolId : usdcEthPanPoolId,
         assetInIndex : 0,
         assetOutIndex : 2,
-        amount : amount,
+        amount : amounts[0],
         userData : abi.encode("")
         }
         );
@@ -543,7 +524,7 @@ contract NexusVortexTests is Test{
         poolId : usdcEthPanPoolId,
         assetInIndex : 1,
         assetOutIndex : 2,
-        amount : amount,
+        amount : amounts[1],
         userData : abi.encode("")
         }
         );
@@ -593,8 +574,8 @@ contract NexusVortexTests is Test{
         tokens[1] = panOnEth;
 
         vm.startPrank(user1);
-        IERC20(usdcE).approve(ethNexus,amount);
-        IERC20(panOnEth).approve(ethNexus,amount);
+        IERC20(usdcE).approve(ethNexus,amounts[0]);
+        IERC20(panOnEth).approve(ethNexus,amounts[1]);
         CrossChainRouter(ethNexus).depositMultiTokenAndCall(tokens, amounts, calls);
         vm.stopPrank();
 
@@ -609,12 +590,12 @@ contract NexusVortexTests is Test{
 
         assertEq(
             IERC20(usdcE).balanceOf(user1),
-            amount
+            amounts[0]
         );
 
         assertEq(
             IERC20(panOnEth).balanceOf(user1),
-            amount
+            amounts[1]
         );
     }
 
@@ -733,7 +714,6 @@ contract NexusVortexTests is Test{
 
         //queryBatchSwap
         vm.selectFork(axon);
-        Vortex vortex = new Vortex(axonNexus);
         Call[] memory calls = new Call[](2);
         calls[0] = Call({to : usdcEth, data : abi.encodeWithSelector(IERC20.approve.selector,address(vortex),amount)});
 
