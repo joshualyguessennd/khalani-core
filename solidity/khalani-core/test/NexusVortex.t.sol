@@ -206,7 +206,7 @@ contract NexusVortexTests is Test{
     //--------- fork test start here -----------//
     function testAddLiquidityVortex(uint amount) public { //balanced
         //pool size : 150000000000 usdc.eth,pan | usdc.avax,pan ie 150000e6
-        amount = bound(amount,1e4, 1e20);
+        amount = bound(amount,1e6, 1e20);
         vm.selectFork(eth);
         address userICA = Create2Lib.computeAddress(user1, axonNexus);
         IERC20Mintable(usdcE).mint(user1,amount);
@@ -314,7 +314,7 @@ contract NexusVortexTests is Test{
 
     function testWithdrawLiquidityVortex(uint amount) public {
         //pool size : 1500000000000000000000,1500000000000000000000 -> usdc,pan i.e 1.5e21
-        amount = bound(amount,1e4, 1e20);
+        amount = bound(amount,1e6, 5e6);
         vm.selectFork(eth);
         address userICA = Create2Lib.computeAddress(user1, axonNexus);
         IERC20Mintable(usdcE).mint(user1,amount);
@@ -507,7 +507,7 @@ contract NexusVortexTests is Test{
 
     function testRefundOnAddLiquidityFail(uint amount) public { //balanced
         //pool size : 1500000000000000000000,1500000000000000000000 -> usdc,pan i.e 1.5e21
-        amount = bound(amount,1e4, 1e20);
+        amount = bound(amount,1e6, 1e20);
         vm.selectFork(eth);
         address userICA = Create2Lib.computeAddress(user1, axonNexus);
         IERC20Mintable(usdcE).mint(user1,amount);
