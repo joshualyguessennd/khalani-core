@@ -60,7 +60,7 @@ After setting up, command to run the deployment script
 forge script script/DeployNexusMultiChain.sol --broadcast --private-key $PRIVATE_KEY
 ```
 ### Pipeline and Order
-1.Deployment Configs are read from the json.
+1. Deployment Configs are read from the json.
 2. Nexus is deployed on axon and all the facets with the functions to be registered are added to this diamond
 3. Kai is deployed on Axon chain
 4. Vortex is deployed on axon chain and initialised
