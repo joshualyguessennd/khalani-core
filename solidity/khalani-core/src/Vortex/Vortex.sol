@@ -13,7 +13,7 @@ contract Vortex is IVortex,Owned{
 
     event SwapAndWithdrawExecuted(
         address indexed sender,
-        address[] indexed tokens,
+        IAsset[] tokens,
         uint[] amounts,
         address[] assetsWithdrawn
     );
@@ -57,7 +57,7 @@ contract Vortex is IVortex,Owned{
     * @param deadline The deadline for the token swaps to be executed.
     * @param assetWithdrawIndexes An array representing the indexes of assets in `assets` to be withdrawn.
     *
-    * @return assetsWithdrawn An array of addresses representing the assets that were withdrawn.
+    * @return An array of addresses representing the assets that were withdrawn.
     */
     function executeSwapAndWithdraw(
         address balancerVault,
@@ -67,7 +67,7 @@ contract Vortex is IVortex,Owned{
         int256[] memory limits,
         uint256 deadline,
         uint[] memory assetWithdrawIndexes
-    ) external payable returns (address[] memory assetsWithdrawn) {
+    ) external payable returns (address[] memory) {
 
         _receiveAssets(
             assets,
@@ -94,12 +94,12 @@ contract Vortex is IVortex,Owned{
         uint size = assetWithdrawIndexes.length;
         uint index;
         uint chainId;
-        address[] memory tokens = new address[](size);
+        address[] memory assetsToWithdraw = new address[](size);
         uint[] memory amounts = new uint[](size);
         chainId = USDMirror(address (assets[assetWithdrawIndexes[0]])).chainId();
         for(uint i; i<size; ){
             index = assetWithdrawIndexes[i];
-            tokens[i] = address(assets[index]);
+            assetsToWithdraw[i] = address(assets[index]);
             amounts[i] = uint(assetDeltas[index]*-1);
             unchecked{
                 ++i;
@@ -110,7 +110,7 @@ contract Vortex is IVortex,Owned{
 
         AxonCrossChainRouter(nexus).withdrawMultiTokenAndCall(
             chainId,
-            tokens,
+            assetsToWithdraw,
             amounts,
             IKhalaInterchainAccount(msg.sender).eoa(),
             emptyCalls
@@ -118,12 +118,12 @@ contract Vortex is IVortex,Owned{
 
         emit SwapAndWithdrawExecuted(
             msg.sender,
-            tokens,
+            assets,
             amounts,
-            assetsWithdrawn
+            assetsToWithdraw
         );
 
-        return tokens;
+        return assetsToWithdraw;
 
     }
 
