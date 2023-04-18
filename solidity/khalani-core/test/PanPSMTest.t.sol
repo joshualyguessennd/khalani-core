@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "./Mock/MockERC20Decimal.sol";
 import "../src/USDMirror.sol";
-import "../src/PSM/PanPSM.sol";
+import "../src/PSM/KaiPSM.sol";
 
-contract PanPSMTest is Test {
+contract KaiPSMTest is Test {
 
     error AssetNotWhiteListed();
     error RedeemFailedNotEnoughBalance();
@@ -18,10 +18,10 @@ contract PanPSMTest is Test {
         address indexed asset
     );
 
-    PanPSM psm;
+    KaiPSM psm;
     MockERC20Decimal usdc;
     MockERC20Decimal usdt;
-    USDMirror pan;
+    USDMirror kai;
 
     address user = 0x0000000000000000000000000000000000000001;
     address MOCK_ADDRESS_1 = 0x0000000000000000000000000000000000000002;
@@ -29,12 +29,12 @@ contract PanPSMTest is Test {
     function setUp() public {
         usdc = new MockERC20Decimal("USDC","USDC");
         usdt = new MockERC20Decimal("USDT","USDT");
-        pan = new USDMirror();
-        pan.initialize("PAN","PAN");
+        kai = new USDMirror();
+        kai.initialize("KAI","KAI");
 
-        psm = new PanPSM();
-        psm.initialize(address(pan));
-        pan.transferMinterBurnerRole(address(psm));
+        psm = new KaiPSM();
+        psm.initialize(address(kai));
+        kai.transferMinterBurnerRole(address(psm));
 
         psm.addWhiteListedAsset(address(usdc));
         psm.addWhiteListedAsset(address(usdt));
@@ -53,7 +53,7 @@ contract PanPSMTest is Test {
         psm.removeWhiteListedAddress(address(usdc));
     }
 
-    function testMintPan(uint balanceAmount, uint mintAmount, uint8 dec) public{
+    function testMintKai(uint balanceAmount, uint mintAmount, uint8 dec) public{
         balanceAmount = bound(balanceAmount,0,1.15e30);
         dec = uint8(bound(dec,1,18));
         vm.assume(balanceAmount>0 && mintAmount>0 && balanceAmount>mintAmount);
@@ -62,7 +62,7 @@ contract PanPSMTest is Test {
 
         vm.startPrank(user);
         IERC20(address(usdc)).approve(address(psm),mintAmount);
-        psm.mintPan(address(usdc),mintAmount);
+        psm.mintKai(address(usdc),mintAmount);
         vm.stopPrank();
 
         assertEq(
@@ -71,7 +71,7 @@ contract PanPSMTest is Test {
         );
 
         assertEq(
-            pan.balanceOf(user),
+            kai.balanceOf(user),
             _upscale6(mintAmount,dec)
         );
 
@@ -82,7 +82,7 @@ contract PanPSMTest is Test {
 
         vm.startPrank(user);
         vm.expectRevert();
-        psm.mintPan(address(usdt),mintAmount);
+        psm.mintKai(address(usdt),mintAmount);
         vm.stopPrank();
 
         assertEq(
@@ -97,7 +97,7 @@ contract PanPSMTest is Test {
 
     }
 
-    function testMintPanInvalidAsset(uint balanceAmount, uint mintAmount) public{
+    function testMintKaiInvalidAsset(uint balanceAmount, uint mintAmount) public{
         balanceAmount = bound(balanceAmount,0,1.15e30);
         vm.assume(balanceAmount>0 && mintAmount>0 && balanceAmount>mintAmount);
         MockERC20Decimal newAsset = new MockERC20Decimal("DUMMY","DUMMY");
@@ -106,7 +106,7 @@ contract PanPSMTest is Test {
         vm.startPrank(user);
         newAsset.approve(address(psm),mintAmount);
         vm.expectRevert(AssetNotWhiteListed.selector);
-        psm.mintPan(MOCK_ADDRESS_1,mintAmount);
+        psm.mintKai(MOCK_ADDRESS_1,mintAmount);
         vm.stopPrank();
 
         assertEq(
@@ -125,7 +125,7 @@ contract PanPSMTest is Test {
 
         vm.startPrank(user);
         usdc.approve(address(psm),mintAmount);
-        psm.mintPan(address(usdc),mintAmount);
+        psm.mintKai(address(usdc),mintAmount);
         vm.stopPrank();
 
         assertEq(
@@ -134,7 +134,7 @@ contract PanPSMTest is Test {
         );
 
         assertEq(
-            pan.balanceOf(user),
+            kai.balanceOf(user),
             _upscale6(mintAmount,dec)
         );
 
@@ -145,10 +145,10 @@ contract PanPSMTest is Test {
 
 
         vm.prank(user);
-        psm.redeemPan(redeemAmount,address(usdc));
+        psm.redeemKai(redeemAmount,address(usdc));
 
         assertEq(
-            pan.balanceOf(user),
+            kai.balanceOf(user),
             _upscale6(mintAmount,dec) - redeemAmount
         );
 
@@ -165,11 +165,11 @@ contract PanPSMTest is Test {
         vm.startPrank(user);
         newAsset.approve(address(psm),redeemAmount);
         vm.expectRevert(AssetNotWhiteListed.selector);
-        psm.redeemPan(redeemAmount,address(newAsset));
+        psm.redeemKai(redeemAmount,address(newAsset));
         vm.stopPrank();
     }
 
-    function testRedeemPanLowBalance(uint balanceAmount, uint mintAmount, uint redeemAmount,uint8 dec) public{
+    function testRedeemKaiLowBalance(uint balanceAmount, uint mintAmount, uint redeemAmount,uint8 dec) public{
         balanceAmount = bound(balanceAmount,0,1.15e30);
         dec = uint8(bound(dec,1,18));
         vm.assume(balanceAmount<10e18 && balanceAmount>0 && mintAmount>0 && redeemAmount>0 && balanceAmount>=mintAmount && mintAmount>=redeemAmount);
@@ -178,7 +178,7 @@ contract PanPSMTest is Test {
 
         vm.startPrank(user);
         usdc.approve(address(psm),mintAmount);
-        psm.mintPan(address(usdc),mintAmount);
+        psm.mintKai(address(usdc),mintAmount);
         vm.stopPrank();
 
         assertEq(
@@ -187,7 +187,7 @@ contract PanPSMTest is Test {
         );
 
         assertEq(
-            pan.balanceOf(user),
+            kai.balanceOf(user),
             _upscale6(mintAmount,dec)
         );
 
@@ -199,7 +199,7 @@ contract PanPSMTest is Test {
         //trying to withdraw with asset of low balance
         vm.startPrank(user);
         vm.expectRevert(RedeemFailedNotEnoughBalance.selector);
-        psm.redeemPan(redeemAmount,address(usdt));
+        psm.redeemKai(redeemAmount,address(usdt));
         vm.stopPrank();
     }
 

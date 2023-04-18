@@ -110,7 +110,7 @@ contract Receiver is Modifiers {
         address _token,
         uint256 _amount
     ) internal {
-        if(s.pan == _token){
+        if(s.kai == _token){
             IERC20Mintable(_token).mint(_user,_amount);
         } else {
             SafeERC20Upgradeable.safeTransfer(

@@ -15,7 +15,7 @@ library ConfigLib {
         uint domainId;
         address owner;
         address hyperlaneMailbox;
-        address pan;
+        address kai;
         address psm;
         address nexusDiamond;
         address crossChainRouter;
@@ -28,7 +28,7 @@ library ConfigLib {
         uint domainId;
         address owner;
         address hyperlaneMailbox;
-        address pan;
+        address kai;
         address nexusDiamond;
         address axonCrossChainRouter;
         address axonHandlerFacet;
@@ -66,7 +66,7 @@ library ConfigLib {
 
     function writeNexusConfig(NexusConfig memory config, Vm vm) internal {
         string memory contracts = "contracts";
-        vm.serializeAddress(contracts,"pan",config.pan);
+        vm.serializeAddress(contracts,"kai",config.kai);
         vm.serializeAddress(contracts,"psm",config.psm);
         vm.serializeAddress(contracts,"nexusDiamond",config.nexusDiamond);
         vm.serializeAddress(contracts,"crossChainRouter",config.crossChainRouter);
@@ -77,7 +77,7 @@ library ConfigLib {
 
     function writeAxonNexusConfig(AxonNexusConfig memory config, Vm vm) internal {
         string memory contracts = "contracts";
-        vm.serializeAddress(contracts,"pan",config.pan);
+        vm.serializeAddress(contracts,"kai",config.kai);
         vm.serializeAddress(contracts,"nexusDiamond",config.nexusDiamond);
         vm.serializeAddress(contracts,"axonCrossChainRouter",config.axonCrossChainRouter);
         vm.serializeAddress(contracts,"axonHandlerFacet",config.axonHandlerFacet);

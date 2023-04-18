@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/presets/ERC20PresetMinterPauserUpgradeable.sol";
 
-contract Pan is ERC20PresetMinterPauserUpgradeable {
+contract Kai is ERC20PresetMinterPauserUpgradeable {
 
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 

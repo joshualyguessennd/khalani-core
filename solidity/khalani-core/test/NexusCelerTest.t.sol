@@ -69,7 +69,7 @@ contract NexusCelerTest is Test {
     Nexus gwNexus;
     MockERC20 usdc;
     MockERC20 usdt;
-    MockERC20 panOnGw;
+    MockERC20 kaiOnGw;
     MockCelerMessageBus chain1Bus;
     MockCelerMessageBus chain2Bus;
 
@@ -77,7 +77,7 @@ contract NexusCelerTest is Test {
     Nexus axonNexus;
     address usdcgW;
     address usdtgW;
-    address panOnAxon;
+    address kaiOnAxon;
 
     address MOCK_ADDR_1 = 0x0000000000000000000000000000000000000001;
     address MOCK_ADDR_2 = 0x0000000000000000000000000000000000000002;
@@ -121,7 +121,7 @@ contract NexusCelerTest is Test {
         ccrFunctionSelectors[0] = ccr.initializeNexus.selector;
         ccrFunctionSelectors[1] = ccr.depositTokenAndCall.selector;
         ccrFunctionSelectors[2] = ccr.depositMultiTokenAndCall.selector;
-        ccrFunctionSelectors[3] = ccr.setPan.selector;
+        ccrFunctionSelectors[3] = ccr.setKai.selector;
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(ccr),
         action: IDiamond.FacetCutAction.Add,
@@ -156,7 +156,7 @@ contract NexusCelerTest is Test {
             "" //initializer data
         );
 
-        CrossChainRouter(address (gwNexus)).initializeNexus(address(panOnGw),address(axonNexus),2);
+        CrossChainRouter(address (gwNexus)).initializeNexus(address(kaiOnGw),address(axonNexus),2);
         CelerFacet(address(gwNexus)).initCelerFacet(address(chain1Bus));
 
         //Axon side setup
@@ -210,7 +210,7 @@ contract NexusCelerTest is Test {
 
     function deployTokens() internal {
         usdc = new MockERC20("USDC", "USDC");
-        panOnGw  = new MockERC20("PanOnGw","PAN/GW");
+        kaiOnGw  = new MockERC20("KaiOnGw","KAI/GW");
         usdt = new MockERC20("USDT", "USDT");
 
 
@@ -219,7 +219,7 @@ contract NexusCelerTest is Test {
         bytes4[] memory tokenRegistryfunctionSelectors = new bytes4[](3);
         tokenRegistryfunctionSelectors[0] = tokenRegistry.initTokenFactory.selector;
         tokenRegistryfunctionSelectors[1] = tokenRegistry.registerMirrorToken.selector;
-        tokenRegistryfunctionSelectors[2] = tokenRegistry.registerPan.selector;
+        tokenRegistryfunctionSelectors[2] = tokenRegistry.registerKai.selector;
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(tokenRegistry),
         action: IDiamond.FacetCutAction.Add,
@@ -232,8 +232,8 @@ contract NexusCelerTest is Test {
             "" //initializer data
         );
 
-        StableTokenRegistry(address(axonNexus)).initTokenFactory(panOnAxon);
-        StableTokenRegistry(address(axonNexus)).registerPan(1,address (panOnGw));
+        StableTokenRegistry(address(axonNexus)).initTokenFactory(kaiOnAxon);
+        StableTokenRegistry(address(axonNexus)).registerKai(1,address (kaiOnGw));
 
         //deploying USDMirror for USDT on Godwoken
         usdcgW = address(new USDMirror());

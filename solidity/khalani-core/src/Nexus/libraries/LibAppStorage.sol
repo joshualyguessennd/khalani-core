@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../Errors.sol";
 struct AppStorage {
    mapping(address => address) mirrorToChainToken; //usdceth -> usdc
-   address pan;
+   address kai;
    address axonReceiver;
    uint axonChainId;
    uint godwokenChainId;

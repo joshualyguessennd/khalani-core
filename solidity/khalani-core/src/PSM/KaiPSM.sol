@@ -4,7 +4,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/IERC20Mintable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract PanPSM is OwnableUpgradeable{
+contract KaiPSM is OwnableUpgradeable{
 
     error AssetNotWhiteListed();
     error RedeemFailedNotEnoughBalance();
@@ -20,11 +20,11 @@ contract PanPSM is OwnableUpgradeable{
     );
 
     mapping(address => bool) whiteListedTokens;
-    address pan;
+    address kai;
     uint256 internal constant ONE = 1e18;
 
-    function initialize(address _pan) external initializer {
-        pan = _pan;
+    function initialize(address _kai) external initializer {
+        kai = _kai;
         __Ownable_init();
     }
 
@@ -38,7 +38,7 @@ contract PanPSM is OwnableUpgradeable{
         emit WhiteListedTokenRemoved(asset);
     }
 
-    function mintPan(address tokenIn, uint amount) external {
+    function mintKai(address tokenIn, uint amount) external {
         if(!whiteListedTokens[tokenIn]){
             revert AssetNotWhiteListed();
         }
@@ -47,14 +47,14 @@ contract PanPSM is OwnableUpgradeable{
         if(scalingFactor != ONE){
             amount = _upscale(amount, scalingFactor);
         }
-        IERC20Mintable(pan).mint(msg.sender, amount);
+        IERC20Mintable(kai).mint(msg.sender, amount);
     }
 
-    function redeemPan(uint256 amount, address tokenOut) external {
+    function redeemKai(uint256 amount, address tokenOut) external {
         if(!whiteListedTokens[tokenOut]){
             revert AssetNotWhiteListed();
         }
-        IERC20Mintable(pan).burn(msg.sender, amount);
+        IERC20Mintable(kai).burn(msg.sender, amount);
 
         uint redeemedAmount = (amount*995)/1000;
         uint scalingFactor = _computeScalingFactor(tokenOut);

@@ -75,7 +75,7 @@ contract NexusHyperlaneTest is Test {
     //Eth
     Nexus ethNexus;
     MockERC20 usdc;
-    MockERC20 panOnEth;
+    MockERC20 kaiOnEth;
     MockERC20 usdt;
     MockMailbox mailboxEth;
 
@@ -83,7 +83,7 @@ contract NexusHyperlaneTest is Test {
     Nexus axonNexus;
     address usdcEth;
     address usdtEth;
-    address panOnAxon;
+    address kaiOnAxon;
     MockMailbox mailboxAxon;
 
     address MOCK_ADDR_1 = 0x0000000000000000000000000000000000000001;
@@ -131,7 +131,7 @@ contract NexusHyperlaneTest is Test {
         ccrFunctionSelectors[0] = ccr.initializeNexus.selector;
         ccrFunctionSelectors[1] = ccr.depositTokenAndCall.selector;
         ccrFunctionSelectors[2] = ccr.depositMultiTokenAndCall.selector;
-        ccrFunctionSelectors[3] = ccr.setPan.selector;
+        ccrFunctionSelectors[3] = ccr.setKai.selector;
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(ccr),
         action: IDiamond.FacetCutAction.Add,
@@ -166,7 +166,7 @@ contract NexusHyperlaneTest is Test {
             "" //initializer data
         );
 
-        CrossChainRouter(address (ethNexus)).initializeNexus(address(panOnEth),address(axonNexus),2);
+        CrossChainRouter(address (ethNexus)).initializeNexus(address(kaiOnEth),address(axonNexus),2);
         HyperlaneFacet(address(ethNexus)).initHyperlaneFacet(address(mailboxEth), MOCK_ISM);
 
         //Axon side setup
@@ -219,16 +219,16 @@ contract NexusHyperlaneTest is Test {
     function deployTokens() internal {
 
         usdc = new MockERC20("USDC", "USDC");
-        panOnEth = new MockERC20("PanOnEth","Pan/Eth");
+        kaiOnEth = new MockERC20("KaiOnEth","Kai/Eth");
         usdt = new MockERC20("USDT", "USDT");
-        panOnAxon = address(new MockERC20("PanOnAxon","Pan/Axon"));
+        kaiOnAxon = address(new MockERC20("KaiOnAxon","Kai/Axon"));
 
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
         StableTokenRegistry tokenRegistry = new StableTokenRegistry();
         bytes4[] memory tokenRegistryfunctionSelectors = new bytes4[](3);
         tokenRegistryfunctionSelectors[0] = tokenRegistry.initTokenFactory.selector;
         tokenRegistryfunctionSelectors[1] = tokenRegistry.registerMirrorToken.selector;
-        tokenRegistryfunctionSelectors[2] = tokenRegistry.registerPan.selector;
+        tokenRegistryfunctionSelectors[2] = tokenRegistry.registerKai.selector;
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(tokenRegistry),
         action: IDiamond.FacetCutAction.Add,
@@ -240,9 +240,9 @@ contract NexusHyperlaneTest is Test {
             address(0), //initializer address
             "" //initializer data
         );
-        StableTokenRegistry(address(axonNexus)).initTokenFactory(panOnAxon);
-        StableTokenRegistry(address(axonNexus)).registerPan(1,address(panOnEth));
-        MsgHandlerFacet(address(ethNexus)).addChainTokenForMirrorToken(address(panOnEth),address(panOnAxon));
+        StableTokenRegistry(address(axonNexus)).initTokenFactory(kaiOnAxon);
+        StableTokenRegistry(address(axonNexus)).registerKai(1,address(kaiOnEth));
+        MsgHandlerFacet(address(ethNexus)).addChainTokenForMirrorToken(address(kaiOnEth),address(kaiOnAxon));
         //deploying USDMirror for USDC on Godwoken
         usdcEth = address(new USDMirror());
         USDMirror(usdcEth).initialize("USDCeth","USDCETH"); //init
@@ -422,46 +422,46 @@ contract NexusHyperlaneTest is Test {
         assertEq(usdc.balanceOf(user),amountToDeposit);
     }
 
-    //Test scenario : depositAndCall with Pan
+    //Test scenario : depositAndCall with Kai
     //first cross chain call for add liquidity successful and second call fails
-    function testWithdrawAndCallWithPan(uint amountToDeposit) public{
+    function testWithdrawAndCallWithKai(uint amountToDeposit) public{
         amountToDeposit = bound(amountToDeposit,0,100e18); // limiting here because of multiple deposits
         address user = MOCK_ADDR_1;
         vm.prank(address(axonNexus));
         address userKhalaAccount = LibAccountsRegistry.getDeployedInterchainAccount(user);
-        panOnEth.mint(user,amountToDeposit);
+        kaiOnEth.mint(user,amountToDeposit);
         Call[] memory calls =  new Call[](2);
-        calls[0] = Call({to:address(panOnAxon),data:abi.encodeWithSelector(approveSelector,mockLp,amountToDeposit)});
-        calls[1] = Call({to:address(mockLp),data:abi.encodeWithSelector(mockLp.addLiquidity.selector,address(panOnAxon),amountToDeposit)});
+        calls[0] = Call({to:address(kaiOnAxon),data:abi.encodeWithSelector(approveSelector,mockLp,amountToDeposit)});
+        calls[1] = Call({to:address(mockLp),data:abi.encodeWithSelector(mockLp.addLiquidity.selector,address(kaiOnAxon),amountToDeposit)});
         vm.startPrank(user);
-        panOnEth.approve(address(ethNexus),amountToDeposit);
+        kaiOnEth.approve(address(ethNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(ethNexus));
-        emit LogDepositAndCall(user,address(panOnEth), amountToDeposit, calls);
-        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(panOnEth),amountToDeposit,calls);
+        emit LogDepositAndCall(user,address(kaiOnEth), amountToDeposit, calls);
+        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(kaiOnEth),amountToDeposit,calls);
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
         emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
         mailboxAxon.processNextPendingMessage();
         vm.expectRevert();
         mailboxEth.processNextPendingMessage();
-        assertEq(IERC20(panOnAxon).balanceOf(address(mockLp)),amountToDeposit);
-        assertEq(panOnEth.balanceOf(user),0);
+        assertEq(IERC20(kaiOnAxon).balanceOf(address(mockLp)),amountToDeposit);
+        assertEq(kaiOnEth.balanceOf(user),0);
 
         //failing call
         mockLp.setFail(true);
-        panOnEth.mint(user,amountToDeposit);
+        kaiOnEth.mint(user,amountToDeposit);
         vm.startPrank(user);
-        panOnEth.approve(address(ethNexus),amountToDeposit);
+        kaiOnEth.approve(address(ethNexus),amountToDeposit);
         vm.expectEmit(true, true, true , true,address(ethNexus));
-        emit LogDepositAndCall(user,address(panOnEth), amountToDeposit, calls);
-        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(panOnEth),amountToDeposit,calls);
+        emit LogDepositAndCall(user,address(kaiOnEth), amountToDeposit, calls);
+        CrossChainRouter(address(ethNexus)).depositTokenAndCall(address(kaiOnEth),amountToDeposit,calls);
         vm.stopPrank();
         vm.expectEmit(true, true, false, false, address(axonNexus));
         emit CrossChainMsgReceived(1, TypeCasts.addressToBytes32(address(ethNexus)), abi.encode(""));
         mailboxAxon.processNextPendingMessage();
         mailboxEth.processNextPendingMessage();
-        assertEq(IERC20(panOnAxon).balanceOf(address(mockLp)),amountToDeposit);
-        assertEq(panOnEth.balanceOf(user),amountToDeposit);
+        assertEq(IERC20(kaiOnAxon).balanceOf(address(mockLp)),amountToDeposit);
+        assertEq(kaiOnEth.balanceOf(user),amountToDeposit);
     }
 
     //scenario : user tried to deposit both usdc and usdt and add liquidity call fails

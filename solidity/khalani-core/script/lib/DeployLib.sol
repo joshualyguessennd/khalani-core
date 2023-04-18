@@ -7,13 +7,13 @@ import "../../src/Nexus/facets/AxonCrossChainRouter.sol";
 import "../../src/Nexus/facets/bridges/AxonHandlerFacet.sol";
 import "../../src/Nexus/facets/CrossChainRouter.sol";
 import "../../src/Nexus/facets/bridges/MsgHandlerFacet.sol";
-import "../../src/PanToken.sol";
+import "../../src/KaiToken.sol";
 import "../../src/Vortex/Vortex.sol";
 import "../../src/Nexus/facets/factory/TokenRegistry.sol";
 import "../../src/Nexus/facets/bridges/AxonMultiBridgeFacet.sol";
 import "forge-std/console.sol";
 import {ConfigLib} from "./ConfigLib.sol";
-import "../../src/PSM/PanPSM.sol";
+import "../../src/PSM/KaiPSM.sol";
 
 
 library DeployLib {
@@ -42,12 +42,12 @@ library DeployLib {
         //--------Token Registry-------------//
         (address tokenRegistry, bytes4[] memory tokenRegistryFunctionSelectors) = deployTokenRegistry();
         out.stableTokenRegistry = tokenRegistry;
-        //--------PanToken-------------//
-        address panOnAxon = deployPan(out.nexusDiamond);
-        out.pan = panOnAxon;
+        //--------KaiToken-------------//
+        address kaiOnAxon = deployKai(out.nexusDiamond);
+        out.kai = kaiOnAxon;
 
         //--------Vortex-------------//
-        address vortex = deployVortex(address(nexus), panOnAxon);
+        address vortex = deployVortex(address(nexus), kaiOnAxon);
         out.vortex = vortex;
 
         //--------Making Facet cuts to diamond-------------//
@@ -84,8 +84,8 @@ library DeployLib {
         Nexus nexus = deployNexusDiamond();
         out.nexusDiamond = address(nexus);
 
-        //--------Deploy Pan-------//
-        address pan = deployPan(out.nexusDiamond);
+        //--------Deploy Kai-------//
+        address kai = deployKai(out.nexusDiamond);
 
         //--------Source Chain Facets-------------//
         address crossChainRouter;
@@ -124,7 +124,7 @@ library DeployLib {
             "" //initializer data
         );
         //--------PSM-------------//
-        address psm = deployPSM(pan); //fix import issue
+        address psm = deployPSM(kai); //fix import issue
     }
 
     //--------Nexus Diamond-------------//
@@ -178,7 +178,7 @@ library DeployLib {
         tokenRegistryfunctionSelectors = new bytes4[](3);
         tokenRegistryfunctionSelectors[0] = tokenRegistry.initTokenFactory.selector;
         tokenRegistryfunctionSelectors[1] = tokenRegistry.registerMirrorToken.selector;
-        tokenRegistryfunctionSelectors[2] = tokenRegistry.registerPan.selector;
+        tokenRegistryfunctionSelectors[2] = tokenRegistry.registerKai.selector;
         return (address(tokenRegistry), tokenRegistryfunctionSelectors);
     }
 
@@ -189,7 +189,7 @@ library DeployLib {
         ccrFunctionSelectors[0] = ccr.initializeNexus.selector;
         ccrFunctionSelectors[1] = ccr.depositTokenAndCall.selector;
         ccrFunctionSelectors[2] = ccr.depositMultiTokenAndCall.selector;
-        ccrFunctionSelectors[3] = ccr.setPan.selector;
+        ccrFunctionSelectors[3] = ccr.setKai.selector;
         return (address(ccr), ccrFunctionSelectors);
     }
 
@@ -221,11 +221,11 @@ library DeployLib {
     //--------Tokens-------------//
     // minter burner is both nexus and psm
     // minter burner is both nexus and psm
-    function deployPan(address minterBurner) private returns (address) {
-        Pan pan = new Pan();
-        pan.initialize("PAN","PAN");
-        pan.transferMinterBurnerRole(minterBurner);
-        return address(pan);
+    function deployKai(address minterBurner) private returns (address) {
+        Kai kai = new Kai();
+        kai.initialize("KAI","KAI");
+        kai.transferMinterBurnerRole(minterBurner);
+        return address(kai);
     }
 
     function deployMirrorToken(address sourceAddress, string memory _name, string memory _symbol, uint _chainId, address axonNexus) internal returns (address) {
@@ -239,7 +239,7 @@ library DeployLib {
 
     function initializeAxonNexus(ConfigLib.DeployConfig memory config, ConfigLib.AxonNexusConfig memory axonConfig) internal{
         AxonMultiBridgeFacet(axonConfig.nexusDiamond).initMultiBridgeFacet(config.hyperlaneMailbox,config.hyperlaneMailbox,0);
-        StableTokenRegistry(axonConfig.nexusDiamond).initTokenFactory(axonConfig.pan);
+        StableTokenRegistry(axonConfig.nexusDiamond).initTokenFactory(axonConfig.kai);
     }
 
     function initializeRemoteNexus(
@@ -248,14 +248,14 @@ library DeployLib {
         address axon,
         uint chainIdAxon
     ) internal{
-        CrossChainRouter(nexusConfig.nexusDiamond).initializeNexus(nexusConfig.pan,axon,chainIdAxon);
+        CrossChainRouter(nexusConfig.nexusDiamond).initializeNexus(nexusConfig.kai,axon,chainIdAxon);
         HyperlaneFacet(nexusConfig.nexusDiamond).initHyperlaneFacet(config.hyperlaneMailbox,config.hyperlaneISM);
     }
 
     //--PSM--//
-    function deployPSM(address _pan) private returns (address) {
-        PanPSM psm = new PanPSM();
-        psm.initialize(_pan);
+    function deployPSM(address _kai) private returns (address) {
+        KaiPSM psm = new KaiPSM();
+        psm.initialize(_kai);
         console.log("PSM deployed at - ", address(psm));
         return address(psm);
     }

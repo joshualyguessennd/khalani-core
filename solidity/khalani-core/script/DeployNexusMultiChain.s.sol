@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 import "./lib/ConfigLib.sol";
 import "./lib/DeployLib.sol";
-import "../src/PSM/PanPSM.sol";
+import "../src/PSM/KaiPSM.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract Deploy is Script{
     function run() public {

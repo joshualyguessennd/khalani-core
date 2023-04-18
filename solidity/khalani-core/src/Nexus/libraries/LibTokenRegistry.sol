@@ -6,10 +6,10 @@ library LibTokenRegistry {
 
 
     struct TokenRegistryStorage {
-        // mapping of pan on source chain (1 => PanOnEth)
-        mapping(uint => address) panTokenMap;
-        // address of pan token deployed on AXON chain
-        address panAddressAxon;
+        // mapping of kai on source chain (1 => KaiOnEth)
+        mapping(uint => address) kaiTokenMap;
+        // address of kai token deployed on AXON chain
+        address kaiAddressAxon;
 
         mapping(uint => mapping(address => address)) mirrorTokenMap;
     }
@@ -41,13 +41,13 @@ library LibTokenRegistry {
 //    }
 
     /**
-    * @notice fetches the address of mirror / pan token for a given
+    * @notice fetches the address of mirror / kai token for a given
     * chain id and token address on the chain id
     */
     function getMirrorToken(uint _chain, address _token) internal view returns (address) {
         TokenRegistryStorage storage s = tokenRegistryStorage();
-        if(s.panTokenMap[_chain] == _token){
-            return s.panAddressAxon;
+        if(s.kaiTokenMap[_chain] == _token){
+            return s.kaiAddressAxon;
         }
         return s.mirrorTokenMap[_chain][_token];
     }

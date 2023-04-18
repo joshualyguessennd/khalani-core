@@ -24,7 +24,7 @@ import "forge-std/console.sol";
 import "@hyperlane-xyz/core/contracts/Mailbox.sol";
 import "../src/Vortex/Vortex.sol";
 import {IBalancerPool} from "../src/Vortex/BalancerTypes.sol";
-import {Pan} from "../src/PanToken.sol";
+import {Kai} from "../src/KaiToken.sol";
 import "./Mock/MockERC20Decimal.sol";
 // mocking mailbox contracts in tests as relayer is involved
 // making use of foundry's persistent contracts
@@ -33,23 +33,23 @@ contract NexusVortexTests is Test{
     //Eth
     address ethNexus;
     address usdcE;
-    address panOnEth;
+    address kaiOnEth;
     MockMailbox mailboxEth;
 
     //Avax
     address avaxNexus;
     address usdcA;
-    address panOnAvax;
+    address kaiOnAvax;
     MockMailbox mailboxAvax;
 
     //Axon
     address axonNexus;
     address usdcEth = vm.envAddress("USDC_ETH_MIRROR");
     address usdcAvax = vm.envAddress("USDC_AVAX_MIRROR");
-    address panOnAxon = vm.envAddress("AXON_TEST_PAN");
+    address kaiOnAxon = vm.envAddress("AXON_TEST_KAI");
     MockMailbox mailboxAxon;
-    address usdcEthPanBptAddr = vm.envAddress("AXON_USDCETH_PAN_BPT");
-    address usdcAvaxPanBptAddr = vm.envAddress("AXON_USDCAVAX_PAN_BPT");
+    address usdcEthKaiBptAddr = vm.envAddress("AXON_USDCETH_KAI_BPT");
+    address usdcAvaxKaiBptAddr = vm.envAddress("AXON_USDCAVAX_KAI_BPT");
     bytes4 approveSelector = IERC20.approve.selector;
     //Original token deployer
     address tokenAdmin = vm.envAddress("TOKEN_ADMIN");
@@ -62,11 +62,11 @@ contract NexusVortexTests is Test{
 
     address MOCK_ADDR_CELER_BUS = 0x0000000000000000000000000000000000000005;
 
-    bytes32 usdcEthPanPoolId;
-    address usdcEthPanBalancerVault;
+    bytes32 usdcEthKaiPoolId;
+    address usdcEthKaiBalancerVault;
 
-    bytes32 usdcAvaxPanPoolId;
-    address usdcAvaxPanBalancerVault;
+    bytes32 usdcAvaxKaiPoolId;
+    address usdcAvaxKaiBalancerVault;
 
     address user1 = 0x0000000000000000000000000000000000000001;
     address MOCK_ISM    = 0x0000000000000000000000000000000000000006;
@@ -116,11 +116,11 @@ contract NexusVortexTests is Test{
 
         vm.selectFork(axon);
 
-        usdcEthPanPoolId = IBalancerPool(usdcEthPanBptAddr).getPoolId();
-        usdcEthPanBalancerVault = IBalancerPool(usdcEthPanBptAddr).getVault();
+        usdcEthKaiPoolId = IBalancerPool(usdcEthKaiBptAddr).getPoolId();
+        usdcEthKaiBalancerVault = IBalancerPool(usdcEthKaiBptAddr).getVault();
 
-        usdcAvaxPanPoolId = IBalancerPool(usdcAvaxPanBptAddr).getPoolId();
-        usdcAvaxPanBalancerVault = IBalancerPool(usdcAvaxPanBptAddr).getVault();
+        usdcAvaxKaiPoolId = IBalancerPool(usdcAvaxKaiBptAddr).getPoolId();
+        usdcAvaxKaiBalancerVault = IBalancerPool(usdcAvaxKaiBptAddr).getVault();
 
         axonNexus = deployDiamond();
         mailboxAxon = new MockMailbox(10012);
@@ -130,12 +130,12 @@ contract NexusVortexTests is Test{
 
         vm.selectFork(eth);
         mailboxEth.addRemoteMailbox(10012,mailboxAxon);
-        CrossChainRouter(ethNexus).initializeNexus(panOnEth,axonNexus,10012);
+        CrossChainRouter(ethNexus).initializeNexus(kaiOnEth,axonNexus,10012);
         HyperlaneFacet(ethNexus).initHyperlaneFacet(address(mailboxEth),MOCK_ISM);
 
         vm.selectFork(avax);
         mailboxAvax.addRemoteMailbox(10012,mailboxAxon);
-        CrossChainRouter(avaxNexus).initializeNexus(panOnAvax,axonNexus,10012);
+        CrossChainRouter(avaxNexus).initializeNexus(kaiOnAvax,axonNexus,10012);
         HyperlaneFacet(avaxNexus).initHyperlaneFacet(address(mailboxAvax),MOCK_ISM);
 
         vm.selectFork(axon);
@@ -156,14 +156,14 @@ contract NexusVortexTests is Test{
         vm.selectFork(eth);
         usdcE = address(new MockERC20Decimal("USDC","USDC"));
         MockERC20Decimal(usdcE).setDecimal(6);
-        panOnEth = address(new MockERC20Decimal("Pan/Eth","PanOnEth"));
-        MockERC20Decimal(panOnEth).setDecimal(18);
+        kaiOnEth = address(new MockERC20Decimal("Kai/Eth","KaiOnEth"));
+        MockERC20Decimal(kaiOnEth).setDecimal(18);
 
         vm.selectFork(avax);
         usdcA = address(new MockERC20Decimal("USDCA","USDCA"));
         MockERC20Decimal(usdcA).setDecimal(6);
-        panOnAvax = address(new MockERC20Decimal("Pan/Avax","Pan/Avax"));
-        MockERC20Decimal(panOnAvax).setDecimal(18);
+        kaiOnAvax = address(new MockERC20Decimal("Kai/Avax","Kai/Avax"));
+        MockERC20Decimal(kaiOnAvax).setDecimal(18);
 
         vm.selectFork(axon);
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
@@ -171,7 +171,7 @@ contract NexusVortexTests is Test{
         bytes4[] memory tokenRegistryfunctionSelectors = new bytes4[](3);
         tokenRegistryfunctionSelectors[0] = tokenRegistry.initTokenFactory.selector;
         tokenRegistryfunctionSelectors[1] = tokenRegistry.registerMirrorToken.selector;
-        tokenRegistryfunctionSelectors[2] = tokenRegistry.registerPan.selector;
+        tokenRegistryfunctionSelectors[2] = tokenRegistry.registerKai.selector;
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(tokenRegistry),
         action: IDiamond.FacetCutAction.Add,
@@ -184,47 +184,47 @@ contract NexusVortexTests is Test{
             "" //initializer data
         );
 
-        StableTokenRegistry(axonNexus).initTokenFactory(panOnAxon);
-        StableTokenRegistry(axonNexus).registerPan(5,panOnEth);
-        StableTokenRegistry(axonNexus).registerPan(43113,panOnAvax);
+        StableTokenRegistry(axonNexus).initTokenFactory(kaiOnAxon);
+        StableTokenRegistry(axonNexus).registerKai(5,kaiOnEth);
+        StableTokenRegistry(axonNexus).registerKai(43113,kaiOnAvax);
         StableTokenRegistry(axonNexus).registerMirrorToken(5, usdcE, usdcEth);
         StableTokenRegistry(axonNexus).registerMirrorToken(5, usdcA, usdcAvax);
 
         vm.startPrank(tokenAdmin);
         USDMirror(usdcEth).transferMinterBurnerRole(axonNexus); //transferOwnership
         USDMirror(usdcAvax).transferMinterBurnerRole(axonNexus);
-        USDMirror(panOnAxon).transferMinterBurnerRole(axonNexus);
+        USDMirror(kaiOnAxon).transferMinterBurnerRole(axonNexus);
         vm.stopPrank();
 
         vm.selectFork(eth);
-        MsgHandlerFacet(ethNexus).addChainTokenForMirrorToken(panOnEth,panOnAxon);
+        MsgHandlerFacet(ethNexus).addChainTokenForMirrorToken(kaiOnEth,kaiOnAxon);
         MsgHandlerFacet(ethNexus).addChainTokenForMirrorToken(usdcE,usdcEth);
 
         vm.selectFork(avax);
-        MsgHandlerFacet(avaxNexus).addChainTokenForMirrorToken(panOnAvax,panOnAxon);
+        MsgHandlerFacet(avaxNexus).addChainTokenForMirrorToken(kaiOnAvax,kaiOnAxon);
         MsgHandlerFacet(avaxNexus).addChainTokenForMirrorToken(usdcA,usdcAvax);
 
         vm.selectFork(eth);
         IERC20Mintable(usdcE).mint(ethNexus, 15e20);
-        IERC20Mintable(panOnEth).mint(ethNexus,15e20);
+        IERC20Mintable(kaiOnEth).mint(ethNexus,15e20);
 
         vm.selectFork(avax);
         IERC20Mintable(usdcA).mint(avaxNexus, 15e20);
-        IERC20Mintable(panOnAvax).mint(avaxNexus,15e20);
+        IERC20Mintable(kaiOnAvax).mint(avaxNexus,15e20);
     }
 
     function _vortexSetup() internal {
-        vortex = new Vortex(axonNexus,panOnAxon);
-        vortex.addWhiteListedAsset(usdcEth,usdcEthPanBptAddr);
-        vortex.addWhiteListedAsset(usdcAvax,usdcAvaxPanBptAddr);
+        vortex = new Vortex(axonNexus,kaiOnAxon);
+        vortex.addWhiteListedAsset(usdcEth,usdcEthKaiBptAddr);
+        vortex.addWhiteListedAsset(usdcAvax,usdcAvaxKaiBptAddr);
         vm.startPrank(tokenAdmin);
-        Pan(panOnAxon).transferMinterBurnerRole(address(vortex));
+        Kai(kaiOnAxon).transferMinterBurnerRole(address(vortex));
         vm.stopPrank();
     }
 
     //--------- fork test start here -----------//
     function testAddLiquidityVortex(uint amount) public { //balanced
-        //pool size : 150000000000 usdc.eth,pan | usdc.avax,pan ie 150000e6
+        //pool size : 150000000000 usdc.eth,kai | usdc.avax,kai ie 150000e6
         amount = bound(amount,1e6, 1e16);
         vm.selectFork(eth);
         address userICA = Create2Lib.computeAddress(user1, axonNexus);
@@ -241,7 +241,7 @@ contract NexusVortexTests is Test{
         BatchSwapStep[] memory swaps = new BatchSwapStep[](2);
         swaps[0] = BatchSwapStep(
         {
-        poolId : usdcEthPanPoolId,
+        poolId : usdcEthKaiPoolId,
         assetInIndex : 0,
         assetOutIndex : 1,
         amount : amount,
@@ -251,7 +251,7 @@ contract NexusVortexTests is Test{
 
         swaps[1] = BatchSwapStep(
         {
-        poolId : usdcEthPanPoolId,
+        poolId : usdcEthKaiPoolId,
         assetInIndex : 2,
         assetOutIndex : 1,
         amount : amount* 1e18 / 1e6,
@@ -261,8 +261,8 @@ contract NexusVortexTests is Test{
 
         IAsset[] memory assets = new IAsset[](3);
         assets[0] = IAsset(usdcEth);
-        assets[1] = IAsset(usdcEthPanBptAddr);
-        assets[2] = IAsset(panOnAxon);
+        assets[1] = IAsset(usdcEthKaiBptAddr);
+        assets[2] = IAsset(kaiOnAxon);
 
         FundManagement memory funds;
         funds.sender = userICA;
@@ -270,7 +270,7 @@ contract NexusVortexTests is Test{
         funds.recipient = payable(userICA);
         funds.toInternalBalance = false;
 
-        int256[] memory assetDeltas = IVault(usdcEthPanBalancerVault).queryBatchSwap(
+        int256[] memory assetDeltas = IVault(usdcEthKaiBalancerVault).queryBatchSwap(
             IVault.SwapKind.GIVEN_IN,
             swaps,
             assets,
@@ -309,15 +309,15 @@ contract NexusVortexTests is Test{
         mailboxAxon.processNextPendingMessage();
 
         assertEq(
-            expectedBpt/2, IERC20(usdcEthPanBptAddr).balanceOf(userICA),
+            expectedBpt/2, IERC20(usdcEthKaiBptAddr).balanceOf(userICA),
             "BPT balance is not around the expected value"
         );
 
-        emit log_named_int("BPT balance userICA - ",int(IERC20(usdcEthPanBptAddr).balanceOf(userICA)));
+        emit log_named_int("BPT balance userICA - ",int(IERC20(usdcEthKaiBptAddr).balanceOf(userICA)));
     }
 
     function testWithdrawLiquidityVortex(uint amount) public {
-        //pool size : 150000000000, 150000000000000000000000 usdc.eth,pan | usdc.avax,pan
+        //pool size : 150000000000, 150000000000000000000000 usdc.eth,kai | usdc.avax,kai
         amount = bound(amount,1e6, 1e16);
         vm.selectFork(eth);
         address userICA = Create2Lib.computeAddress(user1, axonNexus);
@@ -334,7 +334,7 @@ contract NexusVortexTests is Test{
         BatchSwapStep[] memory swaps = new BatchSwapStep[](2);
         swaps[0] = BatchSwapStep(
         {
-        poolId : usdcEthPanPoolId,
+        poolId : usdcEthKaiPoolId,
         assetInIndex : 0,
         assetOutIndex : 1,
         amount : amount,
@@ -344,7 +344,7 @@ contract NexusVortexTests is Test{
 
         swaps[1] = BatchSwapStep(
         {
-        poolId : usdcEthPanPoolId,
+        poolId : usdcEthKaiPoolId,
         assetInIndex : 2,
         assetOutIndex : 1,
         amount : amount* 1e18 / 1e6,
@@ -354,8 +354,8 @@ contract NexusVortexTests is Test{
 
         IAsset[] memory assets = new IAsset[](3);
         assets[0] = IAsset(usdcEth);
-        assets[1] = IAsset(usdcEthPanBptAddr);
-        assets[2] = IAsset(panOnAxon);
+        assets[1] = IAsset(usdcEthKaiBptAddr);
+        assets[2] = IAsset(kaiOnAxon);
 
         FundManagement memory funds;
         funds.sender = userICA;
@@ -363,7 +363,7 @@ contract NexusVortexTests is Test{
         funds.recipient = payable(userICA);
         funds.toInternalBalance = false;
 
-        int256[] memory assetDeltas = IVault(usdcEthPanBalancerVault).queryBatchSwap(
+        int256[] memory assetDeltas = IVault(usdcEthKaiBalancerVault).queryBatchSwap(
             IVault.SwapKind.GIVEN_IN,
             swaps,
             assets,
@@ -402,17 +402,17 @@ contract NexusVortexTests is Test{
         mailboxAxon.processNextPendingMessage();
 
         assertEq(
-            expectedBpt/2, IERC20(usdcEthPanBptAddr).balanceOf(userICA),
+            expectedBpt/2, IERC20(usdcEthKaiBptAddr).balanceOf(userICA),
             "BPT balance is not around the expected value"
         );
 
-        emit log_named_int("BPT balance userICA - ",int(IERC20(usdcEthPanBptAddr).balanceOf(userICA)));
+        emit log_named_int("BPT balance userICA - ",int(IERC20(usdcEthKaiBptAddr).balanceOf(userICA)));
 
         //attempt to withdraw completely
-        uint bptAmountIn =  IERC20(usdcEthPanBptAddr).balanceOf(userICA);
+        uint bptAmountIn =  IERC20(usdcEthKaiBptAddr).balanceOf(userICA);
 
         swaps[0] = BatchSwapStep({
-            poolId : usdcEthPanPoolId,
+            poolId : usdcEthKaiPoolId,
             assetInIndex : 1,
             assetOutIndex : 0,
             amount : bptAmountIn,
@@ -420,14 +420,14 @@ contract NexusVortexTests is Test{
         });
 
         swaps[1] = BatchSwapStep({
-            poolId : usdcEthPanPoolId,
+            poolId : usdcEthKaiPoolId,
             assetInIndex : 1,
             assetOutIndex : 2,
             amount : bptAmountIn,
             userData : abi.encode("")
         });
 
-        assetDeltas = IVault(usdcEthPanBalancerVault).queryBatchSwap(
+        assetDeltas = IVault(usdcEthKaiBalancerVault).queryBatchSwap(
             IVault.SwapKind.GIVEN_IN,
             swaps,
             assets,
@@ -440,8 +440,8 @@ contract NexusVortexTests is Test{
         calls = new Call[](3);
         calls[0] = Call(
             {
-                to : usdcEthPanBptAddr,
-                data : abi.encodeWithSelector(IERC20.approve.selector, address(vortex), IERC20(usdcEthPanBptAddr).balanceOf(userICA))
+                to : usdcEthKaiBptAddr,
+                data : abi.encodeWithSelector(IERC20.approve.selector, address(vortex), IERC20(usdcEthKaiBptAddr).balanceOf(userICA))
             // approval for complete withdrawal
             }
         );
@@ -487,20 +487,20 @@ contract NexusVortexTests is Test{
     }
 
     function testRefundOnAddLiquidityFail(uint amount) public { //balanced
-        //pool size : 150000000000,150000000000000000000000 -> usdc,pan
+        //pool size : 150000000000,150000000000000000000000 -> usdc,kai
         amount = bound(amount,1e6, 1e16);
         vm.selectFork(eth);
         address userICA = Create2Lib.computeAddress(user1, axonNexus);
         IERC20Mintable(usdcE).mint(user1,amount);
-        IERC20Mintable(panOnEth).mint(user1,amount*1e18/1e6);
+        IERC20Mintable(kaiOnEth).mint(user1,amount*1e18/1e6);
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = amount;
         amounts[1] = amount*1e18/1e6;
 
         Call[] memory calls = new Call[](3);
         //approving with 0 amount so call fails
-        calls[0] = Call({to : usdcEth, data : abi.encodeWithSelector(IERC20.approve.selector,usdcEthPanBalancerVault,0)});
-        calls[1] = Call({to : panOnAxon, data : abi.encodeWithSelector(IERC20.approve.selector,usdcEthPanBalancerVault,0)});
+        calls[0] = Call({to : usdcEth, data : abi.encodeWithSelector(IERC20.approve.selector,usdcEthKaiBalancerVault,0)});
+        calls[1] = Call({to : kaiOnAxon, data : abi.encodeWithSelector(IERC20.approve.selector,usdcEthKaiBalancerVault,0)});
 
 
         //preparation for calls[2] i.e batchSwap call to balancer vault
@@ -511,7 +511,7 @@ contract NexusVortexTests is Test{
         BatchSwapStep[] memory swaps = new BatchSwapStep[](2);
         swaps[0] = BatchSwapStep(
         {
-        poolId : usdcEthPanPoolId,
+        poolId : usdcEthKaiPoolId,
         assetInIndex : 0,
         assetOutIndex : 2,
         amount : amounts[0],
@@ -521,7 +521,7 @@ contract NexusVortexTests is Test{
 
         swaps[1] = BatchSwapStep(
         {
-        poolId : usdcEthPanPoolId,
+        poolId : usdcEthKaiPoolId,
         assetInIndex : 1,
         assetOutIndex : 2,
         amount : amounts[1],
@@ -531,8 +531,8 @@ contract NexusVortexTests is Test{
 
         IAsset[] memory assets = new IAsset[](3);
         assets[0] = IAsset(usdcEth);
-        assets[1] = IAsset(panOnAxon);
-        assets[2] = IAsset(usdcEthPanBptAddr);
+        assets[1] = IAsset(kaiOnAxon);
+        assets[2] = IAsset(usdcEthKaiBptAddr);
 
         FundManagement memory funds;
         funds.sender = userICA;
@@ -540,7 +540,7 @@ contract NexusVortexTests is Test{
         funds.recipient = payable(userICA);
         funds.toInternalBalance = false;
 
-        int256[] memory assetDeltas = IVault(usdcEthPanBalancerVault).queryBatchSwap(
+        int256[] memory assetDeltas = IVault(usdcEthKaiBalancerVault).queryBatchSwap(
             IVault.SwapKind.GIVEN_IN,
             swaps,
             assets,
@@ -556,7 +556,7 @@ contract NexusVortexTests is Test{
         vm.selectFork(eth);
 
         calls[2] = Call({
-        to : usdcEthPanBalancerVault,
+        to : usdcEthKaiBalancerVault,
         data : abi.encodeWithSelector(
                 IVault.batchSwap.selector,
                 IVault.SwapKind.GIVEN_IN,
@@ -571,11 +571,11 @@ contract NexusVortexTests is Test{
 
         address[] memory tokens = new address[](2);
         tokens[0] = usdcE;
-        tokens[1] = panOnEth;
+        tokens[1] = kaiOnEth;
 
         vm.startPrank(user1);
         IERC20(usdcE).approve(ethNexus,amounts[0]);
-        IERC20(panOnEth).approve(ethNexus,amounts[1]);
+        IERC20(kaiOnEth).approve(ethNexus,amounts[1]);
         CrossChainRouter(ethNexus).depositMultiTokenAndCall(tokens, amounts, calls);
         vm.stopPrank();
 
@@ -594,7 +594,7 @@ contract NexusVortexTests is Test{
         );
 
         assertEq(
-            IERC20(panOnEth).balanceOf(user1),
+            IERC20(kaiOnEth).balanceOf(user1),
             amounts[1]
         );
     }
@@ -607,7 +607,7 @@ contract NexusVortexTests is Test{
         IERC20Mintable(usdcE).mint(user1,amount);
 
         Call[] memory calls = new Call[](2);
-        calls[0] = Call({to : usdcEth, data : abi.encodeWithSelector(IERC20.approve.selector,usdcEthPanBalancerVault,amount)});
+        calls[0] = Call({to : usdcEth, data : abi.encodeWithSelector(IERC20.approve.selector,usdcEthKaiBalancerVault,amount)});
 
 
         //preparation for calls[2] i.e batchSwap call to balancer vault
@@ -618,7 +618,7 @@ contract NexusVortexTests is Test{
         BatchSwapStep[] memory swaps = new BatchSwapStep[](2);
         swaps[0] = BatchSwapStep(
         {
-            poolId : usdcEthPanPoolId,
+            poolId : usdcEthKaiPoolId,
             assetInIndex : 0,
             assetOutIndex : 1,
             amount : amount,
@@ -628,7 +628,7 @@ contract NexusVortexTests is Test{
 
         swaps[1] = BatchSwapStep(
         {
-            poolId : usdcAvaxPanPoolId,
+            poolId : usdcAvaxKaiPoolId,
             assetInIndex : 1,
             assetOutIndex : 2,
             amount : 0,
@@ -638,7 +638,7 @@ contract NexusVortexTests is Test{
 
         IAsset[] memory assets = new IAsset[](3);
         assets[0] = IAsset(usdcEth);
-        assets[1] = IAsset(panOnAxon);
+        assets[1] = IAsset(kaiOnAxon);
         assets[2] = IAsset(usdcAvax);
 
         FundManagement memory funds;
@@ -647,7 +647,7 @@ contract NexusVortexTests is Test{
         funds.recipient = payable(userICA);
         funds.toInternalBalance = false;
 
-        int256[] memory assetDeltas = IVault(usdcEthPanBalancerVault).queryBatchSwap(
+        int256[] memory assetDeltas = IVault(usdcEthKaiBalancerVault).queryBatchSwap(
             IVault.SwapKind.GIVEN_IN,
             swaps,
             assets,
@@ -665,7 +665,7 @@ contract NexusVortexTests is Test{
         vm.selectFork(eth);
 
         calls[1] = Call({
-        to : usdcEthPanBalancerVault,
+        to : usdcEthKaiBalancerVault,
         data : abi.encodeWithSelector(
                 IVault.batchSwap.selector,
                 IVault.SwapKind.GIVEN_IN,
@@ -720,7 +720,7 @@ contract NexusVortexTests is Test{
         BatchSwapStep[] memory swaps = new BatchSwapStep[](2);
         swaps[0] = BatchSwapStep(
         {
-        poolId : usdcEthPanPoolId,
+        poolId : usdcEthKaiPoolId,
         assetInIndex : 0,
         assetOutIndex : 1,
         amount : amount,
@@ -730,7 +730,7 @@ contract NexusVortexTests is Test{
 
         swaps[1] = BatchSwapStep(
         {
-        poolId : usdcAvaxPanPoolId,
+        poolId : usdcAvaxKaiPoolId,
         assetInIndex : 1,
         assetOutIndex : 2,
         amount : 0,
@@ -740,7 +740,7 @@ contract NexusVortexTests is Test{
 
         IAsset[] memory assets = new IAsset[](3);
         assets[0] = IAsset(usdcEth);
-        assets[1] = IAsset(panOnAxon);
+        assets[1] = IAsset(kaiOnAxon);
         assets[2] = IAsset(usdcAvax);
 
         FundManagement memory funds;
@@ -749,7 +749,7 @@ contract NexusVortexTests is Test{
         funds.recipient = payable(userICA);
         funds.toInternalBalance = false;
 
-        int256[] memory assetDeltas = IVault(usdcEthPanBalancerVault).queryBatchSwap(
+        int256[] memory assetDeltas = IVault(usdcEthKaiBalancerVault).queryBatchSwap(
             IVault.SwapKind.GIVEN_IN,
             swaps,
             assets,
@@ -772,7 +772,7 @@ contract NexusVortexTests is Test{
         to : address(vortex),
         data : abi.encodeWithSelector(
                 Vortex.executeSwapAndWithdraw.selector,
-                usdcEthPanBalancerVault,
+                usdcEthKaiBalancerVault,
                 IVault.SwapKind.GIVEN_IN,
                 swaps,
                 assets,
@@ -810,7 +810,7 @@ contract NexusVortexTests is Test{
         ccrFunctionSelectors[0] = ccr.initializeNexus.selector;
         ccrFunctionSelectors[1] = ccr.depositTokenAndCall.selector;
         ccrFunctionSelectors[2] = ccr.depositMultiTokenAndCall.selector;
-        ccrFunctionSelectors[3] = ccr.setPan.selector;
+        ccrFunctionSelectors[3] = ccr.setKai.selector;
         cut[0] = IDiamond.FacetCut({
         facetAddress: address(ccr),
         action: IDiamond.FacetCutAction.Add,

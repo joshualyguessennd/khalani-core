@@ -34,19 +34,19 @@ contract CrossChainRouter is Modifiers {
         uint256 amount
     );
 
-    function initializeNexus(address _pan, address _axonReceiver, uint _axonChainId) public onlyDiamondOwner{
-        s.pan = _pan;
+    function initializeNexus(address _kai, address _axonReceiver, uint _axonChainId) public onlyDiamondOwner{
+        s.kai = _kai;
         s.axonReceiver = _axonReceiver;
         s.axonChainId = _axonChainId;
     }
 
-    function setPan(address _pan) external onlyDiamondOwner{
+    function setKai(address _kai) external onlyDiamondOwner{
         AppStorage storage appStorage = LibAppStorage.diamondStorage();
-        appStorage.pan = _pan;
+        appStorage.kai = _kai;
     }
 
     /**
-    * @notice locks token / burn pan token and calls hyperlane to bridge token and execute call on `toContract` with `data`
+    * @notice locks token / burn kai token and calls hyperlane to bridge token and execute call on `toContract` with `data`
     * mirror token will be minted on axon chain
     * @param token - address of token to deposit
     * @param amount - amount of tokens to deposit
@@ -78,7 +78,7 @@ contract CrossChainRouter is Modifiers {
     }
 
     /**
-    * @notice locks tokens / burn pan tokens and calls hyperlane to bridge tokens and execute call on `toContract` with `data`
+    * @notice locks tokens / burn kai tokens and calls hyperlane to bridge tokens and execute call on `toContract` with `data`
     * mirror token will be minted on axon chain
     * @param tokens - addresses of tokens to deposit
     * @param amounts - amounts of tokens to deposit
@@ -121,7 +121,7 @@ contract CrossChainRouter is Modifiers {
         address _token,
         uint256 _amount
     ) internal {
-        if(s.pan == _token) {
+        if(s.kai == _token) {
             IERC20Mintable(_token).burn(_user,_amount);
         } else {
             SafeERC20Upgradeable.safeTransferFrom(

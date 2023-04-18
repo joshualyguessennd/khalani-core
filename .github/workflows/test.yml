@@ -9,10 +9,10 @@ env:
   FOUNDRY_PROFILE: ci
   USDC_ETH_MIRROR : "0x58d2f623fA51FD58838880fC46a2A89315e1B89F"
   USDC_AVAX_MIRROR : "0xA87334cf922DB06D684FBD290367a4538C1A4DFE"
-  AXON_TEST_PAN : "0x442B4Ce5fba8CdFAEF6F8E23C97C92905aEED2d5"
+  AXON_TEST_KAI : "0x442B4Ce5fba8CdFAEF6F8E23C97C92905aEED2d5"
 
-  AXON_USDCETH_PAN_BPT : "0xBbE05af8dcbd4E32985ca37575E4825D98d4998d"
-  AXON_USDCAVAX_PAN_BPT : "0x1Ef6e9bEd1D648De6B40d2B38f573cEfD7B4e3b2"
+  AXON_USDCETH_KAI_BPT : "0xBbE05af8dcbd4E32985ca37575E4825D98d4998d"
+  AXON_USDCAVAX_KAI_BPT : "0x1Ef6e9bEd1D648De6B40d2B38f573cEfD7B4e3b2"
 
   TOKEN_ADMIN : "0xdDF7F0d7bcCa30022Fe1D1a49f19f53A8d72eC41"
   GOERLI_INFURA_URL: ${{ secrets.GOERLI_INFURA_URL }}
@@ -75,7 +75,7 @@ jobs:
         run: |
           forge coverage --report lcov
           sudo apt-get install lcov
-          lcov --remove ./lcov.info -o ./lcov.info.pruned 'src/diamondCommons/*'  'test/Mock/*' 'test/utils/*' 'test/lib/*' 'script/*' 'scripts/*' 'script/lib/*' 'src/USDMirror.sol' 'src/PanToken.sol'
+          lcov --remove ./lcov.info -o ./lcov.info.pruned 'src/diamondCommons/*'  'test/Mock/*' 'test/utils/*' 'test/lib/*' 'script/*' 'scripts/*' 'script/lib/*' 'src/USDMirror.sol' 'src/KaiToken.sol'
 
       - name: Report coverage
         uses: romeovs/lcov-reporter-action@v0.2.21
