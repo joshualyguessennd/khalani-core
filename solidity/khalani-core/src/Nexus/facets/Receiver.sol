@@ -22,7 +22,7 @@ contract Receiver is Modifiers {
 
     event LogWithdrawMultiTokenAndCall(
         address indexed user,
-        address[]  token,
+        address[]  tokens,
         uint256[]  amounts
     );
 

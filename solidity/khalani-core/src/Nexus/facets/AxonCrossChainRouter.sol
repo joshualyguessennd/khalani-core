@@ -19,7 +19,7 @@ contract AxonCrossChainRouter is Modifiers {
     event LogWithdrawMultiTokenAndCall(
         address indexed user,
         address[] tokens,
-        uint256[] amount,
+        uint256[] amounts,
         Call[] calls
     );
 
