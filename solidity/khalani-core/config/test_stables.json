@@ -1,0 +1,46 @@
+[
+  {
+    "10012": [
+      {
+        "name": "USDC",
+        "symbol": "USDC",
+        "decimal": 6,
+        "address": "0x6b8d185a97e5E254499915E7a79d016cC9778Ec6"
+      },
+      {
+        "name": "USDT",
+        "symbol": "USDT",
+        "decimal": 6,
+        "address": "0x17466cff3c1fB6Cdf1894480Dc29A912cC59581f"
+      },
+      {
+        "name": "DAI",
+        "symbol": "DAI",
+        "decimal": 18,
+        "address": "0x45EBAf5Ba2061Ce3346f4bF72eC46C757bE8A3eE"
+      }
+    ]
+  },
+  {
+    "43113": [
+      {
+        "name": "USDC",
+        "symbol": "USDC",
+        "decimal": 6,
+        "address": "0x45649961e399125735190d56ff24b9cb3ef76B31"
+      },
+      {
+        "name": "USDT",
+        "symbol": "USDT",
+        "decimal": 6,
+        "address": "0x0e8b0E7468d15b955F6303da94edccCeAE4fEbAb"
+      },
+      {
+        "name": "BUSD",
+        "symbol": "BUSD",
+        "decimal": 18,
+        "address": "0x66e1AF9e4E920de855A28B44F67B6b38eA5bfD44"
+      }
+    ]
+  }
+]

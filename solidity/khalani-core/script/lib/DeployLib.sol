@@ -24,55 +24,53 @@ library DeployLib {
         out.nexusDiamond = address (nexus);
 
         //--------Axon Facets-------------//
-        address axonCrossChainRouter;
         bytes4[] memory axonCrossChainRouterfunctionSelectors;
-        (axonCrossChainRouter, axonCrossChainRouterfunctionSelectors) = deployAxonCrossChainRouter();
-        out.axonCrossChainRouter = axonCrossChainRouter;
+        (out.axonCrossChainRouter, axonCrossChainRouterfunctionSelectors) = deployAxonCrossChainRouter();
 
-        address axonHandler;
+
+
         bytes4[] memory axonHandlerFunctionSelectors;
-        (axonHandler, axonHandlerFunctionSelectors) = deployAxonHandlerFacet();
-        out.axonHandlerFacet = axonHandler;
+        (out.axonHandlerFacet, axonHandlerFunctionSelectors) = deployAxonHandlerFacet();
 
-        address axonMultiBridgeFacet;
         bytes4[] memory axonMultiBridgeFacetfunctionSelectors;
-        (axonMultiBridgeFacet, axonMultiBridgeFacetfunctionSelectors) = deployMultiBridgeFacet();
-        out.axonMultiBridgeFacet = axonMultiBridgeFacet;
+        (out.axonMultiBridgeFacet, axonMultiBridgeFacetfunctionSelectors) = deployMultiBridgeFacet();
+
 
         //--------Token Registry-------------//
-        (address tokenRegistry, bytes4[] memory tokenRegistryFunctionSelectors) = deployTokenRegistry();
-        out.stableTokenRegistry = tokenRegistry;
+        bytes4[] memory tokenRegistryFunctionSelectors;
+        (out.stableTokenRegistry, tokenRegistryFunctionSelectors) = deployTokenRegistry();
+
         //--------KaiToken-------------//
-        address kaiOnAxon = deployKai(out.nexusDiamond);
-        out.kai = kaiOnAxon;
+        out.kai = deployKai(out.nexusDiamond);
+
 
         //--------Vortex-------------//
-        address vortex = deployVortex(address(nexus), kaiOnAxon);
-        out.vortex = vortex;
+        out.vortex = deployVortex(address(nexus), out.kai);
+
 
         //--------Making Facet cuts to diamond-------------//
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](4);
         cut[0] = IDiamond.FacetCut({
-        facetAddress: axonCrossChainRouter,
+        facetAddress: out.axonCrossChainRouter,
         action: IDiamond.FacetCutAction.Add,
         functionSelectors: axonCrossChainRouterfunctionSelectors
         });
         cut[1] = IDiamond.FacetCut({
-        facetAddress: axonHandler,
+        facetAddress: out.axonHandlerFacet,
         action: IDiamond.FacetCutAction.Add,
         functionSelectors: axonHandlerFunctionSelectors
         });
         cut[2] = IDiamond.FacetCut({
-        facetAddress: axonMultiBridgeFacet,
+        facetAddress: out.axonMultiBridgeFacet,
         action: IDiamond.FacetCutAction.Add,
         functionSelectors: axonMultiBridgeFacetfunctionSelectors
         });
         cut[3] = IDiamond.FacetCut({
-        facetAddress: tokenRegistry,
+        facetAddress: out.stableTokenRegistry,
         action: IDiamond.FacetCutAction.Add,
         functionSelectors: tokenRegistryFunctionSelectors
         });
-        DiamondCutFacet(address(nexus)).diamondCut(
+        DiamondCutFacet(out.nexusDiamond).diamondCut(
             cut, //array of of cuts
             address(0), //initializer address
             "" //initializer data
@@ -85,7 +83,7 @@ library DeployLib {
         out.nexusDiamond = address(nexus);
 
         //--------Deploy Kai-------//
-        address kai = deployKai(out.nexusDiamond);
+        out.kai = deployKai(out.nexusDiamond);
 
         //--------Source Chain Facets-------------//
         address crossChainRouter;
@@ -96,6 +94,7 @@ library DeployLib {
         address hyperlaneFacet;
         bytes4[] memory hyperlaneFacetfunctionSelector;
         (hyperlaneFacet, hyperlaneFacetfunctionSelector)  = deployHyperlaneFacet();
+        out.hyperlaneFacet = hyperlaneFacet;
 
         address msgHandler;
         bytes4[] memory msgHandlerFunctionSelectors;
@@ -124,7 +123,7 @@ library DeployLib {
             "" //initializer data
         );
         //--------PSM-------------//
-        address psm = deployPSM(kai); //fix import issue
+        out.psm = deployPSM(out.kai); //fix import issue
     }
 
     //--------Nexus Diamond-------------//
@@ -228,12 +227,13 @@ library DeployLib {
         return address(kai);
     }
 
-    function deployMirrorToken(address sourceAddress, string memory _name, string memory _symbol, uint _chainId, address axonNexus) internal returns (address) {
+    function deployMirrorToken(address sourceAddress, string memory _name, string memory _symbol, uint8 _decimals, uint _chainId, address axonNexus) internal returns (address) {
         USDMirror mirrorToken = new USDMirror();
-        mirrorToken.initialize(_name, _symbol, _chainId);
+        mirrorToken.initialize(_name, _symbol, _decimals, _chainId);
         mirrorToken.transferMinterBurnerRole(axonNexus);
+        console.log("Registering to registry");
         StableTokenRegistry(axonNexus).registerMirrorToken(_chainId,sourceAddress,address(mirrorToken));
-        console.log("Deploying token : ",_name);
+        console.log("Deployed mirror token %s %s to %s", _name, _symbol, address(mirrorToken));
         return address(mirrorToken);
     }
 
@@ -256,6 +256,8 @@ library DeployLib {
     function deployPSM(address _kai) private returns (address) {
         KaiPSM psm = new KaiPSM();
         psm.initialize(_kai);
+        //transfer minter burner role to psm
+        Kai(_kai).transferMinterBurnerRole(address(psm));
         console.log("PSM deployed at - ", address(psm));
         return address(psm);
     }

@@ -13,8 +13,6 @@ library ConfigLib {
     struct NexusConfig {
         string chainName;
         uint domainId;
-        address owner;
-        address hyperlaneMailbox;
         address kai;
         address psm;
         address nexusDiamond;
@@ -26,8 +24,6 @@ library ConfigLib {
     struct AxonNexusConfig {
         string chainName;
         uint domainId;
-        address owner;
-        address hyperlaneMailbox;
         address kai;
         address nexusDiamond;
         address axonCrossChainRouter;
@@ -51,7 +47,7 @@ library ConfigLib {
         string memory chainName
     ) internal returns (DeployConfig memory deployConfig) {
         string memory json = vm.readFile("config/deploy_config.json");
-        console.log(json);
+        deployConfig.chainName = chainName;
         chainName = string.concat('.',chainName);
         deployConfig.chainId = vm.parseJsonUint(json, string.concat(chainName, ".chainId"));
 
@@ -61,11 +57,85 @@ library ConfigLib {
 
         deployConfig.hyperlaneISM = vm.parseJsonAddress(json,string.concat(chainName,".hyperlaneISM"));
 
-        deployConfig.tokens = vm.parseJsonAddressArray(json,string.concat(chainName, ".tokens"));
+        // Workaround for Forge parser error on empty array of addresses []
+        bytes memory tokensAddressesBytes = vm.parseJson(json, string.concat(chainName, ".tokens"));
+        uint256 numOfTokens = (tokensAddressesBytes.length - 64) / 32;
+        if (numOfTokens > 0) {
+            deployConfig.tokens = vm.parseJsonAddressArray(json, string.concat(chainName, ".tokens"));
+        }
+
+        console.log("Read DeployConfig for %s", chainName);
+        console.log("  chainName = %s", deployConfig.chainName);
+        console.log("  chainId = %s", deployConfig.chainId);
+        console.log("  hyperlaneMailbox = %s", deployConfig.hyperlaneMailbox);
+        console.log("  hyperlaneISM = %s", deployConfig.hyperlaneISM);
+        console.log("  rpcUrl = %s", deployConfig.rpcUrl);
+        console.log("  tokens.length = %s", deployConfig.tokens.length);
+        for (uint i = 0; i < deployConfig.tokens.length; i++) {
+            console.log("    token %s", deployConfig.tokens[i]);
+        }
+    }
+
+    function readNexusConfig(
+        Vm vm,
+        string memory chainName,
+        uint domainId
+    ) internal returns (NexusConfig memory nexusConfig) {
+        string memory json = vm.readFile("config/networks.json");
+
+        nexusConfig.chainName = chainName;
+        nexusConfig.domainId = domainId;
+
+        nexusConfig.kai = vm.parseJsonAddress(json, string.concat(".", chainName, ".kai"));
+        nexusConfig.psm = vm.parseJsonAddress(json, string.concat(".", chainName, ".psm"));
+        nexusConfig.nexusDiamond = vm.parseJsonAddress(json, string.concat(".", chainName, ".nexusDiamond"));
+        nexusConfig.crossChainRouter = vm.parseJsonAddress(json, string.concat(".", chainName, ".crossChainRouter"));
+        nexusConfig.hyperlaneFacet = vm.parseJsonAddress(json, string.concat(".", chainName, ".hyperlaneFacet"));
+        nexusConfig.msgHandlerFacet = vm.parseJsonAddress(json, string.concat(".", chainName, ".msgHandlerFacet"));
+
+        console.log("Read NexusConfig for %s", chainName);
+        console.log("  chainName = %s", nexusConfig.chainName);
+        console.log("  chainId = %s", nexusConfig.domainId);
+        console.log("  kai = %s", nexusConfig.kai);
+        console.log("  psm = %s", nexusConfig.psm);
+        console.log("  nexusDiamond = %s", nexusConfig.nexusDiamond);
+        console.log("  hyperlaneFacet = %s", nexusConfig.hyperlaneFacet);
+        console.log("  msgHandlerFacet = %s", nexusConfig.msgHandlerFacet);
+        console.log("  crossChainRouter = %s", nexusConfig.crossChainRouter);
+    }
+
+    function readAxonNexusConfig(
+        Vm vm,
+        string memory axon,
+        uint axonDomainId
+    ) internal returns (AxonNexusConfig memory axonNexusConfig) {
+        string memory json = vm.readFile("config/networks.json");
+
+        axonNexusConfig.chainName = axon;
+        axonNexusConfig.domainId = axonDomainId;
+
+        axonNexusConfig.kai = vm.parseJsonAddress(json, string.concat(".", axon, ".kai"));
+        axonNexusConfig.nexusDiamond = vm.parseJsonAddress(json, string.concat(".", axon, ".nexusDiamond"));
+        axonNexusConfig.axonCrossChainRouter = vm.parseJsonAddress(json, string.concat(".", axon, ".axonCrossChainRouter"));
+        axonNexusConfig.axonHandlerFacet = vm.parseJsonAddress(json, string.concat(".", axon, ".axonHandlerFacet"));
+        axonNexusConfig.axonMultiBridgeFacet = vm.parseJsonAddress(json, string.concat(".", axon, ".axonMultiBridgeFacet"));
+        axonNexusConfig.stableTokenRegistry = vm.parseJsonAddress(json, string.concat(".", axon, ".stableTokenRegistry"));
+        axonNexusConfig.vortex = vm.parseJsonAddress(json, string.concat(".", axon, ".vortex"));
+
+        console.log("Read AxonNexusConfig for %s", axon);
+        console.log("  chainName = %s", axonNexusConfig.chainName);
+        console.log("  chainId = %s", axonNexusConfig.domainId);
+        console.log("  kai = %s", axonNexusConfig.kai);
+        console.log("  nexusDiamond = %s", axonNexusConfig.nexusDiamond);
+        console.log("  axonCrossChainRouter = %s", axonNexusConfig.axonCrossChainRouter);
+        console.log("  axonHandlerFacet = %s", axonNexusConfig.axonHandlerFacet);
+        console.log("  axonMultiBridgeFacet = %s", axonNexusConfig.axonMultiBridgeFacet);
+        console.log("  stableTokenRegistry = %s", axonNexusConfig.stableTokenRegistry);
+        console.log("  vortex = %s", axonNexusConfig.vortex);
     }
 
     function writeNexusConfig(NexusConfig memory config, Vm vm) internal {
-        string memory contracts = "contracts";
+        string memory contracts = string.concat("nexusContracts", ".", config.chainName);
         vm.serializeAddress(contracts,"kai",config.kai);
         vm.serializeAddress(contracts,"psm",config.psm);
         vm.serializeAddress(contracts,"nexusDiamond",config.nexusDiamond);
@@ -76,7 +146,7 @@ library ConfigLib {
     }
 
     function writeAxonNexusConfig(AxonNexusConfig memory config, Vm vm) internal {
-        string memory contracts = "contracts";
+        string memory contracts = "axonContracts";
         vm.serializeAddress(contracts,"kai",config.kai);
         vm.serializeAddress(contracts,"nexusDiamond",config.nexusDiamond);
         vm.serializeAddress(contracts,"axonCrossChainRouter",config.axonCrossChainRouter);
@@ -103,5 +173,13 @@ library ConfigLib {
             }
         }
         vm.writeJson(json,"config/networks.json");
+        vm.writeJson(json,"config/tokens.json");
+    }
+
+    function writeMirrorTokens(string memory chainName, address[] memory tokens, address[] memory mirrorTokens, Vm vm) internal{
+        string memory tokensJson = string.concat("tokensJson", ".", chainName);
+        vm.serializeAddress(tokensJson,"tokens",tokens);
+        string memory addressArrays = vm.serializeAddress(tokensJson,"mirrorTokens",mirrorTokens);
+        vm.writeJson(addressArrays,"config/tokens.json",string.concat('.',chainName));
     }
 }

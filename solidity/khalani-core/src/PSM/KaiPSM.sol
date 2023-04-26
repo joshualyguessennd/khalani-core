@@ -3,8 +3,9 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/IERC20Mintable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./IKaiPSM.sol";
 
-contract KaiPSM is OwnableUpgradeable{
+contract KaiPSM is IKaiPSM,OwnableUpgradeable{
 
     error AssetNotWhiteListed();
     error RedeemFailedNotEnoughBalance();

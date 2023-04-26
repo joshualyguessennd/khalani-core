@@ -7,11 +7,13 @@ contract USDMirror is ERC20PresetMinterPauserUpgradeable {
 
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
     uint public chainId;
+    uint8 public decimal;
 
-    function initialize(string memory name, string memory symbol, uint _chainId) public initializer {
+    function initialize(string memory name, string memory symbol, uint8 _dec, uint _chainId) public initializer {
         __ERC20PresetMinterPauser_init(name, symbol);
         _setupRole(BURNER_ROLE, msg.sender);
         chainId = _chainId;
+        decimal = _dec;
     }
 
     function burn(address account, uint256 value) external {
@@ -26,6 +28,6 @@ contract USDMirror is ERC20PresetMinterPauserUpgradeable {
     }
 
     function decimals() public view override returns (uint8) {
-        return 6;
+        return decimal;
     }
 }
