@@ -5,10 +5,11 @@ import "./facets/AxonCrossChainRouter.sol";
 import "./interfaces/IKhalaInterchainAccount.sol";
 import "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import {Call} from "../Nexus/Call.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /*This is not a facet of nexus diamond*/
 /*Khala interchain account contract - multi-call support*/
-contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
+contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable, ReentrancyGuard{
 
     address public eoa;
 
@@ -27,7 +28,7 @@ contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
     *@param chainId - source chain-Id
     *@param calls - list of `Call` struct (to, data)
     */
-    function sendProxyCall(address token, uint256 amount, uint chainId, Call[] calldata calls) external onlyOwner {
+    function sendProxyCall(address token, uint256 amount, uint chainId, Call[] calldata calls) external onlyOwner nonReentrant {
 
         uint length  = calls.length;
         for(uint i ; i<length;) {
@@ -46,6 +47,8 @@ contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
                     eoa,
                     callBacks
                 );
+                emit ProxyCallFailedRefundInitiated(msg.sender,chainId);
+                return;
             }
 
             unchecked{
@@ -53,6 +56,7 @@ contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
             }
         }
 
+        emit ProxyCallSuccess(msg.sender,chainId);
 
     }
 
@@ -63,7 +67,7 @@ contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
     *@param chainId - source chain-Id
     *@param calls - list of `Call` struct (to, data)
     */
-    function sendProxyCallForMultiTokens(address[] calldata tokens, uint256[] calldata amounts, uint chainId, Call[] calldata calls) external onlyOwner {
+    function sendProxyCallForMultiTokens(address[] calldata tokens, uint256[] calldata amounts, uint chainId, Call[] calldata calls) external onlyOwner nonReentrant {
         uint length  = calls.length;
         for(uint i; i<length; ) {
             (bool success, bytes memory returnData) = calls[i].to.call(
@@ -79,11 +83,15 @@ contract KhalaInterChainAccount is IKhalaInterchainAccount, OwnableUpgradeable{
                     eoa,
                     callBacks
                 );
+                emit ProxyCallFailedRefundInitiated(msg.sender,chainId);
+                return;
             }
+
             unchecked{
                 ++i;
             }
         }
+        emit ProxyCallSuccess(msg.sender,chainId);
     }
 
     function _checkOwner() internal view override {
