@@ -2,19 +2,21 @@
 
 set -e
 
-if [[ -z "${PRIVATE_KEY}" ]]; then
-  echo "Error: PRIVATE_KEY environment variable is not set, use [export PRIVATE_KEY = <private key>] to set it."
+if [[ -z "${AWS_KMS_KEY_ID}" ]]; then
+  echo "Error: AWS_KMS_KEY_ID environment variable is not set, use [export AWS_KMS_KEY_ID=<private key>] to set it."
   exit 1
 fi
-export REMOTE=fuji
-export TOKENS=USDC,USDT,BUSD
-export DECIMALS=6,6,18
+export REMOTE=optimismgoerli
+export TOKENS=USDC,USDT
+export DECIMALS=6,6
+export FAUCET=0x6542C57F3D8618f571889FA04a36c469F87383A7
+export FAUCET_AMOUNT=1000000000
 CHAIN_ID=$(jq --arg remote "$REMOTE" '.[$remote].chainId' config/deploy_config.json)
 
 echo "Starting forge script..."
 
 # deploy tokens to the CHAIN_ID
-forge script script/DeployFakeStable.s.sol --legacy --broadcast --private-key "${PRIVATE_KEY}"
+forge script script/DeployFakeStable.s.sol --broadcast --verify --aws true --sender 0x04b0bff8776d8cc0ef00489940afd9654c67e4c7
 
 echo "Forge script completed. Processing JSON..."
 

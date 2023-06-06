@@ -2,41 +2,56 @@
   "khalanitestnet": {
     "chainId": 10012,
     "rpcUrl": "<rpc_url>",
-    "hyperlaneMailbox": "0xd8E78417e8C8D672258bbCb8Ec078E15EB419730",
-    "hyperlaneISM": "0xd8E78417e8C8D672258bbCb8Ec078E15EB419730",
-    "tokens": [
-      "0x6b8d185a97e5E254499915E7a79d016cC9778Ec6",
-      "0x17466cff3c1fB6Cdf1894480Dc29A912cC59581f",
-      "0x45EBAf5Ba2061Ce3346f4bF72eC46C757bE8A3eE"
-    ]
+    "hyperlaneMailbox": "<hyperlaneMailbox_address>",
+    "hyperlaneISM": "<hyperlaneISM_address>"
   },
-  "goerli": {
-    "chainId": 5,
+  "sepolia": {
+    "chainId": 11155111,
     "rpcUrl": "<rpc_url>",
-    "hyperlaneMailbox": "0xCC737a94FecaeC165AbCf12dED095BB13F037685",
-    "hyperlaneISM": "0x5fA58BA5fa524BB9a40622E0e1C935Fa51d1dD9E",
+    "hyperlaneMailbox": "<hyperlaneMailbox_address>",
+    "hyperlaneISM": "<hyperlaneISM_address>",
     "tokens": []
   },
   "fuji": {
     "chainId": 43113,
     "rpcUrl": "<rpc_url>",
-    "hyperlaneMailbox": "0xCC737a94FecaeC165AbCf12dED095BB13F037685",
-    "hyperlaneISM": "0x8193268787f3F5B43E88959e648809f6DB4e8A9B",
-    "tokens": [
-      "0x45649961e399125735190d56ff24b9cb3ef76B31",
-      "0x0e8b0E7468d15b955F6303da94edccCeAE4fEbAb",
-      "0x66e1AF9e4E920de855A28B44F67B6b38eA5bfD44"
-    ]
+    "hyperlaneMailbox": "<hyperlaneMailbox_address>",
+    "hyperlaneISM": "<hyperlaneISM_address>",
+    "tokens": []
   },
   "mumbai": {
     "chainId": 80001,
     "rpcUrl": "<rpc_url>",
-    "hyperlaneMailbox": "0xCC737a94FecaeC165AbCf12dED095BB13F037685",
-    "hyperlaneISM": "0x9f494Af1d6A2BFF5373d955162aD47ad1F219774",
-    "tokens": [
-      "0xa87334cf922db06d684fbd290367a4538c1a4dfe",
-      "0x79943038b33c378f4e5d17dc33688f5970118974",
-      "0x7ce5363727c061fc3e1fb66939e3b1f42120999b"
-    ]
+    "hyperlaneMailbox": "<hyperlaneMailbox_address>",
+    "hyperlaneISM": "<hyperlaneISM_address>",
+    "tokens": []
+  },
+  "bsctestnet": {
+    "chainId": 97,
+    "rpcUrl": "<rpc_url>",
+    "hyperlaneMailbox": "<hyperlaneMailbox_address>",
+    "hyperlaneISM": "<hyperlaneISM_address>",
+    "tokens": []
+  },
+  "arb-goerli": {
+    "chainId": 421613,
+    "rpcUrl": "<rpc_url>",
+    "hyperlaneMailbox": "<hyperlaneMailbox_address>",
+    "hyperlaneISM": "<hyperlaneISM_address>",
+    "tokens": []
+  },
+  "optimism-goerli": {
+    "chainId": 420,
+    "rpcUrl": "<rpc_url>",
+    "hyperlaneMailbox": "<hyperlaneMailbox_address>",
+    "hyperlaneISM": "<hyperlaneISM_address>",
+    "tokens": []
+  },
+  "godwokentestnet": {
+    "chainId": 71401,
+    "rpcUrl": "<rpc_url>",
+    "hyperlaneMailbox": "<hyperlaneMailbox_address>",
+    "hyperlaneISM": "<hyperlaneISM_address>",
+    "tokens": []
   }
 }

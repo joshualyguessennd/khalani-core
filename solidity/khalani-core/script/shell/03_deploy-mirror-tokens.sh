@@ -1,5 +1,5 @@
 #!/bin/bash
 
-export REMOTE=fuji
+export REMOTE=sepolia
 
-forge script script/DeployMirrorTokens.s.sol --legacy --broadcast --private-key "${PRIVATE_KEY}" -vv
+forge script script/DeployMirrorTokens.s.sol --legacy --verify --broadcast --aws true -vv

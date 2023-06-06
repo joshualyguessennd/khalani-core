@@ -6,7 +6,7 @@ if [[ -z "${PRIVATE_KEY}" ]]; then
 fi
 
 export AXON=khalanitestnet
-export REMOTES=fuji,goerli
+export REMOTES=sepolia,fuji,mumbai,bsctestnet,arb-goerli,optimism-goerli,godwoken-testnet
 
 #### ------------ONLY FOR V0 TEST TOKEN PURPOSE---------- ####
 # Set the input and output file paths

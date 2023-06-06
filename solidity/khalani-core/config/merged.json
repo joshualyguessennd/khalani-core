@@ -1,0 +1,143 @@
+{
+    "khalanitestnet": "",
+    "sepolia": {
+        "tokens": [
+            {
+                "address": "0x24bcc5d1F6538F4a84Cd9009ebD4Fa614904fA59",
+                "mirrorToken": "0x47e4F578Baa6A63891Ee5Ba2D08fcf0c5b8d8307",
+                "name": "USDC",
+                "symbol": "USDC",
+                "decimal": 6
+            },
+            {
+                "address": "0xdf830a3F120515bd99fE6Bc8513537713e204BC5",
+                "mirrorToken": "0x7E5DB0bFb97571853Cd10E568dC27B3Fd88B7BD4",
+                "name": "USDT",
+                "symbol": "USDT",
+                "decimal": 6
+            },
+            {
+                "address": "0xC0A27ef2304753d49ec4349DAC38fD33F8D40256",
+                "mirrorToken": "0xC54c54deaA4B041924Ed5067f5493c8488bF7f25",
+                "name": "BUSD",
+                "symbol": "BUSD",
+                "decimal": 18
+            }
+        ]
+    },
+    "arbitrumgoerli": {
+        "tokens": [
+            {
+                "address": "0x24bcc5d1F6538F4a84Cd9009ebD4Fa614904fA59",
+                "mirrorToken": "0xBEf9e8e7087038C1277C75f0D8bec8718fdfE3b9",
+                "name": "USDC",
+                "symbol": "USDC",
+                "decimal": 6
+            },
+            {
+                "address": "0xdf830a3F120515bd99fE6Bc8513537713e204BC5",
+                "mirrorToken": "0x1fb2D6402c7468e43B192F4Fc59506Eb4Bd75056",
+                "name": "USDT",
+                "symbol": "USDT",
+                "decimal": 6
+            }
+        ]
+    },
+    "fuji": {
+        "tokens": [
+            {
+                "address": "0x24bcc5d1F6538F4a84Cd9009ebD4Fa614904fA59",
+                "mirrorToken": "0xb83dca5964b7FF263279c9f5f3E8E38728ea26Ba",
+                "name": "USDC",
+                "symbol": "USDC",
+                "decimal": 6
+            },
+            {
+                "address": "0xdf830a3F120515bd99fE6Bc8513537713e204BC5",
+                "mirrorToken": "0x89432AFbE44404a10e71cC3255ae93fA6fAcD174",
+                "name": "USDT",
+                "symbol": "USDT",
+                "decimal": 6
+            }
+        ]
+    },
+    "optimismgoerli": {
+        "tokens": [
+            {
+                "address": "0xED84fBAAa27D1136101D0b1d18B1FF194C17dBC3",
+                "mirrorToken": "0xA9c95568E372a81448d9bd5e3945C5347f6BE09F",
+                "name": "USDC",
+                "symbol": "USDC",
+                "decimal": 6
+            },
+            {
+                "address": "0x738E12aA6aF874e4019B70718F4057959E0c5D2B",
+                "mirrorToken": "0x2e038b800126DA1a39defc1d2d7ffd5B88D977f1",
+                "name": "USDT",
+                "symbol": "USDT",
+                "decimal": 6
+            }
+        ]
+    },
+    "bsctestnet": {
+        "tokens": [
+            {
+                "address": "0x24bcc5d1F6538F4a84Cd9009ebD4Fa614904fA59",
+                "mirrorToken": "0xDBFC4CC40da4ffcb8C2188d6B717dDEFf92e180f",
+                "name": "USDC",
+                "symbol": "USDC",
+                "decimal": 6
+            },
+            {
+                "address": "0xdf830a3F120515bd99fE6Bc8513537713e204BC5",
+                "mirrorToken": "0x62D7c7361ad7D7b56f09D2084B82a88599B35fe6",
+                "name": "USDT",
+                "symbol": "USDT",
+                "decimal": 6
+            },
+            {
+                "address": "0x8f9C8f120d5E751b24d96d9c683B8d0450b45DBc",
+                "mirrorToken": "0x185A801BA31E9b30Bdde1c71b7b2D82396001530",
+                "name": "BUSD",
+                "symbol": "BUSD",
+                "decimal": 18
+            }
+        ]
+    },
+    "mumbai": {
+        "tokens": [
+            {
+                "address": "0x24bcc5d1F6538F4a84Cd9009ebD4Fa614904fA59",
+                "mirrorToken": "0x6E4A0f465768861734BAE744F702a2104F96c16F",
+                "name": "USDC",
+                "symbol": "USDC",
+                "decimal": 6
+            },
+            {
+                "address": "0xdf830a3F120515bd99fE6Bc8513537713e204BC5",
+                "mirrorToken": "0x45Ae659493c7c106727b44bB537f4712b0a604C8",
+                "name": "USDT",
+                "symbol": "USDT",
+                "decimal": 6
+            }
+        ]
+    },
+    "godwoken-testnet": {
+        "tokens": [
+            {
+                "address": "0x8f9C8f120d5E751b24d96d9c683B8d0450b45DBc",
+                "mirrorToken": "0x932819A4fc7B8483976ADB0E26fC9Ca447248938",
+                "name": "USDC",
+                "symbol": "USDC",
+                "decimal": 6
+            },
+            {
+                "address": "0xED84fBAAa27D1136101D0b1d18B1FF194C17dBC3",
+                "mirrorToken": "0x65b12982eCd0bc898fAe55278d71F937b92D94d0",
+                "name": "USDT",
+                "symbol": "USDT",
+                "decimal": 6
+            }
+        ]
+    }
+}

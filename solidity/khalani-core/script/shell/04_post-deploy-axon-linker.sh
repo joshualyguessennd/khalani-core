@@ -1,3 +1,3 @@
-export REMOTES=fuji,goerli
+export REMOTES=sepolia,fuji,mumbai,bsctestnet,arb-goerli,optimism-goerli,godwoken-testnet
 
-forge script script/PostDeployAxonLinker.s.sol --legacy --broadcast --private-key $PRIVATE_KEY
+forge script script/PostDeployAxonLinker.s.sol --legacy --broadcast --aws true -vv

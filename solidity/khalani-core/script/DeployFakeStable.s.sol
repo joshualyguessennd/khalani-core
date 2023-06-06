@@ -16,6 +16,7 @@ contract DeployFakeStable is Script {
         vm.startBroadcast();
         for(uint i;i<tokens.length;){
             FakeStable token = new FakeStable(tokens[i],tokens[i],uint8(decimals[i]));
+            token.mint(vm.envAddress("FAUCET"),vm.envUint("FAUCET_AMOUNT")*10**decimals[i]);
             console.log("Token %s deployed at address %s", tokens[i], address(token));
             unchecked{
                 ++i;
