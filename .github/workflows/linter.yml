@@ -25,6 +25,8 @@ jobs:
         uses: github/super-linter@v4
         env:
           VALIDATE_ALL_CODEBASE: false
-          FILTER_REGEX_INCLUDE: ./solidity/khalani-core/src/.*
+          FILTER_REGEX_INCLUDE: ./src/.*
+          FILTER_REGEX_EXCLUDE: ./lib/.*
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          

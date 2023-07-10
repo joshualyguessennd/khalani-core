@@ -11,7 +11,7 @@ A diamond is a contract with external functions that are supplied by contracts c
 ## AMP
 For cross-chain communication, currently Khalani only uses Hyperlane. More specifically , Khalani relies on Hyperlane's Messaging API
 
-![img.png](solidity/khalani-core/docs/img.png)
+![img.png](docs/img.png)
 
 # Contracts
 Nexus diamond is deployed on all end chains as well as on Khalani Chain, however the facets on Khalani chain are different to facets on other chains.
@@ -20,10 +20,10 @@ The reason behind different facets on Khalani chain is due to the following reas
 2. Management of cross-chain liquidity happens on Khalani chain
 
 ## High Level Architecture
-![img_4.png](solidity/khalani-core/docs/img_4.png)
+![img_4.png](docs/img_4.png)
 
 ## Contract Level Architecture
-![img_3.png](solidity/khalani-core/docs/img_3.png)
+![img_3.png](docs/img_3.png)
 
 Source : [Khalani Core Contracts](https://www.figma.com/file/X9chVDnZBgZvuMQSUMjaJN/Khalani_V0_Architecture?type=whiteboard&node-id=0%3A1&t=mudjcIC4IjZqT4Iw-1)
 ## Nexus diamond and facets on non-khalani chains:

@@ -1,0 +1,26 @@
+# File extension owners
+
+*.sol @yorhodes @asaj @tkporter
+*.ts @yorhodes @jmrossy @nambrot
+*.rs @mattiecnvr @tkporter @asaj
+*.md @Skunkchain @asaj
+
+# Package owners
+
+## Contracts
+solidity/ @yorhodes @asaj @tkporter
+
+## Agents
+rust/ @mattiecnvr @tkporter @asaj
+
+## SDK
+typescript/sdk @yorhodes @jmrossy
+
+## Token
+typescript/token @yorhodes @jmrossy @tkporter
+
+## Hello World
+typescript/helloworld @yorhodes @nambrot
+
+## Infra
+typescript/infra @tkporter @asaj @mattiecnvr
