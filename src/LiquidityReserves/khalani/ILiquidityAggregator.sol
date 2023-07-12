@@ -4,17 +4,17 @@ import "../../InterchainMessaging/Token.sol";
 
 interface ILiquidityAggregator {
 
-    //------------EVENTS------------//
+    //------EVENT------//
     event Deposit(
         address indexed sender,
-        Token[] tokens,
-        address receiver
+        address receiver,
+        Token token
     );
 
     /**
-    *@dev deposit mirror tokens to the liquidity aggregator and redeem kln(Token) 1:1 mint
-    *@param token -> mirror tokens address and amount struct
-    *@param receiver address to receive kln(Token)
+    *@dev deposit tokens to the liquidity aggregator and redeem corresponding aggregate token
+    *@param token -> tokens address and amount to be deposited
+    *@param receiver address to receive aggregate token
     */
     function deposit(
         Token memory token,
