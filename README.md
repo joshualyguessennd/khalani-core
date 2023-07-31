@@ -1,59 +1,69 @@
-# Khalani-Core
-Cross-chain bridges are fundamentally multi-chain asset issuers that issue their own obligations against user deposits on their balance sheets across all supported chains. This enables the protocol to tokenize various risk profiles (combinations of tokens, chains, and underlying messaging infrastructure) and efficiently and permissionlessly scale cross-chain liquidity by pricing supply and demand.
+# Khalani Core
 
-Khalani operates on its own EVM blockchain and initially launches as a modular rollup. Khalani Chain employs Hyperlane to connect to all blockchains, encompassing mainstream chains and permissionlessly deployed ones. Khalani utilizes Hyperlane's PoS and its multisig as a combined ISM to secure cross-chain messages.
+Khalani is the first Universal Liquidity Protocol designed from the ground up for the interoperable blockchains. Built to scale permissionlessly with high capital efficiency and security, Khalani is ready to serve as the liquidity foundation for the next 10,000 modular blockchains.
 
+## Useful Links
+- [Explore the docs](https://docs.khalani.network/)
+- [Try testnet](https://app.testnet.khalani.network/bridge)
+- [Request Feature or Bug Report](https://github.com/tvl-labs/khalani-core/issues/new/choose)
+---
 
-# Design Overview
-The smart contracts in Khalani use EIP-2353 [(Diamond Pattern - MultiFacet Proxy)](https://eips.ethereum.org/EIPS/eip-2535).
-A diamond is a contract with external functions that are supplied by contracts called facets. Facets are separate, independent contracts that can share internal functions, libraries, and state variables.
+## Khalani Architecture
+- **Application Layer** : Crosschain Apps and SDK
+- **Liquidity Layer** : Khalani Interchain Liquidity Hub [Balancer Composable Stable Pool v4](https://docs.balancer.fi/concepts/pools/composable-stable.html)
+- **Messaging Transport layer** : [Hyperlane](https://docs.hyperlane.xyz/docs/introduction/readme)
 
-## AMP
-For cross-chain communication, currently Khalani only uses Hyperlane. More specifically , Khalani relies on Hyperlane's Messaging API
+### Architecture
+![img.png](docs/arch.png)
 
-![img.png](docs/img.png)
+#### [Interchain Messaging](https://github.com/tvl-labs/khalani-core/tree/main/src/InterchainMessaging)
+  - ERC-2535: Diamonds, Multi-Facet Proxy contracts to provide end point for [Bridging](https://github.com/tvl-labs/khalani-core/tree/main/src/InterchainMessaging/facets/Bridge) and [Processing request](https://github.com/tvl-labs/khalani-core/tree/main/src/InterchainMessaging/facets/RequestProcessor) from a remote chian
 
-# Contracts
-Nexus diamond is deployed on all end chains as well as on Khalani Chain, however the facets on Khalani chain are different to facets on other chains.
-The reason behind different facets on Khalani chain is due to the following reason:
-1. ICA (interchain accounts) is created for the address from which transaction was originated.
-2. Management of cross-chain liquidity happens on Khalani chain
+  - Adapter : [AMP Bridge Adapter](https://github.com/tvl-labs/khalani-core/tree/main/src/InterchainMessaging/adapters) contract to integrate with Hyperlane
 
-## High Level Architecture
-![img_4.png](docs/img_4.png)
+#### [Asset Reserves](https://github.com/tvl-labs/khalani-core/blob/main/src/LiquidityReserves/remote/IAssetReserves.sol)
+  - Khalani uses Asset Reserves on every connected blockchain to keep custody of provided liquidity. Liquidity Providers can supply single or multiple sided
+liquidity and expect to withdraw their funds on the same blockchain.
 
-## Contract Level Architecture
-![img_3.png](docs/img_3.png)
+#### [Liquidity Projector](https://github.com/tvl-labs/khalani-core/blob/main/src/LiquidityReserves/khalani/ILiquidityProjector.sol)
+  - A Liquidity Projector monitors the balances of all asset reserves on a connected blockchain and issues mirror tokens as depository receipts for liquidity providers. These depository receipts can be used to redeem against the reserves on the original chain, allowing the assets to stay on the original chain, while the claims against them can be traded outside of it. The functioning of a Liquidity Projector relies on cross-chain messaging and it's tightly coupled with a specific ISM. As such, a projected liquidity token can also be viewed as a mirror token that's bundled with the infrastructure risks associated with the external blockchain and the cross-chain messaging mechanisms, as surfaced by the ISMs deployed on the connected blockchain and the Khalani Chain.
+ 
+#### [Liquidity Aggregator](https://github.com/tvl-labs/khalani-core/blob/main/src/LiquidityReserves/khalani/kln/LiquidityAggregator.sol)
+  - The Liquidity Aggregator enables Khalani to aggregate multiple chain-specific asset liquidity into chain-agnostic and fungible liquidity. The protocol can then utilize this aggregated fungible liquidity to enable inter-chain value transfers, essentially operating as a cross-chain market maker.
+ 
+#### **Inter-chain Liquidty Hub**
+  - **Cross-chain Liquidity Pools (CCLPs)**
+   CCLPs are engineered to price inter-chain, same-asset liquidity. Chain-specific, same-asset liquidity (for instance, USDCs from multiple blockchains) are paired with a chain-agnostic Khalani native asset (in this case, klnUSDC). Using a forgiving bonding curve for pricing, these pools allow efficient cross-chain value transfers and incentivize arbitrageurs to maintain equilibrium across various blockchains.
+  - **Cross-asset Liquidity Pools (CALPs)**
+CALPs bridge similar but different assets, such as USDC, USDT, and other USD-pegged stablecoins. CALPs are paired with Kai, Khalani's native USD-paired stablecoin, allowing liquidity providers to clearly understand their risk exposures.
+  -  [Interchain Liquidity Hub Wrapper](https://github.com/tvl-labs/khalani-core/blob/main/src/InterchainLiquidityHub/InterchainLiquidityHubWrapper.sol)
+     This contract functions as both a helper and a wrapper, designed to facilitate a swap within the CCLP and CALP. Its purpose is to assist and complete requests originating from other blockchains. Additionally, it provides functions to streamline the process of liquidity withdrawal and transitioning to another chain through a singular request.
 
-Source : [Khalani Core Contracts](https://www.figma.com/file/X9chVDnZBgZvuMQSUMjaJN/Khalani_V0_Architecture?type=whiteboard&node-id=0%3A1&t=mudjcIC4IjZqT4Iw-1)
-## Nexus diamond and facets on non-khalani chains:
-### CrossChainRouter
-CrossChainRouter's interface provides the depositTokenAndCall functions and functions to register nexus's storage with `Kai's address` , `Nexus on axon` and `axon's chain id`
+---
 
-### IBridgeInterface
-This interface is implemented by `HyperlaneFacet` and `CelerFacet` , this interface provides bridging function that implement the **_outbox adapter logic_** to integrate with any kind of bridge. The implementing facet should also have a function to register
+## Setup
+### Dependecies
+- Foundry
+```
+$ curl -L https://foundry.paradigm.xyz | bash
+$ source ~/.bashrc # or open a new terminal
+$ foundryup
+```
+### Clone
+```
+$ git clone --recurse-submodules https://github.com/tvl-labs/khalani-core.git
+```
+### First time build
+```
+$ forge install
+$ forge build
+```
 
-### MsgHandlerFacet
-This implements the functions required to handle cross-chain message from the relayer for example , `handle` function of hyperlane and `executeMessage` function of celer.
-
-## Nexus diamond and Facets on Khalani Chain
-### AxonCrossChainRouter
-AxonCrossChainRouter's interface provides the withdrawTokenAndCall functions
-
-### AxonHandler
-This implements the functions required to handle cross-chain message from the relayer for example , `handle` function of hyperlane and `executeMessage` function of celer. It also provides a function to **_validate Nexus on other chains_** where the call comes from -  `addValidNexusForChain`
-
-### StableTokenRegistry
-This provides the interface to register Khalani Protocol's tokens.. i.e Mirror and Kai token, it also provides a function to register the mapping between end-chain's canonical asset and its representation on Khalani chain.
-
-## Khalani Tokens
-Multiple Tokens on Khalani Chain are deployed, these tokens are owned by the protocol.
-Mirror Tokens : These are ERC20 tokens and they also register the chain id of the source chain's token it is mirroring to.
-Kai : Khalani's Stable coin
-
-## Vortex Wrapper
-This contract provides the functions to execute an arbitrary batchswap with liquidity hub's balancer pools,
-This contract also provides functions to provide liquidity and withdraw from Khalani Pools
-
-## InterChainAccounts
-ICAs can be thought of a wallet for each user interacting with the Khalani protocol. Interchain accounts help user to execute a series of calls on Khalani chain using any remote chain. It also holds user's bridged funds  and LP tokens of the liquidity hub
+### Regular Build
+```
+$ forge build
+```
+In order to run all test 
+```
+$ forge test
+```
