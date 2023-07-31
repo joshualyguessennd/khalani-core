@@ -12,11 +12,12 @@ import "../../src/InterchainMessaging/facets/Setter/KhalaniSetter.sol";
 library LibDiamondDeployer {
 
     //Include BridgeFacet and RemoteRequestProcessor Facets
-    function addKhalaniFacets(address interChainGateway) internal {
+    function addKhalaniFacets(address interChainGateway) internal returns (address, address, address) {
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](3);
         BridgeFacet bridgeFacet = new BridgeFacet();
-        bytes4[] memory bridgeFacetfunctionSelectors = new bytes4[](1);
+        bytes4[] memory bridgeFacetfunctionSelectors = new bytes4[](2);
         bridgeFacetfunctionSelectors[0] = bridgeFacet.send.selector;
+        bridgeFacetfunctionSelectors[1] = bridgeFacet.getLiquidityProjector.selector;
         cut[0] = IDiamond.FacetCut(
             {facetAddress: address(bridgeFacet),
                 action: IDiamond.FacetCutAction.Add,
@@ -45,18 +46,20 @@ library LibDiamondDeployer {
             address(0), //initializer address
             "" //initializer data
         );
+        return (address(bridgeFacet), address(metaRequestProcessor), address(setterFacet));
     }
 
     //Include RemoteBridgeFacet and DefaultRequestProcessor Facets
-    function addRemoteChainFacets(address interChainGateway) internal {
+    function addRemoteChainFacets(address interChainGateway) internal returns (address, address, address) {
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](3);
-        RemoteBridgeFacet metaBridgeFacet = new RemoteBridgeFacet();
-        bytes4[] memory metaBridgeFacetfunctionSelectors = new bytes4[](1);
-        metaBridgeFacetfunctionSelectors[0] = metaBridgeFacet.send.selector;
+        RemoteBridgeFacet remoteBridgeFacet = new RemoteBridgeFacet();
+        bytes4[] memory remoteBridgeFacetfunctionSelectors = new bytes4[](2);
+        remoteBridgeFacetfunctionSelectors[0] = remoteBridgeFacet.send.selector;
+        remoteBridgeFacetfunctionSelectors[1] = remoteBridgeFacet.getAssetReserves.selector;
         cut[0] = IDiamond.FacetCut(
-            {facetAddress: address(metaBridgeFacet),
+            {facetAddress: address(remoteBridgeFacet),
                 action: IDiamond.FacetCutAction.Add,
-                functionSelectors: metaBridgeFacetfunctionSelectors
+                functionSelectors: remoteBridgeFacetfunctionSelectors
             });
         DefaultRequestProcessor defaultRequestProcessor = new DefaultRequestProcessor();
         bytes4[] memory defaultRequestProcessorfunctionSelectors = new bytes4[](1);
@@ -79,9 +82,10 @@ library LibDiamondDeployer {
             address(0), //initializer address
             "" //initializer data
         );
+        return (address(remoteBridgeFacet), address(defaultRequestProcessor), address(setterFacet));
     }
 
-    function deployDiamond() internal returns (address) {
+    function deployDiamond(address owner) internal returns (address) {
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
         DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
         bytes4[] memory diamondCutFacetfunctionSelectors = new bytes4[](1);
@@ -92,7 +96,7 @@ library LibDiamondDeployer {
                 functionSelectors: diamondCutFacetfunctionSelectors
             });
         DiamondArgs memory args;
-        args.owner  = address(this);
+        args.owner  = owner;
         args.init = address(0);
         args.initCalldata = "";
         Nexus diamond = new Nexus(cut, args);

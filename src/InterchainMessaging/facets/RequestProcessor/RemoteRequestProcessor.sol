@@ -5,26 +5,29 @@ import "../../libraries/LibAppStorage.sol";
 import "../../interfaces/IMessageReceiver.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../../LiquidityReserves/khalani/ILiquidityAggregator.sol";
+import "../Bridge/BridgeFacet.sol";
+import "../../../LiquidityReserves/LibBatchTokenOp.sol";
 
-contract RemoteRequestProcessor is KhalaniStorage, AbstractRequestProcessor{
+contract RemoteRequestProcessor is KhalaniStorage, AbstractRequestProcessor {
     /**
-    * @dev process cross-chain message from Bridge's Adapter
-    * @param _origin origin chain id
-    * @param _sender sender address on origin chain
-    * @param _message arbitrary message received from origin chain
-    */
+     * @dev process cross-chain message from Bridge's Adapter
+     * @param _origin origin chain id
+     * @param _sender sender address on origin chain
+     * @param _message arbitrary message received from origin chain
+     */
     function processRequest(
         uint256 _origin,
         bytes32 _sender,
         bytes memory _message
     ) external override nonReentrant onlyHyperlaneAdapter(s.hyperlaneAdapter) {
         //validate
-        isValidSender(_origin,_sender);
+        isValidSender(_origin, _sender);
         // decode the message
         address user;
         uint256 destinationChainId;
         Token[] memory tokens;
         bytes memory interchainLiquidityHubPayload;
+        bool withAggregateTokens;
         address target;
         bytes memory message;
 
@@ -33,96 +36,118 @@ contract RemoteRequestProcessor is KhalaniStorage, AbstractRequestProcessor{
             destinationChainId,
             tokens,
             interchainLiquidityHubPayload,
+            withAggregateTokens,
             target,
             message
-        ) = decodeMessage(_message);
+        ) = _decodeMessage(_message);
 
-        if(target==address(0x0)) {
+        if (target == address(0x0)) {
             revert ZeroTargetAddress();
         }
 
-        emit MessageProcessed(_origin, user, tokens, destinationChainId, target);
-        // check if the destinationChainId is Khalani chain itself
-            // if the contract is  then exchange mirror token with aggregator, transfer to target contract and call the target contract
-        // else -> the destinationChainId is not Khalani chain mint exact amount of mirror tokens, approve to swap executor and call the executor then bridge token to destination.
-        tokens = mintTokens(_origin, tokens, address(this));
-        if(destinationChainId == block.chainid){
-            //for situations like add liquidity
-            if(interchainLiquidityHubPayload.length!=0){
-                executeILHPayload(tokens,interchainLiquidityHubPayload);
-            } else {
-                tokens = depositToLiquidityAggregator(tokens,target);
-                if(target.code.length > 0){ //if a contract
-                    IMessageReceiver(target).onMessageReceive(_origin,user,tokens,message);
+        emit MessageProcessed(
+            _origin,
+            user,
+            tokens,
+            destinationChainId,
+            target
+        );
+
+        tokens = _mintOrUnlockTokens(_origin, tokens, address(this));
+        if (withAggregateTokens) {
+            tokens = _depositToLiquidityAggregator(tokens, address(this));
+        }
+        if (interchainLiquidityHubPayload.length != 0) {
+            Token[] memory tokenOut = _executeILHPayload(
+                tokens,
+                interchainLiquidityHubPayload
+            );
+            if (destinationChainId == block.chainid) {
+                LibBatchTokenOp._transferTokens(tokenOut, target);
+                if (target.code.length > 0) {
+                    //if a contract
+                    IMessageReceiver(target).onMessageReceive(
+                        _origin,
+                        user,
+                        tokenOut,
+                        message
+                    );
                 }
+            } else {
+                LibBatchTokenOp._approveTokens(tokenOut, s.liquidityProjector);
+                BridgeFacet(address(this)).send(
+                    _origin,
+                    user,
+                    destinationChainId,
+                    tokenOut,
+                    target,
+                    message
+                );
             }
         } else {
-            executeILHPayload(tokens,interchainLiquidityHubPayload);
+            if (destinationChainId == block.chainid) {
+                LibBatchTokenOp._transferTokens(tokens, target);
+                if (target.code.length > 0) {
+                    //if a contract
+                    IMessageReceiver(target).onMessageReceive(
+                        _origin,
+                        user,
+                        tokens,
+                        message
+                    );
+                }
+            }
         }
     }
 
     /**
-    * @dev decode the message received from origin chain
-    * @param _message arbitrary message received from origin chain
-    */
-    function decodeMessage(
+     * @dev decode the message received from origin chain
+     * @param _message arbitrary message received from origin chain
+     */
+    function _decodeMessage(
         bytes memory _message
-    ) internal pure returns (
+    )
+    internal
+    pure
+    returns (
         address user,
         uint256 destinationChainId,
         Token[] memory approvedTokens,
         bytes memory interchainLiquidityHubPayload,
+        bool isSwapWithAggregateToken,
         address target,
         bytes memory message
-    ) {
+    )
+    {
         (
             user,
             destinationChainId,
             approvedTokens,
             interchainLiquidityHubPayload,
+            isSwapWithAggregateToken,
             target,
             message
         ) = abi.decode(
-            _message,(address,uint256, Token[], bytes, address, bytes)
+            _message,
+            (address, uint256, Token[], bytes, bool, address, bytes)
         );
     }
 
     /**
-    * @dev approve tokens to an address
-    * @param tokens array of tokens to approve
-    * @param to address to approve tokens to
-    */
-    function approveTokens(
-        Token[] memory tokens,
-        address to
-    ) private {
-        for(uint i; i<tokens.length;){
-            SafeERC20.forceApprove(
-                IERC20(tokens[i].tokenAddress),
-                to,
-                tokens[i].amount
-            );
-
-            unchecked{
-                ++i;
-            }
-        }
-    }
-
-    /**
-    * @dev exchange mirror tokens with kln(Token)
-    * @param tokens array of tokens to approve
-    * @param receiver address which will receive kln tokens
-    */
-    function depositToLiquidityAggregator( //transfer case
+     * @dev exchange mirror tokens with kln(Token)
+     * @param tokens array of tokens to approve
+     * @param receiver address which will receive kln tokens
+     */
+    function _depositToLiquidityAggregator(
+    //transfer case
         Token[] memory tokens,
         address receiver
-    ) private returns (Token[] memory){
-        address kai = address(IAssetReserves(s.liquidityProjector).kai());
-        for(uint i; i<tokens.length;){
-            if(tokens[i].tokenAddress == kai){
-                IERC20(kai).transfer(receiver,tokens[i].amount);
-                unchecked{
+    ) private returns (Token[] memory) {
+        address kai = address(ILiquidityProjector(s.liquidityProjector).kai());
+        for (uint i; i < tokens.length; ) {
+            if (tokens[i].tokenAddress == kai) {
+                IERC20(kai).transfer(receiver, tokens[i].amount);
+                unchecked {
                     ++i;
                 }
                 continue;
@@ -132,30 +157,51 @@ contract RemoteRequestProcessor is KhalaniStorage, AbstractRequestProcessor{
                 s.liquidityAggregator,
                 tokens[i].amount
             );
-            tokens[i] = ILiquidityAggregator(s.liquidityAggregator).deposit(tokens[i], receiver);
-            unchecked{
+            tokens[i] = ILiquidityAggregator(s.liquidityAggregator).deposit(
+                tokens[i],
+                receiver
+            );
+            unchecked {
                 ++i;
             }
         }
         return tokens;
     }
 
-    function isValidSender(uint256 _origin, bytes32 _sender) internal virtual override view {
-        if(s.chainIdToAdapter[_origin] != TypeCasts.bytes32ToAddress(_sender)){
+    function isValidSender(
+        uint256 _origin,
+        bytes32 _sender
+    ) internal view virtual override {
+        if (
+            s.chainIdToAdapter[_origin] != TypeCasts.bytes32ToAddress(_sender)
+        ) {
             revert InvalidSender(_sender);
         }
     }
 
-    function executeILHPayload(Token[] memory tokens, bytes memory interchainLiquidityHubPayload) private {
+    function _executeILHPayload(
+        Token[] memory tokens,
+        bytes memory interchainLiquidityHubPayload
+    ) private returns (Token[] memory outTokens) {
         // approveTokens to swap executor
-        approveTokens(tokens,s.interchainLiquidityHub);
+        LibBatchTokenOp._approveTokens(tokens, s.interchainLiquidityHub);
         // call the executor
-        (bool success,) = s.interchainLiquidityHub.call(interchainLiquidityHubPayload);
-        require(success,"RemoteRequestProcessor: meta transaction failed");
+        (bool success, bytes memory returnData) = s.interchainLiquidityHub.call(
+            interchainLiquidityHubPayload
+        );
+        if (!success) {
+            revert ILHSwapFailed();
+        }
+        outTokens = abi.decode(returnData, (Token[]));
     }
 
-    function mintTokens(uint256 chainId, Token[] memory tokens, address to) internal returns(Token[] memory){
-        return ILiquidityProjector(s.liquidityProjector).mintOrUnlock(
+    function _mintOrUnlockTokens(
+        uint256 chainId,
+        Token[] memory tokens,
+        address to
+    ) private returns (Token[] memory) {
+        return
+        ILiquidityProjector(s.liquidityProjector).mintOrUnlock(
             chainId,
             to,
             tokens

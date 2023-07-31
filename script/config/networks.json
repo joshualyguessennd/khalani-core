@@ -1,0 +1,85 @@
+{
+  "arb-goerli": {
+    "assetReserves": "0xb81B2575b0B34e76e56F2e35cD66b5Cd58c6C85F",
+    "bridgeFacet": "0x861867fad95236F256BA318AECD50d814Be1dC8F",
+    "chainId": 421613,
+    "diamondProxy": "0x25427539f8ba4f5E42cA8371f43bc0D34B8a089D",
+    "hyperlaneAdapter": "0x905FE6a7c9c22477576f49017217361425e2e865",
+    "kai": "0xf1a70163250ea483de2c5d599581650E7B3882F0",
+    "requestProcessorFacet": "0x513ECFd229De878AAC0fc3b6D01a97283F2B6E1d",
+    "setterFacet": "0xb574419eDF8AB976A3F72723E58Aa57c90fF7a7c"
+  },
+  "bsctestnet": {
+    "assetReserves": "0x86D915757955E8ba9A5Cd9177A9184851B59bB7f",
+    "bridgeFacet": "0x23d27a03AD7E0E997E243dEadc40f6D644cEA651",
+    "chainId": 97,
+    "diamondProxy": "0xD7b702A86A83D3766B38aB5e04Ae5C3d35356cBb",
+    "hyperlaneAdapter": "0xd5ef9aB1A918A690507e61612E28ce5DaF89e96C",
+    "kai": "0xdeea4146771a1eEcf20078DDe470a66917Bb4E9a",
+    "requestProcessorFacet": "0xb79a2C9DD3b4E336A5fC53b0Aac92Dfb69a0A6DD",
+    "setterFacet": "0xE175513929084AbeC6a1891dA28d4Ff8e7321f90"
+  },
+  "fuji": {
+    "assetReserves": "0xb574419eDF8AB976A3F72723E58Aa57c90fF7a7c",
+    "bridgeFacet": "0x0883871d950ab5570010b840CD5c512969F66024",
+    "chainId": 43113,
+    "diamondProxy": "0x74f7532b774e055B4F2f413ddb76AA30b4687bf0",
+    "hyperlaneAdapter": "0x861867fad95236F256BA318AECD50d814Be1dC8F",
+    "kai": "0x513ECFd229De878AAC0fc3b6D01a97283F2B6E1d",
+    "requestProcessorFacet": "0x01AfDd335a723C7c68274e0E9eb11B21323bc046",
+    "setterFacet": "0x28C3361A37D2C4201118845c6E50F8d520E6dB8f"
+  },
+  "godwokentestnet": {
+    "assetReserves": "0xb8A5b3B512d1eEb4c7A96Da0A31B5a2D36175054",
+    "bridgeFacet": "0x4701b630ECA51a3e687da71A114dC4A71B1eCECe",
+    "chainId": 71401,
+    "diamondProxy": "0x16CFB94143350Ee2B4E038ab312068E06884C2B8",
+    "hyperlaneAdapter": "0xe3594c4854aa50c9e01f36D745ADEFBb966fE2b3",
+    "kai": "0x2e038b800126DA1a39defc1d2d7ffd5B88D977f1",
+    "requestProcessorFacet": "0xA9c95568E372a81448d9bd5e3945C5347f6BE09F",
+    "setterFacet": "0xad13E123C194Cd3e58818679df46FB39F89bf09c"
+  },
+  "khalanitestnet": {
+    "bridgeFacet": "0x986923106F10EB596f6Ce7554F00C016b9eE5639",
+    "chainId": 10012,
+    "diamondProxy": "0x930D5879b62763921F3fCe5b20457133Af531225",
+    "hyperlaneAdapter": "0x23C1CdD01C95B4ab69c2BDD2A60AB4c63D85Af32",
+    "interchainLiquidityHubWrapper": "0x60dF39C70D80A4ABDAdfcfCf13D20B38CfeCB440",
+    "kai": "0x477b4198Edd0ED573E900db7e9925FC7bbA35395",
+    "kaiLiquidityAggregator": "0x414EFC7F0b7834a49eAb51bC10809BD6F081B7EB",
+    "liquidityAggregator": "0x555d985AF856f6FE687ccD40dC066cB49EEBA3c1",
+    "liquidityProjector": "0x2E3Ca697cEb0FaeaaC755D2686d264C80038869e",
+    "requestProcessorFacet": "0x54bf0235166D93D2cB6C3e000CA39AC7231Ba263",
+    "setterFacet": "0xaA8763a5A5E6E95Fb8C186d2ec2Ee202b1196Aba"
+  },
+  "mumbai": {
+    "assetReserves": "0xBA45a2A29e7E01689B8080Ef6799d2b2E1E8BF02",
+    "bridgeFacet": "0x3ADAe4D5a2264498c42885C6c9d6Db3d65c581b9",
+    "chainId": 80001,
+    "diamondProxy": "0x86D915757955E8ba9A5Cd9177A9184851B59bB7f",
+    "hyperlaneAdapter": "0xB9e0acd20051723d739774f599EBe2685FF03D64",
+    "kai": "0x5e036eCEF6C9285671765E3EaC51fBD9A76341fE",
+    "requestProcessorFacet": "0xfB4946aC2f744A69da84b395e547a715E41dC20A",
+    "setterFacet": "0x709Df499E8dde26779f235638B6BFBFA4381d3F6"
+  },
+  "optimism-goerli": {
+    "assetReserves": "0x5e036eCEF6C9285671765E3EaC51fBD9A76341fE",
+    "bridgeFacet": "0x86D915757955E8ba9A5Cd9177A9184851B59bB7f",
+    "chainId": 420,
+    "diamondProxy": "0xdeea4146771a1eEcf20078DDe470a66917Bb4E9a",
+    "hyperlaneAdapter": "0x1dC84E4255A2627464e3261c72296fDFbbd45ffe",
+    "kai": "0xB9e0acd20051723d739774f599EBe2685FF03D64",
+    "requestProcessorFacet": "0x3ADAe4D5a2264498c42885C6c9d6Db3d65c581b9",
+    "setterFacet": "0xfB4946aC2f744A69da84b395e547a715E41dC20A"
+  },
+  "sepolia": {
+    "assetReserves": "0x723C29118a1c4b91a0BF1a1c085AdAa920A1ec8a",
+    "bridgeFacet": "0xcAfcEaDb46e56bC7A803480167F70e0f3E8a5864",
+    "chainId": 11155111,
+    "diamondProxy": "0x1089Fa8b3e08972e6ad149BA900c9dB6Ee984E90",
+    "hyperlaneAdapter": "0x2C2510D6b15ee7E864DA9564F7b7bAFf7fFCD6FA",
+    "kai": "0x90a542C81D8A5fd397cbD543Cbe50a9D6EFC36F8",
+    "requestProcessorFacet": "0x7BE74062e14e32148f301A31A6fA2B4E35Eb4114",
+    "setterFacet": "0xbFdEf0C51A3e7c446651d21f8DE23e9bA6001F0d"
+  }
+}

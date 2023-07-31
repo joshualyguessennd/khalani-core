@@ -37,12 +37,14 @@ contract DefaultRequestProcessor is RemoteStorage, AbstractRequestProcessor{
         sendTokens(tokens, target);
 
         // deliver the message to the target contract
-        IMessageReceiver(target).onMessageReceive(
-            rootChain,
-            rootSender,
-            tokens,
-            message
-        );
+        if(target.code.length > 0){
+            IMessageReceiver(target).onMessageReceive(
+                rootChain,
+                rootSender,
+                tokens,
+                message
+            );
+        }
     }
 
     function decodeMessage(bytes memory _message) internal pure returns(uint256 root, address rootSender, Token[] memory tokens, address target, bytes memory message){

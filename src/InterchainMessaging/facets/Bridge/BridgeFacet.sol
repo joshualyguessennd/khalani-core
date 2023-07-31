@@ -23,11 +23,13 @@ contract BridgeFacet is KhalaniStorage{
     * @param message arbitrary message to be sent
     */
     function send(
+        uint256 rootChainId,
+        address rootSender,
         uint256 destinationChainId,
-        Token[] calldata tokens,
+        Token[] memory tokens,
         address target,
         bytes calldata message
-    ) external nonReentrant {
+    ) external bridgeCallNonReentrant {
         if(target==address(0x0)){
             revert ZeroTargetAddress();
         }
@@ -37,17 +39,26 @@ contract BridgeFacet is KhalaniStorage{
             tokens,
             target
         );
-        ILiquidityProjector(s.liquidityProjector).lockOrBurn(destinationChainId, msg.sender, tokens);
+        tokens = ILiquidityProjector(s.liquidityProjector).lockOrBurn(destinationChainId, msg.sender, tokens);
 
         IAdapter(s.hyperlaneAdapter).relayMessage(
             destinationChainId,
             TypeCasts.addressToBytes32(s.chainIdToAdapter[destinationChainId]),
             prepareOutgoingMessage(
+                rootChainId,
+                rootSender,
                 tokens,
                 target,
                 message
             )
         );
+    }
+
+    /**
+    * @dev get the address of the liquidity projector
+    */
+    function getLiquidityProjector() external view returns(address){
+        return s.liquidityProjector;
     }
 
     /**
@@ -57,11 +68,15 @@ contract BridgeFacet is KhalaniStorage{
     * @param message arbitrary message to be sent
     */
     function prepareOutgoingMessage(
-        Token[] calldata tokens,
+        uint256 rootChainId,
+        address rootSender,
+        Token[] memory tokens,
         address target,
         bytes calldata message
     ) internal pure returns (bytes memory){
         return abi.encode(
+            rootChainId,
+            rootSender,
             tokens,
             target,
             message

@@ -14,3 +14,8 @@ pragma solidity ^0.8.0;
     error RedeemFailedNotEnoughBalance();
     error MulOverflow();
     error UnsupportedDecimals();
+    error ILHSwapFailed();
+    error BaseDiamondFacet__nonReentrant_reentrantCall();
+    error BaseDiamondFacet__bridgeCallNonReentrant_reentrantCall();
+    error InterchainLiquidityHubWrapper__NoSwapsToExecute();
+    error InterchainLiquidityHubWrapper__NoAssetsToSwap();

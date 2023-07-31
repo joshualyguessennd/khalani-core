@@ -27,7 +27,7 @@ interface ILiquidityProjector {
     function lockOrBurn(
         uint256 chainId,
         address sender,
-        Token[] calldata tokens
+        Token[] memory tokens
     ) external returns (Token[] memory sourceTokens);
 
     function mintOrUnlock(

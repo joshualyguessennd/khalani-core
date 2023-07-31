@@ -29,9 +29,10 @@ contract RemoteBridgeFacet is RemoteStorage{
         uint256 destinationChainId,
         Token[] memory approvedTokens,
         bytes calldata interchainLiquidityHubPayload,
+        bool isSwapWithAggregateToken,
         address target,
         bytes calldata message
-    ) external nonReentrant{
+    ) external bridgeCallNonReentrant{
         if(target==address(0x0)){
             revert ZeroTargetAddress();
         }
@@ -51,10 +52,18 @@ contract RemoteBridgeFacet is RemoteStorage{
                 destinationChainId,
                 approvedTokens,
                 interchainLiquidityHubPayload,
+                isSwapWithAggregateToken,
                 target,
                 message
             )
         );
+    }
+
+    /**
+    * @dev get the address of the liquidity projector
+    */
+    function getAssetReserves() external view returns(address){
+        return s.assetReserves;
     }
 
     /**
@@ -69,6 +78,7 @@ contract RemoteBridgeFacet is RemoteStorage{
         uint256 destinationChainId,
         Token[] memory approvedTokens,
         bytes calldata interchainLiquidityHubPayload,
+        bool isSwapWithAggregateToken,
         address target,
         bytes calldata message
     ) internal view returns (bytes memory){
@@ -78,6 +88,7 @@ contract RemoteBridgeFacet is RemoteStorage{
             destinationChainId,
             approvedTokens,
             interchainLiquidityHubPayload,
+            isSwapWithAggregateToken,
             target,
             message
         );
